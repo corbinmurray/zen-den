@@ -1,7 +1,6 @@
 "use client";
 
 import { GardenElement } from "@/lib/types";
-import Image from "next/image";
 import { forwardRef, useEffect, useRef, useState } from "react";
 
 interface CanvasProps {
@@ -9,18 +8,24 @@ interface CanvasProps {
 	background: string;
 	onElementUpdate: (element: GardenElement) => void;
 	onElementRemove: (id: string) => void;
+	showOutlines?: boolean;
 }
 
-export const Canvas = forwardRef<HTMLDivElement, CanvasProps>(function Canvas({ elements, background, onElementUpdate, onElementRemove }, ref) {
+export const Canvas = forwardRef<HTMLDivElement, CanvasProps>(function Canvas(
+	{ elements, background, onElementUpdate, onElementRemove, showOutlines = false },
+	ref
+) {
 	const [selectedElementId, setSelectedElementId] = useState<string | null>(null);
 	const canvasRef = useRef<HTMLDivElement>(null);
 	const canvasContainerRef = useRef<HTMLDivElement | null>(null);
 	const [canvasBounds, setCanvasBounds] = useState({ width: 0, height: 0 });
-	const [showOutlines, setShowOutlines] = useState(false);
 
 	// Keep track of the dragging state
 	const [isDragging, setIsDragging] = useState(false);
 	const [draggedElement, setDraggedElement] = useState<string | null>(null);
+	// Add resize dragging state
+	const [isResizing, setIsResizing] = useState(false);
+	const [resizeDirection, setResizeDirection] = useState<string | null>(null);
 
 	// Store loaded images in a map
 	const imagesRef = useRef<Map<string, HTMLImageElement>>(new Map());
@@ -30,6 +35,8 @@ export const Canvas = forwardRef<HTMLDivElement, CanvasProps>(function Canvas({ 
 
 	// Track element positions for rendering
 	const [elementPositions, setElementPositions] = useState<Map<string, { x: number; y: number }>>(new Map());
+	// Track element scales for immediate updates during resize
+	const [elementScales, setElementScales] = useState<Map<string, number>>(new Map());
 
 	// Handle ResizeObserver for canvas size
 	useEffect(() => {
@@ -57,13 +64,16 @@ export const Canvas = forwardRef<HTMLDivElement, CanvasProps>(function Canvas({ 
 		};
 	}, [canvasBounds.width, canvasBounds.height]);
 
-	// Initialize element positions
+	// Initialize element positions and scales
 	useEffect(() => {
 		const newPositions = new Map();
+		const newScales = new Map();
 		elements.forEach((element) => {
 			newPositions.set(element.id, element.position);
+			newScales.set(element.id, element.scale);
 		});
 		setElementPositions(newPositions);
+		setElementScales(newScales);
 	}, [elements]);
 
 	// Pass canvasRef through to parent component if needed
@@ -77,16 +87,7 @@ export const Canvas = forwardRef<HTMLDivElement, CanvasProps>(function Canvas({ 
 
 	// Preload all element images
 	useEffect(() => {
-		elements.forEach((element) => {
-			if (!imagesRef.current.has(element.imagePath)) {
-				// Create a native HTMLImageElement for preloading
-				const img = document.createElement("img");
-				img.src = element.imagePath;
-				img.onload = () => {
-					imagesRef.current.set(element.imagePath, img);
-				};
-			}
-		});
+		// No need to preload SVG elements as they're rendered directly
 	}, [elements]);
 
 	// Handle mouse events
@@ -107,6 +108,29 @@ export const Canvas = forwardRef<HTMLDivElement, CanvasProps>(function Canvas({ 
 				return;
 			}
 
+			// Check if we're clicking on a resize handle
+			const resizeHandle = (e.target as HTMLElement).closest(".resize-handle");
+			if (resizeHandle) {
+				e.preventDefault();
+				e.stopPropagation();
+
+				const elementId = resizeHandle.getAttribute("data-element-id");
+				const direction = resizeHandle.getAttribute("data-direction");
+
+				if (elementId && direction) {
+					setIsResizing(true);
+					setDraggedElement(elementId);
+					setResizeDirection(direction);
+
+					const rect = container.getBoundingClientRect();
+					mousePositionRef.current = {
+						x: e.clientX - rect.left,
+						y: e.clientY - rect.top,
+					};
+					return;
+				}
+			}
+
 			const rect = container.getBoundingClientRect();
 			const x = e.clientX - rect.left;
 			const y = e.clientY - rect.top;
@@ -114,7 +138,7 @@ export const Canvas = forwardRef<HTMLDivElement, CanvasProps>(function Canvas({ 
 			// Find if we clicked on an element (in reverse order for proper z-index)
 			const clickedElementIndex = [...elements].reverse().findIndex((element) => {
 				const pos = elementPositions.get(element.id) || element.position;
-				const size = 100 * element.scale;
+				const size = 100 * (elementScales.get(element.id) || element.scale);
 
 				// Check if click is within the element bounds
 				return x >= pos.x && x <= pos.x + size && y >= pos.y && y <= pos.y + size;
@@ -142,24 +166,81 @@ export const Canvas = forwardRef<HTMLDivElement, CanvasProps>(function Canvas({ 
 		};
 
 		const handleMouseMove = (e: MouseEvent) => {
-			if (isDragging && draggedElement) {
-				const rect = container.getBoundingClientRect();
-				const x = e.clientX - rect.left;
-				const y = e.clientY - rect.top;
+			const rect = container.getBoundingClientRect();
+			const x = e.clientX - rect.left;
+			const y = e.clientY - rect.top;
 
-				// Calculate delta movement
-				const deltaX = x - mousePositionRef.current.x;
-				const deltaY = y - mousePositionRef.current.y;
+			// Calculate delta movement
+			const deltaX = x - mousePositionRef.current.x;
+			const deltaY = y - mousePositionRef.current.y;
 
-				// Update mouse position for next calculation
-				mousePositionRef.current = { x, y };
+			// Update mouse position for next calculation
+			mousePositionRef.current = { x, y };
 
+			// Handle resizing
+			if (isResizing && draggedElement && resizeDirection) {
+				const element = elements.find((el) => el.id === draggedElement);
+				if (element) {
+					let scaleChange = 0;
+
+					// Calculate scale change based on resize direction
+					switch (resizeDirection) {
+						case "corner":
+							// Diagonal movement creates more natural scaling
+							scaleChange = ((Math.abs(deltaX) + Math.abs(deltaY)) / 200) * (deltaX + deltaY > 0 ? 1 : -1);
+							break;
+						case "right":
+						case "left":
+							scaleChange = deltaX / 100;
+							break;
+						case "bottom":
+						case "top":
+							scaleChange = deltaY / 100;
+							break;
+					}
+
+					const oldScale = elementScales.get(element.id) || element.scale;
+					const newScale = Math.max(0.5, Math.min(2, oldScale + scaleChange));
+
+					// Update the scale in our local state for immediate visual feedback
+					setElementScales((prevScales) => {
+						const newScales = new Map(prevScales);
+						newScales.set(element.id, newScale);
+						return newScales;
+					});
+
+					// When resizing, also update the position to keep the element centered
+					const baseSize = 100;
+					const oldSize = baseSize * oldScale;
+					const newSize = baseSize * newScale;
+					const sizeChange = (newSize - oldSize) / 2;
+
+					// Get current position
+					const currentPos = elementPositions.get(element.id) || element.position;
+
+					// Adjust position to maintain center with proper boundary constraints
+					const newPosition = {
+						x: Math.max(0, Math.min(currentPos.x - sizeChange, canvasBounds.width - newSize)),
+						y: Math.max(0, Math.min(currentPos.y - sizeChange, canvasBounds.height - newSize)),
+					};
+
+					// Update positions in state to reflect the scaling
+					setElementPositions((prevPositions) => {
+						const newPositions = new Map(prevPositions);
+						newPositions.set(element.id, newPosition);
+						return newPositions;
+					});
+				}
+			}
+			// Handle dragging
+			else if (isDragging && draggedElement) {
 				// Find the element being dragged
 				const element = elements.find((el) => el.id === draggedElement);
 				if (element) {
 					// Get current position
 					const currentPos = elementPositions.get(element.id) || element.position;
-					const size = 100 * element.scale;
+					const currentScale = elementScales.get(element.id) || element.scale;
+					const size = 100 * currentScale;
 
 					// Calculate new position with proper constraints to keep element fully visible
 					const newX = Math.max(0, Math.min(currentPos.x + deltaX, canvasBounds.width - size));
@@ -176,7 +257,24 @@ export const Canvas = forwardRef<HTMLDivElement, CanvasProps>(function Canvas({ 
 		};
 
 		const handleMouseUp = () => {
-			if (isDragging && draggedElement) {
+			if (isResizing && draggedElement) {
+				const element = elements.find((el) => el.id === draggedElement);
+				const newScale = elementScales.get(draggedElement);
+				const newPosition = elementPositions.get(draggedElement);
+
+				if (element && newScale && newPosition) {
+					// Update the element position and scale through the parent callback
+					onElementUpdate({
+						...element,
+						scale: newScale,
+						position: newPosition,
+					});
+				}
+
+				setIsResizing(false);
+				setDraggedElement(null);
+				setResizeDirection(null);
+			} else if (isDragging && draggedElement) {
 				const element = elements.find((el) => el.id === draggedElement);
 				const newPosition = elementPositions.get(draggedElement);
 
@@ -202,14 +300,39 @@ export const Canvas = forwardRef<HTMLDivElement, CanvasProps>(function Canvas({ 
 		// Touch events for mobile
 		const handleTouchStart = (e: TouchEvent) => {
 			if (e.touches.length === 1) {
+				// Check if we're touching a resize handle
 				const touch = e.touches[0];
+				const element = document.elementFromPoint(touch.clientX, touch.clientY);
+				const resizeHandle = element?.closest(".resize-handle");
+
+				if (resizeHandle) {
+					e.preventDefault();
+
+					const elementId = resizeHandle.getAttribute("data-element-id");
+					const direction = resizeHandle.getAttribute("data-direction");
+
+					if (elementId && direction) {
+						setIsResizing(true);
+						setDraggedElement(elementId);
+						setResizeDirection(direction);
+
+						const rect = container.getBoundingClientRect();
+						mousePositionRef.current = {
+							x: touch.clientX - rect.left,
+							y: touch.clientY - rect.top,
+						};
+						return;
+					}
+				}
+
 				const rect = container.getBoundingClientRect();
 				const x = touch.clientX - rect.left;
 				const y = touch.clientY - rect.top;
 
 				const clickedElementIndex = [...elements].reverse().findIndex((element) => {
 					const pos = elementPositions.get(element.id) || element.position;
-					const size = 100 * element.scale;
+					const scale = elementScales.get(element.id) || element.scale;
+					const size = 100 * scale;
 					return x >= pos.x && x <= pos.x + size && y >= pos.y && y <= pos.y + size;
 				});
 
@@ -227,7 +350,7 @@ export const Canvas = forwardRef<HTMLDivElement, CanvasProps>(function Canvas({ 
 		};
 
 		const handleTouchMove = (e: TouchEvent) => {
-			if (isDragging && draggedElement && e.touches.length === 1) {
+			if (e.touches.length === 1) {
 				const touch = e.touches[0];
 				const rect = container.getBoundingClientRect();
 				const x = touch.clientX - rect.left;
@@ -238,28 +361,100 @@ export const Canvas = forwardRef<HTMLDivElement, CanvasProps>(function Canvas({ 
 
 				mousePositionRef.current = { x, y };
 
-				const element = elements.find((el) => el.id === draggedElement);
-				if (element) {
-					const currentPos = elementPositions.get(element.id) || element.position;
-					const size = 100 * element.scale;
+				// Handle resizing with touch
+				if (isResizing && draggedElement && resizeDirection) {
+					const element = elements.find((el) => el.id === draggedElement);
+					if (element) {
+						let scaleChange = 0;
 
-					// Apply same constraints for touch events
-					const newX = Math.max(0, Math.min(currentPos.x + deltaX, canvasBounds.width - size));
-					const newY = Math.max(0, Math.min(currentPos.y + deltaY, canvasBounds.height - size));
+						// Calculate scale change based on resize direction
+						switch (resizeDirection) {
+							case "corner":
+								scaleChange = ((Math.abs(deltaX) + Math.abs(deltaY)) / 200) * (deltaX + deltaY > 0 ? 1 : -1);
+								break;
+							case "right":
+							case "left":
+								scaleChange = deltaX / 100;
+								break;
+							case "bottom":
+							case "top":
+								scaleChange = deltaY / 100;
+								break;
+						}
 
-					setElementPositions((prevPositions) => {
-						const newPositions = new Map(prevPositions);
-						newPositions.set(element.id, { x: newX, y: newY });
-						return newPositions;
-					});
+						const oldScale = elementScales.get(element.id) || element.scale;
+						const newScale = Math.max(0.5, Math.min(2, oldScale + scaleChange));
+
+						setElementScales((prevScales) => {
+							const newScales = new Map(prevScales);
+							newScales.set(element.id, newScale);
+							return newScales;
+						});
+
+						// Position adjustments for resizing
+						const baseSize = 100;
+						const oldSize = baseSize * oldScale;
+						const newSize = baseSize * newScale;
+						const sizeChange = (newSize - oldSize) / 2;
+
+						const currentPos = elementPositions.get(element.id) || element.position;
+
+						const newPosition = {
+							x: Math.max(0, Math.min(currentPos.x - sizeChange, canvasBounds.width - newSize)),
+							y: Math.max(0, Math.min(currentPos.y - sizeChange, canvasBounds.height - newSize)),
+						};
+
+						setElementPositions((prevPositions) => {
+							const newPositions = new Map(prevPositions);
+							newPositions.set(element.id, newPosition);
+							return newPositions;
+						});
+
+						e.preventDefault();
+					}
 				}
+				// Handle dragging with touch
+				else if (isDragging && draggedElement) {
+					const element = elements.find((el) => el.id === draggedElement);
+					if (element) {
+						const currentPos = elementPositions.get(element.id) || element.position;
+						const currentScale = elementScales.get(element.id) || element.scale;
+						const size = 100 * currentScale;
 
-				e.preventDefault(); // Prevent scrolling when dragging
+						// Apply same constraints for touch events
+						const newX = Math.max(0, Math.min(currentPos.x + deltaX, canvasBounds.width - size));
+						const newY = Math.max(0, Math.min(currentPos.y + deltaY, canvasBounds.height - size));
+
+						setElementPositions((prevPositions) => {
+							const newPositions = new Map(prevPositions);
+							newPositions.set(element.id, { x: newX, y: newY });
+							return newPositions;
+						});
+					}
+
+					e.preventDefault(); // Prevent scrolling when dragging
+				}
 			}
 		};
 
 		const handleTouchEnd = () => {
-			if (isDragging && draggedElement) {
+			if (isResizing && draggedElement) {
+				const element = elements.find((el) => el.id === draggedElement);
+				const newScale = elementScales.get(draggedElement);
+				const newPosition = elementPositions.get(draggedElement);
+
+				if (element && newScale && newPosition) {
+					onElementUpdate({
+						...element,
+						scale: newScale,
+						position: newPosition,
+					});
+				}
+
+				setIsResizing(false);
+				setDraggedElement(null);
+				setResizeDirection(null);
+			} else if (isDragging && draggedElement) {
 				const element = elements.find((el) => el.id === draggedElement);
 				const newPosition = elementPositions.get(draggedElement);
 
@@ -291,7 +486,18 @@ export const Canvas = forwardRef<HTMLDivElement, CanvasProps>(function Canvas({ 
 			window.removeEventListener("touchmove", handleTouchMove);
 			window.removeEventListener("touchend", handleTouchEnd);
 		};
-	}, [canvasBounds.height, canvasBounds.width, draggedElement, elementPositions, elements, isDragging, onElementUpdate]);
+	}, [
+		canvasBounds.height,
+		canvasBounds.width,
+		draggedElement,
+		elementPositions,
+		elementScales,
+		elements,
+		isDragging,
+		isResizing,
+		onElementUpdate,
+		resizeDirection,
+	]);
 
 	// Handle rotate and scale functions
 	const handleRotate = (id: string, change: number, e?: React.MouseEvent) => {
@@ -335,6 +541,13 @@ export const Canvas = forwardRef<HTMLDivElement, CanvasProps>(function Canvas({ 
 				y: Math.max(0, Math.min(currentPos.y - sizeChange, canvasBounds.height - newSize)),
 			};
 
+			// Update scales in state
+			setElementScales((prevScales) => {
+				const newScales = new Map(prevScales);
+				newScales.set(element.id, newScale);
+				return newScales;
+			});
+
 			// Update positions in state to reflect the scaling
 			setElementPositions((prevPositions) => {
 				const newPositions = new Map(prevPositions);
@@ -356,6 +569,83 @@ export const Canvas = forwardRef<HTMLDivElement, CanvasProps>(function Canvas({ 
 		onElementRemove(id);
 	};
 
+	// Function to render the SVG content for each element type
+	const renderElementSVG = (type: string) => {
+		switch (type) {
+			case "rock":
+				return (
+					<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
+						<ellipse cx="50" cy="60" rx="40" ry="30" fill="#8B8B8B" />
+						<ellipse cx="50" cy="60" rx="30" ry="20" fill="#A3A3A3" />
+						<ellipse cx="40" cy="50" rx="10" ry="8" fill="#CFCFCF" opacity="0.6" />
+					</svg>
+				);
+			case "bamboo":
+				return (
+					<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
+						<rect x="45" y="20" width="10" height="70" fill="#4D7C0F" rx="5" />
+						<rect x="45" y="20" width="10" height="5" fill="#3F6212" rx="2" />
+						<rect x="45" y="35" width="10" height="5" fill="#3F6212" rx="2" />
+						<rect x="45" y="50" width="10" height="5" fill="#3F6212" rx="2" />
+						<rect x="45" y="65" width="10" height="5" fill="#3F6212" rx="2" />
+						<path d="M55 25 C70 15, 75 10, 85 15" stroke="#65A30D" strokeWidth="2" fill="none" />
+						<path d="M55 40 C70 30, 75 25, 85 30" stroke="#65A30D" strokeWidth="2" fill="none" />
+						<path d="M55 55 C70 45, 75 40, 85 45" stroke="#65A30D" strokeWidth="2" fill="none" />
+						<path d="M45 25 C30 15, 25 10, 15 15" stroke="#65A30D" strokeWidth="2" fill="none" />
+						<path d="M45 55 C30 45, 25 40, 15 45" stroke="#65A30D" strokeWidth="2" fill="none" />
+					</svg>
+				);
+			case "bonsai":
+				return (
+					<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
+						<rect x="40" y="70" width="20" height="15" fill="#8B4513" rx="2" />
+						<rect x="45" y="40" width="10" height="30" fill="#A0522D" />
+						<path d="M50 15 C20 40, 30 20, 50 40" stroke="#A0522D" strokeWidth="5" fill="none" />
+						<path d="M50 15 C80 40, 70 20, 50 40" stroke="#A0522D" strokeWidth="5" fill="none" />
+						<circle cx="50" cy="25" r="20" fill="#228B22" />
+						<circle cx="30" cy="30" r="10" fill="#228B22" />
+						<circle cx="70" cy="30" r="10" fill="#228B22" />
+						<circle cx="40" cy="15" r="8" fill="#228B22" />
+						<circle cx="60" cy="15" r="8" fill="#228B22" />
+					</svg>
+				);
+			case "lantern":
+				return (
+					<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
+						<rect x="40" y="80" width="20" height="5" fill="#7F7F7F" />
+						<rect x="30" y="75" width="40" height="5" fill="#7F7F7F" />
+						<path d="M35 35 L65 35 L60 75 L40 75 Z" fill="#9F9F9F" />
+						<rect x="30" y="30" width="40" height="5" fill="#7F7F7F" />
+						<rect x="40" y="20" width="20" height="10" fill="#9F9F9F" />
+						<rect x="45" y="15" width="10" height="5" fill="#7F7F7F" />
+						<rect x="48" y="10" width="4" height="5" fill="#7F7F7F" />
+						<rect x="40" y="45" width="20" height="5" fill="#7F7F7F" opacity="0.5" />
+					</svg>
+				);
+			case "sand":
+				return (
+					<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
+						<ellipse cx="50" cy="50" rx="40" ry="25" fill="#E0D2B4" />
+						<path d="M20 50 Q35 40, 50 50 Q65 60, 80 50" stroke="#D1C4A8" strokeWidth="2" fill="none" />
+						<path d="M20 55 Q35 45, 50 55 Q65 65, 80 55" stroke="#D1C4A8" strokeWidth="2" fill="none" />
+						<path d="M20 45 Q35 35, 50 45 Q65 55, 80 45" stroke="#D1C4A8" strokeWidth="2" fill="none" />
+					</svg>
+				);
+			case "water":
+				return (
+					<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
+						<ellipse cx="50" cy="50" rx="35" ry="25" fill="#A5C7D3" />
+						<ellipse cx="50" cy="50" rx="30" ry="20" fill="#B9D9E8" />
+						<ellipse cx="40" cy="45" rx="5" ry="3" fill="#FFFFFF" opacity="0.6" />
+						<ellipse cx="55" cy="60" rx="8" ry="5" fill="#8DB4C2" opacity="0.5" />
+						<path d="M30 50 Q40 45, 50 50 Q60 55, 70 50" stroke="#FFFFFF" strokeWidth="1" fill="none" opacity="0.5" />
+					</svg>
+				);
+			default:
+				return null;
+		}
+	};
+
 	return (
 		<div>
 			<div
@@ -365,14 +655,15 @@ export const Canvas = forwardRef<HTMLDivElement, CanvasProps>(function Canvas({ 
 					backgroundImage: `url(${background})`,
 					backgroundSize: "cover",
 					backgroundPosition: "center",
-					cursor: isDragging ? "grabbing" : "default",
+					cursor: isDragging ? "grabbing" : isResizing ? "nwse-resize" : "default",
 				}}>
 				{/* Render all garden elements */}
 				{elements.map((element) => {
 					// Get position either from our local state (for immediate updates) or from the element
 					const position = elementPositions.get(element.id) || element.position;
+					const scale = elementScales.get(element.id) || element.scale;
 					const baseSize = 100;
-					const size = baseSize * element.scale;
+					const size = baseSize * scale;
 
 					return (
 						<div
@@ -382,7 +673,7 @@ export const Canvas = forwardRef<HTMLDivElement, CanvasProps>(function Canvas({ 
 								transform: `translate(${position.x}px, ${position.y}px)`,
 								zIndex: element.id === selectedElementId ? 100 : element.zIndex || 1,
 								cursor: isDragging && draggedElement === element.id ? "grabbing" : "grab",
-								transition: isDragging && draggedElement === element.id ? "none" : "transform 0.1s ease-out",
+								transition: (isDragging && draggedElement === element.id) || (isResizing && draggedElement === element.id) ? "none" : "transform 0.1s ease-out",
 								touchAction: "none", // Disable browser touch actions for better touch support
 							}}>
 							{/* Element Image with outline */}
@@ -403,20 +694,33 @@ export const Canvas = forwardRef<HTMLDivElement, CanvasProps>(function Canvas({ 
 										}}
 									/>
 								)}
-								<div className="relative w-full h-full">
-									<Image
-										src={element.imagePath}
-										alt={element.name}
-										fill
-										style={{
-											objectFit: "contain",
-											userSelect: "none",
-											pointerEvents: "none", // Prevent image from capturing events
-										}}
-										draggable={false}
-										unoptimized
-									/>
-								</div>
+								<div className="relative w-full h-full">{renderElementSVG(element.type)}</div>
+
+								{/* Resize handles - only show for selected element */}
+								{element.id === selectedElementId && (
+									<>
+										{/* Corner resize handle */}
+										<div
+											className="resize-handle absolute bottom-0 right-0 w-6 h-6 bg-primary/20 rounded-br-md border-r border-b border-primary z-10 cursor-nwse-resize"
+											data-element-id={element.id}
+											data-direction="corner"
+										/>
+
+										{/* Right edge resize handle */}
+										<div
+											className="resize-handle absolute top-1/2 right-0 w-4 h-8 -translate-y-1/2 bg-primary/20 border-r border-primary z-10 cursor-ew-resize"
+											data-element-id={element.id}
+											data-direction="right"
+										/>
+
+										{/* Bottom edge resize handle */}
+										<div
+											className="resize-handle absolute bottom-0 left-1/2 h-4 w-8 -translate-x-1/2 bg-primary/20 border-b border-primary z-10 cursor-ns-resize"
+											data-element-id={element.id}
+											data-direction="bottom"
+										/>
+									</>
+								)}
 							</div>
 
 							{/* Controls - only show when selected */}
@@ -576,23 +880,6 @@ export const Canvas = forwardRef<HTMLDivElement, CanvasProps>(function Canvas({ 
 						</div>
 					</div>
 				)}
-			</div>
-
-			{/* Show outlines toggle button */}
-			<div className="mt-2 flex justify-end">
-				<button
-					type="button"
-					onMouseDown={(e) => {
-						e.stopPropagation();
-						e.preventDefault();
-						setShowOutlines(!showOutlines);
-					}}
-					className={`text-xs px-2 py-1 rounded flex items-center gap-1 ${
-						showOutlines ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground hover:bg-muted/80"
-					}`}>
-					<BorderIcon className="h-3 w-3" />
-					{showOutlines ? "Hide Outlines" : "Show Outlines"}
-				</button>
 			</div>
 		</div>
 	);

@@ -2,46 +2,45 @@
 
 import { ElementOption } from "@/lib/types";
 import { motion } from "motion/react";
-import Image from "next/image";
 import { useState } from "react";
 
-// Sample elements - these would ideally be loaded from a data source
+// Sample elements with SVG-based images
 const ELEMENT_OPTIONS: ElementOption[] = [
 	{
 		type: "rock",
 		name: "Smooth Rock",
-		imagePath: "/garden-elements/rock.png",
-		preview: "/garden-elements/rock-preview.png",
+		imagePath: "#rock", // We'll use SVG components instead
+		preview: "#rock-preview",
 	},
 	{
 		type: "bamboo",
 		name: "Bamboo",
-		imagePath: "/garden-elements/bamboo.png",
-		preview: "/garden-elements/bamboo-preview.png",
+		imagePath: "#bamboo",
+		preview: "#bamboo-preview",
 	},
 	{
 		type: "bonsai",
 		name: "Bonsai Tree",
-		imagePath: "/garden-elements/bonsai.png",
-		preview: "/garden-elements/bonsai-preview.png",
+		imagePath: "#bonsai",
+		preview: "#bonsai-preview",
 	},
 	{
 		type: "lantern",
 		name: "Stone Lantern",
-		imagePath: "/garden-elements/lantern.png",
-		preview: "/garden-elements/lantern-preview.png",
+		imagePath: "#lantern",
+		preview: "#lantern-preview",
 	},
 	{
 		type: "sand",
 		name: "Sand Patch",
-		imagePath: "/garden-elements/sand.png",
-		preview: "/garden-elements/sand-preview.png",
+		imagePath: "#sand",
+		preview: "#sand-preview",
 	},
 	{
 		type: "water",
 		name: "Water Feature",
-		imagePath: "/garden-elements/water.png",
-		preview: "/garden-elements/water-preview.png",
+		imagePath: "#water",
+		preview: "#water-preview",
 	},
 ];
 
@@ -72,10 +71,85 @@ export function ElementPanel({ onAddElement }: ElementPanelProps) {
 		}, 300);
 	};
 
-	return (
-		<div>
-			<h3 className="text-lg font-medium mb-3">Garden Elements</h3>
+	// Function to render the preview SVG for each element type
+	const renderElementPreview = (type: string) => {
+		switch (type) {
+			case "rock":
+				return (
+					<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
+						<ellipse cx="50" cy="60" rx="40" ry="30" fill="#8B8B8B" />
+						<ellipse cx="50" cy="60" rx="30" ry="20" fill="#A3A3A3" />
+						<ellipse cx="40" cy="50" rx="10" ry="8" fill="#CFCFCF" opacity="0.6" />
+					</svg>
+				);
+			case "bamboo":
+				return (
+					<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
+						<rect x="45" y="20" width="10" height="70" fill="#4D7C0F" rx="5" />
+						<rect x="45" y="20" width="10" height="5" fill="#3F6212" rx="2" />
+						<rect x="45" y="35" width="10" height="5" fill="#3F6212" rx="2" />
+						<rect x="45" y="50" width="10" height="5" fill="#3F6212" rx="2" />
+						<rect x="45" y="65" width="10" height="5" fill="#3F6212" rx="2" />
+						<path d="M55 25 C70 15, 75 10, 85 15" stroke="#65A30D" strokeWidth="2" fill="none" />
+						<path d="M55 40 C70 30, 75 25, 85 30" stroke="#65A30D" strokeWidth="2" fill="none" />
+						<path d="M55 55 C70 45, 75 40, 85 45" stroke="#65A30D" strokeWidth="2" fill="none" />
+						<path d="M45 25 C30 15, 25 10, 15 15" stroke="#65A30D" strokeWidth="2" fill="none" />
+						<path d="M45 55 C30 45, 25 40, 15 45" stroke="#65A30D" strokeWidth="2" fill="none" />
+					</svg>
+				);
+			case "bonsai":
+				return (
+					<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
+						<rect x="40" y="70" width="20" height="15" fill="#8B4513" rx="2" />
+						<rect x="45" y="40" width="10" height="30" fill="#A0522D" />
+						<path d="M50 15 C20 40, 30 20, 50 40" stroke="#A0522D" strokeWidth="5" fill="none" />
+						<path d="M50 15 C80 40, 70 20, 50 40" stroke="#A0522D" strokeWidth="5" fill="none" />
+						<circle cx="50" cy="25" r="20" fill="#228B22" />
+						<circle cx="30" cy="30" r="10" fill="#228B22" />
+						<circle cx="70" cy="30" r="10" fill="#228B22" />
+						<circle cx="40" cy="15" r="8" fill="#228B22" />
+						<circle cx="60" cy="15" r="8" fill="#228B22" />
+					</svg>
+				);
+			case "lantern":
+				return (
+					<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
+						<rect x="40" y="80" width="20" height="5" fill="#7F7F7F" />
+						<rect x="30" y="75" width="40" height="5" fill="#7F7F7F" />
+						<path d="M35 35 L65 35 L60 75 L40 75 Z" fill="#9F9F9F" />
+						<rect x="30" y="30" width="40" height="5" fill="#7F7F7F" />
+						<rect x="40" y="20" width="20" height="10" fill="#9F9F9F" />
+						<rect x="45" y="15" width="10" height="5" fill="#7F7F7F" />
+						<rect x="48" y="10" width="4" height="5" fill="#7F7F7F" />
+						<rect x="40" y="45" width="20" height="5" fill="#7F7F7F" opacity="0.5" />
+					</svg>
+				);
+			case "sand":
+				return (
+					<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
+						<ellipse cx="50" cy="50" rx="40" ry="25" fill="#E0D2B4" />
+						<path d="M20 50 Q35 40, 50 50 Q65 60, 80 50" stroke="#D1C4A8" strokeWidth="2" fill="none" />
+						<path d="M20 55 Q35 45, 50 55 Q65 65, 80 55" stroke="#D1C4A8" strokeWidth="2" fill="none" />
+						<path d="M20 45 Q35 35, 50 45 Q65 55, 80 45" stroke="#D1C4A8" strokeWidth="2" fill="none" />
+					</svg>
+				);
+			case "water":
+				return (
+					<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
+						<ellipse cx="50" cy="50" rx="35" ry="25" fill="#A5C7D3" />
+						<ellipse cx="50" cy="50" rx="30" ry="20" fill="#B9D9E8" />
+						<ellipse cx="40" cy="45" rx="5" ry="3" fill="#FFFFFF" opacity="0.6" />
+						<ellipse cx="55" cy="60" rx="8" ry="5" fill="#8DB4C2" opacity="0.5" />
+						<path d="M30 50 Q40 45, 50 50 Q60 55, 70 50" stroke="#FFFFFF" strokeWidth="1" fill="none" opacity="0.5" />
+					</svg>
+				);
+			default:
+				return null;
+		}
+	};
 
+	return (
+		<div className="space-y-4">
 			<div className="grid grid-cols-2 gap-2">
 				{displayedElements.map((element) => (
 					<motion.div
@@ -88,16 +162,7 @@ export function ElementPanel({ onAddElement }: ElementPanelProps) {
 						onClick={() => !addInProgress && handleElementClick(element)}
 						transition={{ duration: 0.2 }}>
 						<div className="relative w-16 h-16 mb-1">
-							<Image
-								src={element.preview}
-								alt={element.name}
-								fill
-								style={{
-									objectFit: "contain",
-									transform: addedElement === element.type ? "scale(1.1)" : "scale(1)",
-									transition: "transform 0.2s ease-out",
-								}}
-							/>
+							{renderElementPreview(element.type)}
 
 							{/* Enhanced animation for element being added */}
 							{addedElement === element.type && (
@@ -158,8 +223,8 @@ export function ElementPanel({ onAddElement }: ElementPanelProps) {
 						<path d="M12 8h.01" />
 					</svg>
 					<div>
-						<p className="mb-1.5">Click any element to add it to your zen garden.</p>
-						<p>Once added, you can drag to position elements naturally within the canvas.</p>
+						<p className="mb-1">Click any element to add it to your zen garden.</p>
+						<p>Drag to position and use handles to resize elements.</p>
 					</div>
 				</div>
 			</div>
