@@ -1,0 +1,83 @@
+description: |
+  Zen Garden is a personal portfolio website built to showcase projects, animations, and design aesthetics. The project emphasizes:
+  - **Next.js 15** (App Router, Server Components, Optimized Performance)
+  - **Tailwind CSS v4** (Utility-first styling, Dark Mode support, Responsive Design)
+  - **ShadCN** (Elegant UI Components, Accessible Design)
+  - **Motion** (Smooth Animations, Interactive Effects, Performance Optimization)
+
+========================
+TECH STACK (Strict Enforcement)
+========================
+required_technologies:
+  frontend:
+    - Next.js 15
+    - Tailwind CSS v4
+    - ShadCN
+    - Motion (used to be Framer Motion)
+  deployment:
+    - Coolify (public GitHub repository)
+
+========================
+File & Folder Structure
+========================
+folder_structure:
+  /app:
+    - /page.tsx: Landing/home page of the application
+  /components: Reusable UI components (buttons, modals, etc.)
+  /layouts: Page layout components
+  /lib: Utility functions & hooks
+  /public: Static assets (images, fonts, etc.)
+
+========================
+Frontend Performance & UX Guidelines
+========================
+performance_guidelines:
+  - Ensure **Fast TTFB (<100ms)** via optimized Next.js server rendering
+  - Use **React.memo & lazy loading** for performance-critical components
+  - Optimize animations with **Framer Motion’s layoutId & stagger effects**
+  - Implement **debounced inputs (300ms)** for form fields & search
+  - Ensure **immediate UI feedback** on all interactive elements
+
+========================
+Error Handling & Edge Case Management
+========================
+error_handling:
+  - Use **try/catch with graceful fallbacks** in async operations
+  - Implement **error boundaries** in Next.js for page-level error handling
+  - Ensure all API calls handle **loading, empty, and error states explicitly**
+  - Validate user inputs with **client-side and server-side checks**
+
+========================
+Security & Compliance
+========================
+security_standards:
+  - Secure environment variables via **Next.js Environment Config**
+  - Sanitize user-generated content to prevent **XSS attacks**
+  - Use **CSP headers & security middleware** for protection
+
+========================
+Accessibility Standards
+========================
+accessibility:
+  - Ensure **WCAG 2.1 AA compliance**
+  - Use **semantic HTML & ARIA roles** in ShadCN components
+  - Implement **keyboard navigation & screen reader support**
+  - Provide **motion-reduction options** for animations
+
+========================
+Documentation & Maintenance
+========================
+documentation:
+  - Use **JSDoc for components & utilities**
+  - Maintain **README with project setup & development guidelines**
+  - Update **CHANGELOG with each release**
+  - Conduct **monthly audits for unused components & assets**
+
+========================
+AI Tool Usage & Context Injection
+========================
+ai_usage:
+  - AI should **gather full context** before making changes (use `@file` & `@folder` references)
+  - Always **explain tool usage before execution**
+  - Limit **repetitive fix loops to 3 iterations max**
+  - AI must flag missing **error handling & accessibility gaps explicitly**
