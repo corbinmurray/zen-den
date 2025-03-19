@@ -16,9 +16,9 @@ function Feature({ icon, title, description, delay }: FeatureProps) {
 			viewport={{ once: true }}
 			transition={{ duration: 0.6, delay: delay, easing: [0.22, 0.03, 0.26, 1] }}
 			className="flex flex-col items-start">
-			<div className="rounded-lg bg-primary/20 p-3 ring-1 ring-primary/30">{icon}</div>
+			<div className="rounded-lg bg-primary/10 p-3 ring-1 ring-primary/20">{icon}</div>
 			<h3 className="mt-4 font-semibold text-foreground">{title}</h3>
-			<p className="mt-2 text-sm text-muted-foreground">{description}</p>
+			<p className="mt-2 text-sm text-muted">{description}</p>
 		</motion.div>
 	);
 }
@@ -61,7 +61,7 @@ export function Features() {
 					viewport={{ once: true }}
 					transition={{ duration: 0.6, easing: [0.22, 0.03, 0.26, 1] }}>
 					<h2 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">Create your own digital calm</h2>
-					<p className="mt-6 text-lg leading-8 text-muted-foreground">
+					<p className="mt-6 text-lg leading-8 text-muted">
 						Zen Den provides a peaceful escape into a world of tranquility where you can create, cultivate, and find balance in your digital garden.
 					</p>
 				</motion.div>

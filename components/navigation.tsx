@@ -34,7 +34,7 @@ export function Navigation() {
 						<Link
 							key={route.href}
 							href={route.href}
-							className={`text-sm transition-colors hover:text-primary ${pathname === route.href ? "text-foreground font-medium" : "text-muted-foreground"}`}>
+							className={`text-sm transition-colors hover:text-primary ${pathname === route.href ? "text-foreground font-medium" : "text-muted"}`}>
 							{route.label}
 						</Link>
 					))}
@@ -61,9 +61,7 @@ export function Navigation() {
 									key={route.href}
 									href={route.href}
 									onClick={() => setIsOpen(false)}
-									className={`text-sm transition-colors hover:text-primary ${
-										pathname === route.href ? "text-foreground font-medium" : "text-muted-foreground"
-									}`}>
+									className={`text-sm transition-colors hover:text-primary ${pathname === route.href ? "text-foreground font-medium" : "text-muted"}`}>
 									{route.label}
 								</Link>
 							))}

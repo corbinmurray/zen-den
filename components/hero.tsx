@@ -21,7 +21,7 @@ export function Hero() {
 								whileInView={{ opacity: 1, y: 0 }}
 								viewport={{ once: true }}
 								transition={{ duration: 0.8, delay: 0.2, easing: [0.22, 0.03, 0.26, 1] }}
-								className="mt-6 text-lg leading-8 text-muted-foreground">
+								className="mt-6 text-lg leading-8 text-muted">
 								Create your own tranquil digital space where you can arrange elements like stones, plants, and water features. Experience the calm of tending to
 								your personal zen garden, wherever you are.
 							</motion.p>
