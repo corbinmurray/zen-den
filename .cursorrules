@@ -2,7 +2,7 @@ description: |
   Zen Garden is a personal portfolio website built to showcase projects, animations, and design aesthetics. The project emphasizes:
   - **Next.js 15** (App Router, Server Components, Optimized Performance)
   - **Tailwind CSS v4** (Utility-first styling, Dark Mode support, Responsive Design)
-  - **ShadCN** (Elegant UI Components, Accessible Design)
+  - **shadcn** (Elegant UI Components, Accessible Design)
   - **Motion** (Smooth Animations, Interactive Effects, Performance Optimization)
 
 ========================
@@ -12,7 +12,7 @@ required_technologies:
   frontend:
     - Next.js 15
     - Tailwind CSS v4
-    - ShadCN
+    - shadcn (npx shadcn@latest add {component-name})
     - Motion ("npm install motion" [used to be Framer Motion])
   deployment:
     - Coolify (public GitHub repository)
