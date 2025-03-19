@@ -204,30 +204,6 @@ export function ElementPanel({ onAddElement }: ElementPanelProps) {
 					</motion.div>
 				))}
 			</div>
-
-			<div className="mt-4 p-3 bg-card/50 border border-border rounded-md">
-				<div className="flex items-start gap-2 text-xs text-muted">
-					<svg
-						xmlns="http://www.w3.org/2000/svg"
-						width="14"
-						height="14"
-						viewBox="0 0 24 24"
-						fill="none"
-						stroke="currentColor"
-						strokeWidth="2"
-						strokeLinecap="round"
-						strokeLinejoin="round"
-						className="mt-0.5 shrink-0">
-						<circle cx="12" cy="12" r="10" />
-						<path d="M12 16v-4" />
-						<path d="M12 8h.01" />
-					</svg>
-					<div>
-						<p className="mb-1">Click any element to add it to your zen garden.</p>
-						<p>Drag to position and use handles to resize elements.</p>
-					</div>
-				</div>
-			</div>
 		</div>
 	);
 }
