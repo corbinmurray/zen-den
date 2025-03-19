@@ -1,36 +1,78 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Zen Den
+
+A digital zen garden where users can design their own tranquil, personalized space.
+
+## Features
+
+- **Drag-and-Drop Elements**: Place zen-inspired items like rocks, bamboo, bonsai trees, and more onto your garden canvas
+- **Multiple Backgrounds**: Choose from serene backgrounds to set the mood for your garden
+- **Ambient Sounds**: Optional soundscapes to enhance the zen experience
+- **Save & Share**: Save your creations locally or share them with others
+
+## Tech Stack
+
+- **Next.js 15**: App Router, Server Components, Optimized Performance
+- **Tailwind CSS v4**: Utility-first styling, Dark Mode support
+- **shadcn**: Elegant UI Components, Accessible Design
+- **Motion**: Smooth Animations and Interactive Effects
 
 ## Getting Started
 
-First, run the development server:
-
 ```bash
+# Clone the repository
+git clone https://github.com/your-username/zen-den.git
+cd zen-den
+
+# Install dependencies
+npm install
+
+# Start the development server
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Required Assets
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Before running the application, you'll need to add the following assets:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### Garden Elements
 
-## Learn More
+Create a folder `/public/garden-elements/` and add the following images:
 
-To learn more about Next.js, take a look at the following resources:
+- rock.png
+- rock-preview.png
+- bamboo.png
+- bamboo-preview.png
+- bonsai.png
+- bonsai-preview.png
+- lantern.png
+- lantern-preview.png
+- sand.png
+- sand-preview.png
+- water.png
+- water-preview.png
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### Backgrounds
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Create a folder `/public/backgrounds/` and add the following images:
 
-## Deploy on Vercel
+- zen-default.jpg
+- zen-default-thumb.jpg
+- mountain.jpg
+- mountain-thumb.jpg
+- wood.jpg
+- wood-thumb.jpg
+- gradient.jpg
+- gradient-thumb.jpg
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### Sounds
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Create a folder `/public/sounds/` and add the following audio files:
+
+- water-trickling.mp3
+- wind-chimes.mp3
+- ambient-zen.mp3
+- birds.mp3
+
+## License
+
+MIT

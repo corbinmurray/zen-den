@@ -1,0 +1,12 @@
+The following background images are needed in this directory:
+
+1. zen-default.jpg - A calming default zen garden background (1920x1080px)
+2. zen-default-thumb.jpg - A thumbnail version of the default background (300x200px)
+3. mountain.jpg - A misty mountain background (1920x1080px)
+4. mountain-thumb.jpg - A thumbnail of the mountain background (300x200px)
+5. wood.jpg - A wooden texture background (1920x1080px)
+6. wood-thumb.jpg - A thumbnail of the wooden background (300x200px)
+7. gradient.jpg - A soft gradient background (1920x1080px)
+8. gradient-thumb.jpg - A thumbnail of the gradient background (300x200px)
+
+These files are required for the background selector to function properly. 
