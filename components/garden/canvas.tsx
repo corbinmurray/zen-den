@@ -1,6 +1,7 @@
 "use client";
 
-import { GardenElement } from "@/lib/types";
+import { AtmosphereSettings, GardenElement } from "@/lib/types";
+import * as motion from "motion/react-client";
 import { forwardRef, useEffect, useRef, useState } from "react";
 
 interface CanvasProps {
@@ -9,10 +10,23 @@ interface CanvasProps {
 	onElementUpdate: (element: GardenElement) => void;
 	onElementRemove: (id: string) => void;
 	showOutlines?: boolean;
+	atmosphereSettings?: AtmosphereSettings;
 }
 
 export const Canvas = forwardRef<HTMLDivElement, CanvasProps>(function Canvas(
-	{ elements, background, onElementUpdate, onElementRemove, showOutlines = false },
+	{
+		elements,
+		background,
+		onElementUpdate,
+		onElementRemove,
+		showOutlines = false,
+		atmosphereSettings = {
+			timeOfDay: "day",
+			weather: "clear",
+			effects: [],
+			effectsIntensity: 50,
+		},
+	},
 	ref
 ) {
 	const [selectedElementId, setSelectedElementId] = useState<string | null>(null);
@@ -51,15 +65,14 @@ export const Canvas = forwardRef<HTMLDivElement, CanvasProps>(function Canvas(
 			}
 		};
 
+		// Initial update
 		updateBounds();
 
+		// Create observer
 		const resizeObserver = new ResizeObserver(updateBounds);
 		resizeObserver.observe(canvasRef.current);
 
 		return () => {
-			if (canvasRef.current) {
-				resizeObserver.unobserve(canvasRef.current);
-			}
 			resizeObserver.disconnect();
 		};
 	}, [canvasBounds.width, canvasBounds.height]);
@@ -486,18 +499,7 @@ export const Canvas = forwardRef<HTMLDivElement, CanvasProps>(function Canvas(
 			window.removeEventListener("touchmove", handleTouchMove);
 			window.removeEventListener("touchend", handleTouchEnd);
 		};
-	}, [
-		canvasBounds.height,
-		canvasBounds.width,
-		draggedElement,
-		elementPositions,
-		elementScales,
-		elements,
-		isDragging,
-		isResizing,
-		onElementUpdate,
-		resizeDirection,
-	]);
+	}, [canvasBounds.height, canvasBounds.width, draggedElement, elementPositions, elementScales, elements, isDragging, isResizing, onElementUpdate, resizeDirection]);
 
 	// Handle rotate and scale functions
 	const handleRotate = (id: string, change: number, e?: React.MouseEvent) => {
@@ -646,6 +648,226 @@ export const Canvas = forwardRef<HTMLDivElement, CanvasProps>(function Canvas(
 		}
 	};
 
+	// Get the appropriate overlay style based on time of day
+	const getTimeOfDayOverlay = () => {
+		switch (atmosphereSettings.timeOfDay) {
+			case "day":
+				return "brightness(1)";
+			case "sunset":
+				return "brightness(0.9) sepia(0.3)";
+			case "night":
+				return "brightness(0.6) saturate(0.8)";
+			default:
+				return "brightness(1)";
+		}
+	};
+
+	// Get the appropriate weather effect class
+	const getWeatherEffect = () => {
+		if (atmosphereSettings.weather === "clear") return null;
+
+		return (
+			<div className="absolute inset-0 pointer-events-none z-10">
+				{atmosphereSettings.weather === "rainy" && (
+					<div className="absolute inset-0 bg-blue-900/10 backdrop-blur-[1px]">
+						{Array.from({ length: 20 }).map((_, i) => (
+							<motion.div
+								key={`rain-${i}`}
+								className="absolute w-[1px] h-[10px] bg-blue-200/60"
+								initial={{
+									x: `${Math.random() * 100}%`,
+									y: -10,
+									opacity: 0.7,
+								}}
+								animate={{
+									y: `${100 + Math.random() * 10}%`,
+									opacity: 0.3,
+								}}
+								transition={{
+									duration: 0.8 + Math.random() * 0.6,
+									repeat: Infinity,
+									delay: Math.random() * 2,
+								}}
+							/>
+						))}
+					</div>
+				)}
+
+				{atmosphereSettings.weather === "snowy" && (
+					<div className="absolute inset-0 bg-blue-100/5 backdrop-blur-[1px]">
+						{Array.from({ length: 15 }).map((_, i) => (
+							<motion.div
+								key={`snow-${i}`}
+								className="absolute w-[4px] h-[4px] rounded-full bg-white/80"
+								initial={{
+									x: `${Math.random() * 100}%`,
+									y: -10,
+									opacity: 0.9,
+								}}
+								animate={{
+									y: `${100 + Math.random() * 10}%`,
+									x: `calc(${Math.random() * 100}% + ${Math.sin(Math.random() * Math.PI * 2) * 50}px)`,
+									opacity: 0.7,
+								}}
+								transition={{
+									duration: 6 + Math.random() * 4,
+									repeat: Infinity,
+									delay: Math.random() * 5,
+									ease: "linear",
+								}}
+							/>
+						))}
+					</div>
+				)}
+
+				{atmosphereSettings.weather === "cloudy" && (
+					<div className="absolute inset-0 bg-gray-400/10 backdrop-blur-[1px]">
+						{Array.from({ length: 3 }).map((_, i) => (
+							<motion.div
+								key={`cloud-${i}`}
+								className="absolute bg-white/20 rounded-full w-[100px] h-[60px] blur-md"
+								initial={{
+									x: -100,
+									y: 50 + i * 30,
+									opacity: 0.2 + i * 0.1,
+								}}
+								animate={{
+									x: `${100 + Math.random() * 10}%`,
+								}}
+								transition={{
+									duration: 90 - i * 10,
+									repeat: Infinity,
+									repeatType: "loop",
+									delay: i * 30,
+									ease: "linear",
+								}}
+							/>
+						))}
+					</div>
+				)}
+			</div>
+		);
+	};
+
+	// Get seasonal effects
+	const getSeasonalEffects = () => {
+		if (!atmosphereSettings.effects.length) return null;
+
+		const intensity = atmosphereSettings.effectsIntensity / 100; // Convert to 0-1 scale
+		const particleCount = Math.floor(15 * intensity);
+
+		return (
+			<div className="absolute inset-0 pointer-events-none z-20">
+				{atmosphereSettings.effects.includes("leaves") && (
+					<div className="absolute inset-0">
+						{Array.from({ length: particleCount }).map((_, i) => (
+							<motion.div
+								key={`leaf-${i}`}
+								className="absolute"
+								initial={{
+									x: `${Math.random() * 100}%`,
+									y: -20,
+									rotate: Math.random() * 360,
+								}}
+								animate={{
+									y: `${100 + Math.random() * 10}%`,
+									x: `calc(${Math.random() * 100}% + ${Math.sin(Math.random() * Math.PI * 2) * 100}px)`,
+									rotate: Math.random() * 360 * (Math.random() > 0.5 ? 1 : -1),
+								}}
+								transition={{
+									duration: 10 + Math.random() * 5,
+									repeat: Infinity,
+									delay: Math.random() * 10,
+									ease: "linear",
+								}}>
+								<svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+									<path d="M12 2C6.5 2 2 6.5 2 12C2 17.5 6.5 22 12 22C17.5 22 22 17.5 22 12C22 6.5 17.5 2 12 2Z" fill="#DC2626" fillOpacity="0.5" />
+									<path d="M12 5C12 5 9 9 9 12C9 15 12 19 12 19C12 19 15 15 15 12C15 9 12 5 12 5Z" fill="#991B1B" fillOpacity="0.8" />
+								</svg>
+							</motion.div>
+						))}
+					</div>
+				)}
+
+				{atmosphereSettings.effects.includes("blossoms") && (
+					<div className="absolute inset-0">
+						{Array.from({ length: particleCount }).map((_, i) => (
+							<motion.div
+								key={`blossom-${i}`}
+								className="absolute"
+								initial={{
+									x: `${Math.random() * 100}%`,
+									y: -20,
+									rotate: Math.random() * 360,
+								}}
+								animate={{
+									y: `${100 + Math.random() * 10}%`,
+									x: `calc(${Math.random() * 100}% + ${Math.sin(Math.random() * Math.PI * 2) * 70}px)`,
+									rotate: Math.random() * 360,
+								}}
+								transition={{
+									duration: 8 + Math.random() * 6,
+									repeat: Infinity,
+									delay: Math.random() * 5,
+									ease: "linear",
+								}}>
+								<svg width="10" height="10" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+									<circle cx="12" cy="12" r="4" fill="#FDF2F8" />
+									<circle cx="12" cy="12" r="2" fill="#FBCFE8" />
+								</svg>
+							</motion.div>
+						))}
+					</div>
+				)}
+
+				{atmosphereSettings.effects.includes("butterflies") && (
+					<div className="absolute inset-0">
+						{Array.from({ length: Math.ceil(particleCount / 2) }).map((_, i) => (
+							<motion.div
+								key={`butterfly-${i}`}
+								className="absolute"
+								initial={{
+									x: `${Math.random() * 100}%`,
+									y: `${Math.random() * 100}%`,
+									scale: 0.6 + Math.random() * 0.4,
+								}}
+								animate={{
+									x: [`${Math.random() * 90}%`, `${Math.random() * 90}%`, `${Math.random() * 90}%`, `${Math.random() * 90}%`],
+									y: [`${Math.random() * 90}%`, `${Math.random() * 90}%`, `${Math.random() * 90}%`, `${Math.random() * 90}%`],
+									rotate: Math.random() * 40 - 20,
+								}}
+								transition={{
+									duration: 20,
+									times: [0, 0.3, 0.6, 1],
+									repeat: Infinity,
+									delay: Math.random() * 2,
+								}}>
+								<svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+									<motion.path
+										d="M12 5C8 5 6 8 6 12C6 16 8 19 12 19C16 19 18 16 18 12C18 8 16 5 12 5Z"
+										fill="#FBBF24"
+										animate={{
+											d: [
+												"M12 5C8 5 6 8 6 12C6 16 8 19 12 19C16 19 18 16 18 12C18 8 16 5 12 5Z",
+												"M12 5C8 7 6 8 6 12C6 16 8 17 12 19C16 17 18 16 18 12C18 8 16 7 12 5Z",
+												"M12 5C8 5 6 8 6 12C6 16 8 19 12 19C16 19 18 16 18 12C18 8 16 5 12 5Z",
+											],
+										}}
+										transition={{
+											duration: 1,
+											repeat: Infinity,
+											repeatType: "mirror",
+										}}
+									/>
+								</svg>
+							</motion.div>
+						))}
+					</div>
+				)}
+			</div>
+		);
+	};
+
 	return (
 		<div>
 			<div
@@ -656,7 +878,14 @@ export const Canvas = forwardRef<HTMLDivElement, CanvasProps>(function Canvas(
 					backgroundSize: "cover",
 					backgroundPosition: "center",
 					cursor: isDragging ? "grabbing" : isResizing ? "nwse-resize" : "default",
+					filter: getTimeOfDayOverlay(),
 				}}>
+				{/* Weather effects */}
+				{getWeatherEffect()}
+
+				{/* Seasonal effects */}
+				{getSeasonalEffects()}
+
 				{/* Render all garden elements */}
 				{elements.map((element) => {
 					// Get position either from our local state (for immediate updates) or from the element

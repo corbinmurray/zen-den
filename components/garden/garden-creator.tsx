@@ -1,6 +1,6 @@
 "use client";
 
-import { GardenElement } from "@/lib/types";
+import { AtmosphereSettings, ElementOption, GardenElement } from "@/lib/types";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Canvas } from "./canvas";
 import { TabbedPanel } from "./tabbed-panel";
@@ -12,6 +12,12 @@ export function GardenCreator() {
 	const [currentSound, setCurrentSound] = useState<string | null>("/sounds/ambient-zen.mp3");
 	const [canvasSize, setCanvasSize] = useState({ width: 0, height: 0 });
 	const [showOutlines, setShowOutlines] = useState(false);
+	const [atmosphereSettings, setAtmosphereSettings] = useState<AtmosphereSettings>({
+		timeOfDay: "day",
+		weather: "clear",
+		effects: [],
+		effectsIntensity: 50,
+	});
 
 	const canvasRef = useRef<HTMLDivElement>(null);
 
@@ -84,6 +90,7 @@ export function GardenCreator() {
 			elements,
 			background,
 			timestamp: new Date().toISOString(),
+			atmosphereSettings,
 		};
 
 		try {
@@ -105,6 +112,7 @@ export function GardenCreator() {
 		const gardenData = JSON.stringify({
 			elements,
 			background,
+			atmosphereSettings,
 		});
 
 		navigator.clipboard
@@ -140,6 +148,11 @@ export function GardenCreator() {
 		setShowOutlines(show);
 	};
 
+	// Update atmosphere settings
+	const handleAtmosphereChange = (settings: AtmosphereSettings) => {
+		setAtmosphereSettings(settings);
+	};
+
 	return (
 		<div className="flex flex-col space-y-4">
 			<div className="flex flex-col md:flex-row gap-4">
@@ -155,6 +168,8 @@ export function GardenCreator() {
 						onSoundChange={handleSoundChange}
 						showOutlines={showOutlines}
 						onShowOutlinesChange={handleShowOutlinesChange}
+						atmosphereSettings={atmosphereSettings}
+						onAtmosphereChange={handleAtmosphereChange}
 						onSave={handleSave}
 						onShare={handleShare}
 						onClear={handleClear}
@@ -170,6 +185,7 @@ export function GardenCreator() {
 						onElementUpdate={handleElementUpdate}
 						onElementRemove={handleRemoveElement}
 						showOutlines={showOutlines}
+						atmosphereSettings={atmosphereSettings}
 					/>
 				</div>
 			</div>

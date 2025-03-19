@@ -1,0 +1,28 @@
+Garden Elements:
+
+Rocks:
+- smooth-rock.svg
+- rough-rock.svg
+- flat-rock.svg
+- tall-rock.svg
+
+Plants:
+- bamboo.svg
+- bonsai.svg
+- pine.svg
+- cherry-tree.svg
+- plumeria.svg
+- lotus.svg
+
+Decorations:
+- stone-lantern.svg
+- wooden-bridge.svg
+- koi-fish.svg
+- zen-rake.svg
+- incense.svg
+
+Features:
+- pond.svg
+- sand-pattern.svg
+- moss-patch.svg
+- waterfall.svg 

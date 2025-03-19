@@ -18,6 +18,7 @@ export interface GardenData {
 	elements: GardenElement[];
 	background: string;
 	timestamp: string;
+	atmosphereSettings?: AtmosphereSettings;
 }
 
 export interface ElementOption {
@@ -25,6 +26,7 @@ export interface ElementOption {
 	name: string;
 	imagePath: string;
 	preview: string;
+	category?: string;
 }
 
 export interface BackgroundOption {
@@ -38,4 +40,11 @@ export interface SoundOption {
 	id: string;
 	name: string;
 	path: string;
+}
+
+export interface AtmosphereSettings {
+	timeOfDay: "day" | "sunset" | "night";
+	weather: "clear" | "cloudy" | "rainy" | "snowy";
+	effects: ("leaves" | "blossoms" | "butterflies")[];
+	effectsIntensity: number;
 }

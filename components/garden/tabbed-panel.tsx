@@ -3,11 +3,12 @@
 import { ElementOption } from "@/lib/types";
 import { useState } from "react";
 import { ActionButtons } from "./action-buttons";
+import { AtmosphereSettings, type AtmosphereSettings as AtmosphereSettingsType } from "./atmosphere-settings";
 import { ElementPanel } from "./element-panel";
 import { GardenSettings } from "./garden-settings";
 
 // Tab identifiers
-type TabId = "elements" | "settings" | "sounds";
+type TabId = "elements" | "settings" | "atmosphere" | "sounds";
 
 interface TabbedPanelProps {
 	onAddElement: (element: ElementOption) => void;
@@ -19,6 +20,8 @@ interface TabbedPanelProps {
 	onSoundChange: (soundPath: string) => void;
 	showOutlines: boolean;
 	onShowOutlinesChange: (show: boolean) => void;
+	atmosphereSettings?: AtmosphereSettingsType;
+	onAtmosphereChange?: (settings: AtmosphereSettingsType) => void;
 	onSave: () => void;
 	onShare: () => void;
 	onClear: () => void;
@@ -34,6 +37,13 @@ export function TabbedPanel({
 	onSoundChange,
 	showOutlines,
 	onShowOutlinesChange,
+	atmosphereSettings = {
+		timeOfDay: "day",
+		weather: "clear",
+		effects: [],
+		effectsIntensity: 50,
+	},
+	onAtmosphereChange = () => {},
 	onSave,
 	onShare,
 	onClear,
@@ -43,7 +53,7 @@ export function TabbedPanel({
 	return (
 		<div className="flex flex-col h-full overflow-hidden bg-card rounded-lg border border-border">
 			{/* Tab Navigation */}
-			<div className="flex border-b border-border">
+			<div className="flex border-b border-border overflow-x-auto">
 				<TabButton id="elements" active={activeTab === "elements"} onClick={() => setActiveTab("elements")}>
 					<ElementsIcon className="h-4 w-4 mr-2" />
 					Elements
@@ -52,6 +62,11 @@ export function TabbedPanel({
 				<TabButton id="settings" active={activeTab === "settings"} onClick={() => setActiveTab("settings")}>
 					<SettingsIcon className="h-4 w-4 mr-2" />
 					Settings
+				</TabButton>
+
+				<TabButton id="atmosphere" active={activeTab === "atmosphere"} onClick={() => setActiveTab("atmosphere")}>
+					<AtmosphereIcon className="h-4 w-4 mr-2" />
+					Atmosphere
 				</TabButton>
 
 				<TabButton id="sounds" active={activeTab === "sounds"} onClick={() => setActiveTab("sounds")}>
@@ -76,6 +91,8 @@ export function TabbedPanel({
 						onShowOutlinesChange={onShowOutlinesChange}
 					/>
 				)}
+
+				{activeTab === "atmosphere" && <AtmosphereSettings settings={atmosphereSettings} onSettingsChange={onAtmosphereChange} />}
 
 				{activeTab === "sounds" && (
 					<div className="space-y-4">
@@ -195,21 +212,29 @@ interface SoundOptionProps {
 	onClick: () => void;
 }
 
-function SoundOption({ id, name, selected, onClick }: SoundOptionProps) {
+function SoundOption({ id, name, path, selected, onClick }: SoundOptionProps) {
 	return (
 		<div
-			className={`p-3 rounded-md border transition-colors cursor-pointer flex items-center gap-3 ${
-				selected ? "bg-primary/10 border-primary" : "border-border hover:border-muted"
+			className={`flex items-center p-2 rounded-md cursor-pointer ${
+				selected ? "bg-primary/10 border border-primary" : "hover:bg-secondary border border-border"
 			}`}
 			onClick={onClick}>
-			<div className={`shrink-0 h-4 w-4 rounded-full border ${selected ? "border-primary bg-primary" : "border-muted"}`}>
-				{selected && (
-					<div className="h-full w-full flex items-center justify-center">
-						<div className="h-1 w-1 rounded-full bg-white"></div>
-					</div>
-				)}
+			<div className="mr-3">
+				<div className={`w-4 h-4 rounded-full ${selected ? "bg-primary" : "border border-muted"}`}>
+					{selected && (
+						<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white" className="w-4 h-4">
+							<path
+								fillRule="evenodd"
+								d="M19.916 4.626a.75.75 0 01.208 1.04l-9 13.5a.75.75 0 01-1.154.114l-6-6a.75.75 0 011.06-1.06l5.353 5.353 8.493-12.739a.75.75 0 011.04-.208z"
+								clipRule="evenodd"
+							/>
+						</svg>
+					)}
+				</div>
 			</div>
-			<span className="text-sm">{name}</span>
+			<div className="flex-1">
+				<div className="text-sm font-medium">{name}</div>
+			</div>
 		</div>
 	);
 }
@@ -255,6 +280,30 @@ function SettingsIcon(props: React.SVGProps<SVGSVGElement>) {
 	);
 }
 
+function AtmosphereIcon(props: React.SVGProps<SVGSVGElement>) {
+	return (
+		<svg
+			xmlns="http://www.w3.org/2000/svg"
+			width="24"
+			height="24"
+			viewBox="0 0 24 24"
+			fill="none"
+			stroke="currentColor"
+			strokeWidth="2"
+			strokeLinecap="round"
+			strokeLinejoin="round"
+			{...props}>
+			<path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z" />
+			<path d="M22 10v1" />
+			<path d="M2 10v1" />
+			<path d="M12 2v1" />
+			<path d="M12 21v1" />
+			<path d="m4.93 4.93-.7.7" />
+			<path d="m19.07 4.93.7.7" />
+		</svg>
+	);
+}
+
 function SoundIcon(props: React.SVGProps<SVGSVGElement>) {
 	return (
 		<svg
@@ -268,9 +317,12 @@ function SoundIcon(props: React.SVGProps<SVGSVGElement>) {
 			strokeLinecap="round"
 			strokeLinejoin="round"
 			{...props}>
-			<path d="M8.5 5.5V18M15.5 5.5V18" />
-			<path d="M2 10h20" />
-			<path d="M2 14h20" />
+			<path d="M2 10v3" />
+			<path d="M6 6v11" />
+			<path d="M10 3v18" />
+			<path d="M14 8v7" />
+			<path d="M18 5v13" />
+			<path d="M22 10v3" />
 		</svg>
 	);
 }
