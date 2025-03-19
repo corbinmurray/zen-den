@@ -13,7 +13,7 @@ required_technologies:
     - Next.js 15
     - Tailwind CSS v4
     - ShadCN
-    - Motion (used to be Framer Motion)
+    - Motion ("npm install motion" [used to be Framer Motion])
   deployment:
     - Coolify (public GitHub repository)
 
@@ -24,7 +24,7 @@ folder_structure:
   /app:
     - /page.tsx: Landing/home page of the application
   /components: Reusable UI components (buttons, modals, etc.)
-  /layouts: Page layout components
+    - /ui: Specifically for shadcn components. All other components we create will go into /components/
   /lib: Utility functions & hooks
   /public: Static assets (images, fonts, etc.)
 
