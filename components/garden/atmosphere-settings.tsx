@@ -1,13 +1,10 @@
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Slider } from "@/components/ui/slider";
 import { Cloud, CloudRain, CloudSnow, Flower, Leaf, Moon, Sun, Sunset } from "lucide-react";
 
 export interface AtmosphereSettings {
 	timeOfDay: "day" | "sunset" | "night";
 	weather: "clear" | "cloudy" | "rainy" | "snowy";
-	effects: ("leaves" | "blossoms" | "butterflies")[];
-	effectsIntensity: number;
 }
 
 interface AtmosphereSettingsProps {
@@ -18,12 +15,6 @@ interface AtmosphereSettingsProps {
 export function AtmosphereSettings({ settings, onSettingsChange }: AtmosphereSettingsProps) {
 	const updateSettings = (updatedValues: Partial<AtmosphereSettings>) => {
 		onSettingsChange({ ...settings, ...updatedValues });
-	};
-
-	const toggleEffect = (effect: "leaves" | "blossoms" | "butterflies") => {
-		const newEffects = settings.effects.includes(effect) ? settings.effects.filter((e) => e !== effect) : [...settings.effects, effect];
-
-		updateSettings({ effects: newEffects });
 	};
 
 	return (
@@ -115,51 +106,6 @@ export function AtmosphereSettings({ settings, onSettingsChange }: AtmosphereSet
 					</div>
 				</RadioGroup>
 			</div>
-
-			{/* Seasonal Effects */}
-			<div className="space-y-3">
-				<h4 className="text-sm font-medium">Effects</h4>
-				<div className="flex justify-between space-x-2">
-					<div
-						onClick={() => toggleEffect("leaves")}
-						className={`flex flex-1 flex-col items-center justify-between rounded-md border-2 ${
-							settings.effects.includes("leaves") ? "border-primary" : "border-muted"
-						} bg-background p-2 hover:bg-secondary hover:text-accent-foreground cursor-pointer`}>
-						<Leaf className="text-amber-600" />
-						<span className="text-xs">Leaves</span>
-					</div>
-
-					<div
-						onClick={() => toggleEffect("blossoms")}
-						className={`flex flex-1 flex-col items-center justify-between rounded-md border-2 gap-1 ${
-							settings.effects.includes("blossoms") ? "border-primary" : "border-muted"
-						} bg-background p-2 hover:bg-secondary hover:text-accent-foreground cursor-pointer`}>
-						<Flower className="text-pink-400" />
-						<span className="text-xs">Blossoms</span>
-					</div>
-				</div>
-			</div>
-
-			{/* Effect Intensity Slider */}
-			{settings.effects.length > 0 && (
-				<div className="space-y-3">
-					<div className="flex items-center justify-between">
-						<Label htmlFor="effects-intensity" className="text-sm">
-							Effect Intensity
-						</Label>
-						<span className="text-xs text-muted-foreground">{settings.effectsIntensity}%</span>
-					</div>
-					<Slider
-						id="effects-intensity"
-						min={10}
-						max={100}
-						step={10}
-						value={[settings.effectsIntensity]}
-						onValueChange={(value) => updateSettings({ effectsIntensity: value[0] })}
-						className="w-full"
-					/>
-				</div>
-			)}
 		</div>
 	);
 }
