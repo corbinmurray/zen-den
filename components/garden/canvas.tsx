@@ -11,6 +11,7 @@ interface CanvasProps {
 	onElementRemove: (id: string) => void;
 	showOutlines?: boolean;
 	atmosphereSettings?: AtmosphereSettings;
+	readonly?: boolean;
 }
 
 export const Canvas = forwardRef<HTMLDivElement, CanvasProps>(function Canvas(
@@ -26,6 +27,7 @@ export const Canvas = forwardRef<HTMLDivElement, CanvasProps>(function Canvas(
 			effects: [],
 			effectsIntensity: 50,
 		},
+		readonly = false,
 	},
 	ref
 ) {
@@ -543,23 +545,49 @@ export const Canvas = forwardRef<HTMLDivElement, CanvasProps>(function Canvas(
 			}
 		};
 
-		// Attach touch event listeners
-		container.addEventListener("touchstart", handleTouchStart, { passive: false });
-		window.addEventListener("touchmove", handleTouchMove, { passive: false });
-		window.addEventListener("touchend", handleTouchEnd);
+		// Setup event listeners
+		if (canvasContainerRef.current) {
+			updateBounds();
+
+			// Only add interactive event listeners if not in readonly mode
+			if (!readonly) {
+				// Mouse events
+				canvasContainerRef.current.addEventListener("mousedown", handleMouseDown);
+				canvasContainerRef.current.addEventListener("mousemove", handleMouseMove);
+				document.addEventListener("mouseup", handleMouseUp);
+
+				// Touch events for mobile
+				canvasContainerRef.current.addEventListener("touchstart", handleTouchStart, { passive: false });
+				canvasContainerRef.current.addEventListener("touchmove", handleTouchMove, { passive: false });
+				document.addEventListener("touchend", handleTouchEnd);
+			}
+		}
+
+		// Always add resize event listener, even in readonly mode
+		window.addEventListener("resize", updateBounds);
 
 		return () => {
 			// Clean up event listeners
-			container.removeEventListener("mousedown", handleMouseDown);
-			container.removeEventListener("click", handleControlsClick);
-			window.removeEventListener("mousemove", handleMouseMove);
-			window.removeEventListener("mouseup", handleMouseUp);
-
-			container.removeEventListener("touchstart", handleTouchStart);
-			window.removeEventListener("touchmove", handleTouchMove);
-			window.removeEventListener("touchend", handleTouchEnd);
+			if (canvasContainerRef.current && !readonly) {
+				canvasContainerRef.current.removeEventListener("mousedown", handleMouseDown);
+				canvasContainerRef.current.removeEventListener("mousemove", handleMouseMove);
+				canvasContainerRef.current.removeEventListener("touchstart", handleTouchStart);
+				canvasContainerRef.current.removeEventListener("touchmove", handleTouchMove);
+			}
+			document.removeEventListener("mouseup", handleMouseUp);
+			document.removeEventListener("touchend", handleTouchEnd);
+			window.removeEventListener("resize", updateBounds);
 		};
-	}, [canvasBounds.height, canvasBounds.width, draggedElement, elementPositions, elementScales, elements, isDragging, isResizing, onElementUpdate, resizeDirection]);
+	}, [
+		updateBounds,
+		handleMouseDown,
+		handleMouseMove,
+		handleMouseUp,
+		handleTouchStart,
+		handleTouchMove,
+		handleTouchEnd,
+		readonly, // Make sure useEffect reruns if readonly status changes
+	]);
 
 	// Handle rotate and scale functions
 	const handleRotate = (id: string, change: number, e?: React.MouseEvent) => {
@@ -1079,8 +1107,8 @@ export const Canvas = forwardRef<HTMLDivElement, CanvasProps>(function Canvas(
 								)}
 								<div className="relative w-full h-full">{renderElementSVG(element.type)}</div>
 
-								{/* Resize handles - only show for selected element */}
-								{element.id === selectedElementId && (
+								{/* Resize handles - only show for selected element when not readonly */}
+								{element.id === selectedElementId && !readonly && (
 									<>
 										{/* Corner resize handle */}
 										<div
@@ -1107,7 +1135,7 @@ export const Canvas = forwardRef<HTMLDivElement, CanvasProps>(function Canvas(
 							</div>
 
 							{/* Controls - only show when selected */}
-							{element.id === selectedElementId && (
+							{element.id === selectedElementId && !readonly && (
 								<div
 									className="absolute -top-10 left-1/2 transform -translate-x-1/2 flex items-center bg-card border border-border rounded-md shadow-md z-50 controls"
 									style={{ pointerEvents: "auto" }}

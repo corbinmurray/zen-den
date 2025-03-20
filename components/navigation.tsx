@@ -39,7 +39,9 @@ export function Navigation() {
 						</Link>
 					))}
 					<ThemeToggle />
-					<Button>Get Started</Button>
+					<Link href="/garden">
+						<Button>Create Garden</Button>
+					</Link>
 				</nav>
 
 				{/* Mobile Navigation */}
@@ -65,7 +67,6 @@ export function Navigation() {
 									{route.label}
 								</Link>
 							))}
-							<Button className="mt-2">Get Started</Button>
 						</nav>
 					</SheetContent>
 				</Sheet>
