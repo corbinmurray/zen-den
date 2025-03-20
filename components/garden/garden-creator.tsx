@@ -2,11 +2,8 @@
 
 import { GardenElement } from "@/lib/types";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { ActionButtons } from "./action-buttons";
-import { BackgroundSelector } from "./background-selector";
 import { Canvas } from "./canvas";
-import { ElementPanel } from "./element-panel";
-import { SoundToggle } from "./sound-toggle";
+import { TabbedPanel } from "./tabbed-panel";
 
 export function GardenCreator() {
 	const [elements, setElements] = useState<GardenElement[]>([]);
@@ -14,6 +11,7 @@ export function GardenCreator() {
 	const [soundEnabled, setSoundEnabled] = useState(false);
 	const [currentSound, setCurrentSound] = useState<string | null>("/sounds/ambient-zen.mp3");
 	const [canvasSize, setCanvasSize] = useState({ width: 0, height: 0 });
+	const [showOutlines, setShowOutlines] = useState(false);
 
 	const canvasRef = useRef<HTMLDivElement>(null);
 
@@ -51,15 +49,15 @@ export function GardenCreator() {
 
 	// Use callback to prevent unnecessary recreations of this function
 	const handleAddElement = useCallback(
-		(element: GardenElement) => {
+		(elementOption: ElementOption) => {
 			// Place new element in center of visible canvas
 			const centerX = Math.max(0, canvasSize.width / 2 - 50); // 50 is half of baseSize
 			const centerY = Math.max(0, canvasSize.height / 2 - 50);
 
 			// Create a copy with a unique ID
-			const newElement = {
-				...element,
-				id: `${element.type}-${Date.now()}`,
+			const newElement: GardenElement = {
+				...elementOption,
+				id: `${elementOption.type}-${Date.now()}`,
 				position: { x: centerX, y: centerY },
 				rotation: 0,
 				scale: 1,
@@ -137,30 +135,42 @@ export function GardenCreator() {
 		setCurrentSound(soundPath);
 	};
 
+	// Toggle showing element outlines
+	const handleShowOutlinesChange = (show: boolean) => {
+		setShowOutlines(show);
+	};
+
 	return (
 		<div className="flex flex-col space-y-4">
 			<div className="flex flex-col md:flex-row gap-4">
-				{/* Left panel with elements and controls */}
-				<div className="w-full md:w-64 p-4 bg-card rounded-lg border border-border">
-					<ElementPanel onAddElement={handleAddElement} />
-
-					<div className="mt-6">
-						<h3 className="text-lg font-medium mb-3">Garden Settings</h3>
-						<BackgroundSelector selected={background} onSelect={setBackground} />
-
-						<div className="mt-4">
-							<SoundToggle enabled={soundEnabled} currentSound={currentSound} onToggle={handleToggleSound} onSoundChange={handleSoundChange} />
-						</div>
-					</div>
-
-					<div className="mt-6">
-						<ActionButtons onSave={handleSave} onShare={handleShare} onClear={handleClear} />
-					</div>
+				{/* Left panel with tabbed interface */}
+				<div className="w-full md:w-80 h-[60vh] md:h-[70vh]">
+					<TabbedPanel
+						onAddElement={handleAddElement}
+						background={background}
+						onBackgroundChange={setBackground}
+						soundEnabled={soundEnabled}
+						onSoundToggle={handleToggleSound}
+						currentSound={currentSound}
+						onSoundChange={handleSoundChange}
+						showOutlines={showOutlines}
+						onShowOutlinesChange={handleShowOutlinesChange}
+						onSave={handleSave}
+						onShare={handleShare}
+						onClear={handleClear}
+					/>
 				</div>
 
 				{/* Right side canvas */}
 				<div className="flex-1">
-					<Canvas ref={canvasRef} elements={elements} background={background} onElementUpdate={handleElementUpdate} onElementRemove={handleRemoveElement} />
+					<Canvas
+						ref={canvasRef}
+						elements={elements}
+						background={background}
+						onElementUpdate={handleElementUpdate}
+						onElementRemove={handleRemoveElement}
+						showOutlines={showOutlines}
+					/>
 				</div>
 			</div>
 		</div>
