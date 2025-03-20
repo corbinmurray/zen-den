@@ -16,7 +16,7 @@ function Feature({ icon, title, description, delay }: FeatureProps) {
 			viewport={{ once: true }}
 			transition={{ duration: 0.6, delay: delay, easing: [0.22, 0.03, 0.26, 1] }}
 			className="flex flex-col items-start">
-			<div className="rounded-lg bg-primary/10 p-3 ring-1 ring-primary/20">{icon}</div>
+			<div className="rounded-lg bg-primary/20 p-3 ring-1 ring-primary/30">{icon}</div>
 			<h3 className="mt-4 font-semibold text-foreground">{title}</h3>
 			<p className="mt-2 text-sm text-muted-foreground">{description}</p>
 		</motion.div>
