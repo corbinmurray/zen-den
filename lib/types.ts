@@ -15,10 +15,12 @@ export interface GardenElement {
 }
 
 export interface GardenData {
+	id?: string;
 	elements: GardenElement[];
 	background: string;
-	timestamp: string;
+	timestamp: number;
 	atmosphereSettings?: AtmosphereSettings;
+	gardenName?: string;
 }
 
 export interface ElementOption {

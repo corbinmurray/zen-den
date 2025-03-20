@@ -1,8 +1,13 @@
 "use client";
 
-import { AtmosphereSettings, ElementOption, GardenElement } from "@/lib/types";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { AtmosphereSettings, ElementOption, GardenData, GardenElement } from "@/lib/types";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
+import { v6 as uuidV6 } from "uuid";
 import { Canvas } from "./canvas";
 import { TabbedPanel } from "./tabbed-panel";
 
@@ -23,6 +28,8 @@ export function GardenCreator() {
 	const [showOutlines, setShowOutlines] = useState(false);
 	const [atmosphereSettings, setAtmosphereSettings] = useState<AtmosphereSettings>(defaultAtmosphereSettings);
 	const [selectedGardenId, setSelectedGardenId] = useState<string | null>(null);
+	const [saveDialogOpen, setSaveDialogOpen] = useState(false);
+	const [gardenName, setGardenName] = useState("My Zen Garden");
 
 	const canvasRef = useRef<HTMLDivElement>(null);
 
@@ -79,10 +86,7 @@ export function GardenCreator() {
 						setBackground(garden.background || "/backgrounds/zen-garden-bg.svg");
 						setAtmosphereSettings(garden.atmosphereSettings || defaultAtmosphereSettings);
 						setSelectedGardenId(gardenId);
-
-						toast.success("Garden loaded", {
-							description: `Editing ${garden.name || "zen garden"}`,
-						});
+						setGardenName(garden.name || "My Zen Garden");
 					} else {
 						toast.error("Garden not found", {
 							description: "The garden you're trying to edit could not be found.",
@@ -143,17 +147,21 @@ export function GardenCreator() {
 		setElements((prev) => prev.filter((el) => el.id !== id));
 	}, []);
 
-	// Handle saving garden
-	const handleSave = () => {
+	// Open the save dialog
+	const handleOpenSaveDialog = () => {
+		setSaveDialogOpen(true);
+	};
+
+	// Save garden with the provided name
+	const saveGardenWithName = () => {
 		try {
 			// Create a unique ID for the garden if it doesn't have one
-			const gardenId = selectedGardenId || Date.now().toString();
-			const gardenName = "My Zen Garden"; // Default name
+			const gardenId = selectedGardenId || uuidV6();
 
 			// Create garden object
-			const garden = {
+			const garden: GardenData = {
 				id: gardenId,
-				name: gardenName,
+				gardenName: gardenName,
 				elements,
 				background,
 				atmosphereSettings,
@@ -171,13 +179,13 @@ export function GardenCreator() {
 				// Update existing garden
 				savedGardens[existingGardenIndex] = garden;
 				toast.success("Garden updated", {
-					description: "Your garden has been updated successfully.",
+					description: `"${gardenName}" has been updated successfully.`,
 				});
 			} else {
 				// Add new garden
 				savedGardens.push(garden);
 				toast.success("Garden saved", {
-					description: "Your garden has been saved successfully.",
+					description: `"${gardenName}" has been saved successfully.`,
 				});
 			}
 
@@ -186,6 +194,9 @@ export function GardenCreator() {
 
 			// Update selected garden ID
 			setSelectedGardenId(gardenId);
+
+			// Close the dialog
+			setSaveDialogOpen(false);
 		} catch (error) {
 			console.error("Error saving garden:", error);
 			toast.error("Save failed", {
@@ -196,45 +207,26 @@ export function GardenCreator() {
 
 	// Handle sharing garden
 	const handleShare = () => {
+		// If garden is not saved yet, open the save dialog first
+		if (!selectedGardenId) {
+			// Set a flag or use a different state to indicate we're saving for sharing
+			setSaveDialogOpen(true);
+			toast.info("Name your garden", {
+				description: "Please name your garden before sharing it.",
+			});
+			return;
+		}
+
 		try {
-			// Check if garden is already saved
-			let existingGardenId = selectedGardenId;
-
-			// If not saved, save it now
-			if (!existingGardenId) {
-				// Create a unique ID for the garden based on timestamp
-				existingGardenId = Date.now().toString();
-				const gardenName = "My Zen Garden";
-
-				// Save garden to local storage
-				const savedGardens = JSON.parse(localStorage.getItem("zenGardens") || "[]");
-				const newGarden = {
-					id: existingGardenId,
-					name: gardenName,
-					elements,
-					background,
-					atmosphereSettings,
-					timestamp: Date.now(),
-				};
-
-				savedGardens.push(newGarden);
-				localStorage.setItem("zenGardens", JSON.stringify(savedGardens));
-				setSelectedGardenId(existingGardenId);
-
-				toast.success("Garden saved", {
-					description: "Your garden has been saved before sharing.",
-				});
-			}
-
 			// Create shareable link
-			const shareableLink = `${window.location.origin}/view?id=${existingGardenId}`;
+			const shareableLink = `${window.location.origin}/view?id=${selectedGardenId}`;
 
 			// Copy to clipboard
 			navigator.clipboard
 				.writeText(shareableLink)
 				.then(() => {
 					toast.success("Link copied!", {
-						description: "Share this link with others to view your garden.",
+						description: `Share this link with others to view "${gardenName}".`,
 					});
 				})
 				.catch((err) => {
@@ -311,7 +303,7 @@ export function GardenCreator() {
 						onShowOutlinesChange={handleShowOutlinesChange}
 						atmosphereSettings={atmosphereSettings}
 						onAtmosphereChange={handleAtmosphereChange}
-						onSave={handleSave}
+						onSave={handleOpenSaveDialog}
 						onShare={handleShare}
 						onClear={handleClear}
 					/>
@@ -330,6 +322,42 @@ export function GardenCreator() {
 					/>
 				</div>
 			</div>
+
+			{/* Save Garden Dialog */}
+			<Dialog open={saveDialogOpen} onOpenChange={setSaveDialogOpen}>
+				<DialogContent className="sm:max-w-md">
+					<DialogHeader>
+						<DialogTitle>Save Your Zen Garden</DialogTitle>
+					</DialogHeader>
+					<form
+						onSubmit={(e) => {
+							e.preventDefault();
+							saveGardenWithName();
+						}}
+						className="space-y-6">
+						<div className="flex flex-col justify-start items-start gap-2">
+							<Label htmlFor="garden-name" className="text-right">
+								Name
+							</Label>
+							<Input
+								id="garden-name"
+								value={gardenName}
+								onChange={(e) => setGardenName(e.target.value)}
+								className="col-span-4"
+								placeholder="Enter garden name"
+								autoFocus
+							/>
+						</div>
+
+						<div className="flex justify-end items-center gap-3">
+							<Button type="button" variant="outline" onClick={() => setSaveDialogOpen(false)}>
+								Cancel
+							</Button>
+							<Button type="submit">Save Garden</Button>
+						</div>
+					</form>
+				</DialogContent>
+			</Dialog>
 		</div>
 	);
 }
