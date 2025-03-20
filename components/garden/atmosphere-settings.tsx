@@ -1,6 +1,6 @@
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Cloud, CloudRain, CloudSnow, Flower, Leaf, Moon, Sun, Sunset } from "lucide-react";
+import { Cloud, CloudRain, CloudSnow, Moon, Sun, Sunset } from "lucide-react";
 
 export interface AtmosphereSettings {
 	timeOfDay: "day" | "sunset" | "night";

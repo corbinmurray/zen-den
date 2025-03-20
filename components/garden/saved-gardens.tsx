@@ -12,16 +12,6 @@ export function SavedGardens() {
 	const [savedGardens, setSavedGardens] = useState<GardenData[]>([]);
 	const router = useRouter();
 
-	// Load saved gardens from localStorage
-	useEffect(() => {
-		try {
-			const gardens = JSON.parse(localStorage.getItem("zenGardens") || "[]");
-			setSavedGardens(gardens);
-		} catch (error) {
-			console.error("Failed to load saved gardens:", error);
-		}
-	}, []);
-
 	// Delete a garden
 	const handleDelete = (timestamp: number) => {
 		toast.warning("Delete garden?", {

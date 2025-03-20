@@ -4,41 +4,37 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { AtmosphereSettings, ElementOption, GardenData, GardenElement } from "@/lib/types";
+import { Atmosphere, GardenItem } from "@/lib/types";
+import { useZenGardenStore } from "@/providers/zen-garden-store-provider";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { v6 as uuidV6 } from "uuid";
 import { Canvas } from "./canvas";
 import { TabbedPanel } from "./tabbed-panel";
 
-// Default atmosphere settings
-const defaultAtmosphereSettings: AtmosphereSettings = {
+const defaultAtmosphere: Atmosphere = {
 	timeOfDay: "day",
 	weather: "clear",
-	effects: [],
-	effectsIntensity: 50,
 };
 
 export function GardenCreator() {
-	const [elements, setElements] = useState<GardenElement[]>([]);
-	const [background, setBackground] = useState("/backgrounds/zen-garden-bg.svg");
-	const [soundEnabled, setSoundEnabled] = useState(false);
-	const [currentSound, setCurrentSound] = useState<string | null>(null);
+	const [gardenItems, setGardenItems] = useState<GardenItem[]>([]);
 	const [canvasSize, setCanvasSize] = useState({ width: 0, height: 0 });
 	const [showOutlines, setShowOutlines] = useState(false);
-	const [atmosphereSettings, setAtmosphereSettings] = useState<AtmosphereSettings>(defaultAtmosphereSettings);
+	const [atmosphere, setAtmosphere] = useState<Atmosphere>(defaultAtmosphere);
 	const [selectedGardenId, setSelectedGardenId] = useState<string | null>(null);
 	const [saveDialogOpen, setSaveDialogOpen] = useState(false);
 	const [gardenName, setGardenName] = useState("My Zen Garden");
 	const [shareAfterSave, setShareAfterSave] = useState(false);
+	const { gardens, add: addGarden, remove: removeGarden } = useZenGardenStore((state) => state);
 
 	const canvasRef = useRef<HTMLDivElement>(null);
 
 	// Cache the most recent elements to avoid unnecessary re-renders
-	const elementsRef = useRef(elements);
+	const itemsRef = useRef(gardenItems);
 	useEffect(() => {
-		elementsRef.current = elements;
-	}, [elements]);
+		itemsRef.current = gardenItems;
+	}, [gardenItems]);
 
 	// Get canvas size when component mounts
 	useEffect(() => {
@@ -66,33 +62,25 @@ export function GardenCreator() {
 		};
 	}, []);
 
-	// Load garden from URL parameters or local storage
+	// Load garden from URL parameters
 	useEffect(() => {
-		// Get URL parameters
 		const urlParams = new URLSearchParams(window.location.search);
 		const gardenId = urlParams.get("id");
 
 		if (gardenId) {
-			// Try to load garden from local storage
 			try {
-				const savedGardensJSON = localStorage.getItem("zenGardens");
+				const garden = gardens.find((g) => g.id === gardenId);
 
-				if (savedGardensJSON) {
-					const savedGardens = JSON.parse(savedGardensJSON);
-					const garden: GardenData = savedGardens.find((g: any) => g.id === gardenId);
-
-					if (garden) {
-						// Load garden data
-						setElements(garden.elements || []);
-						setBackground(garden.background || "/backgrounds/zen-garden-bg.svg");
-						setAtmosphereSettings(garden.atmosphereSettings || defaultAtmosphereSettings);
-						setSelectedGardenId(gardenId);
-						setGardenName(garden.gardenName || "My Zen Garden");
-					} else {
-						toast.error("Garden not found", {
-							description: "The garden you're trying to edit could not be found.",
-						});
-					}
+				if (garden) {
+					// Load garden data
+					setGardenItems(garden.items || []);
+					setAtmosphere(garden.atmosphere || defaultAtmosphere);
+					setSelectedGardenId(gardenId);
+					setGardenName(garden.name || "My Zen Garden");
+				} else {
+					toast.error("Garden not found", {
+						description: "The garden you're trying to edit could not be found.",
+					});
 				}
 			} catch (error) {
 				console.error("Error loading garden from URL:", error);
@@ -101,11 +89,11 @@ export function GardenCreator() {
 				});
 			}
 		}
-	}, []);
+	}, [gardens]);
 
 	// Use callback to prevent unnecessary recreations of this function
 	const handleAddElement = useCallback(
-		(elementOption: ElementOption) => {
+		(gardenItem: GardenItem) => {
 			// Calculate center of visible canvas
 			const centerX = Math.max(0, canvasSize.width / 2 - 50); // 50 is half of baseSize
 			const centerY = Math.max(0, canvasSize.height / 2 - 50);
@@ -125,7 +113,7 @@ export function GardenCreator() {
 			const boundedY = Math.max(10, Math.min(canvasSize.height - 110, randomY));
 
 			// Create a copy with a unique ID
-			const newElement: GardenElement = {
+			const newItem: GardenItem = {
 				...elementOption,
 				id: `${elementOption.type}-${Date.now()}`,
 				position: { x: boundedX, y: boundedY },
@@ -133,13 +121,13 @@ export function GardenCreator() {
 				scale: 1,
 			};
 
-			setElements((prev) => [...prev, newElement]);
+			setGardenItems((prev) => [...prev, newItem]);
 		},
 		[canvasSize.width, canvasSize.height]
 	);
 
 	// Optimize update handler with useCallback
-	const handleElementUpdate = useCallback((updatedElement: GardenElement) => {
+	const handleElementUpdate = useCallback((updatedElement: GardenItem) => {
 		setElements((prev) => prev.map((el) => (el.id === updatedElement.id ? updatedElement : el)));
 	}, []);
 
@@ -286,19 +274,6 @@ export function GardenCreator() {
 		});
 	};
 
-	// Toggle ambient sound
-	const handleToggleSound = () => {
-		setSoundEnabled(!soundEnabled);
-		toast.info(soundEnabled ? "Sound disabled" : "Sound enabled", {
-			description: soundEnabled ? "Ambient sound has been turned off." : "Ambient sound has been enabled. Enjoy your zen experience.",
-		});
-	};
-
-	// Change ambient sound
-	const handleSoundChange = (soundPath: string) => {
-		setCurrentSound(soundPath);
-	};
-
 	// Toggle showing element outlines
 	const handleShowOutlinesChange = (show: boolean) => {
 		setShowOutlines(show);
@@ -316,12 +291,6 @@ export function GardenCreator() {
 				<div className="w-full md:w-96 h-[60vh] md:h-[70vh]">
 					<TabbedPanel
 						onAddElement={handleAddElement}
-						background={background}
-						onBackgroundChange={setBackground}
-						soundEnabled={soundEnabled}
-						onSoundToggle={handleToggleSound}
-						currentSound={currentSound}
-						onSoundChange={handleSoundChange}
 						showOutlines={showOutlines}
 						onShowOutlinesChange={handleShowOutlinesChange}
 						atmosphereSettings={atmosphereSettings}
@@ -336,8 +305,7 @@ export function GardenCreator() {
 				<div className="flex-1">
 					<Canvas
 						ref={canvasRef}
-						elements={elements}
-						background={background}
+						elements={gardenItems}
 						onElementUpdate={handleElementUpdate}
 						onElementRemove={handleRemoveElement}
 						showOutlines={showOutlines}
