@@ -13,6 +13,7 @@ required_technologies:
     - Next.js 15
     - Tailwind CSS v4
     - shadcn (npx shadcn@latest add {component-name})
+      - We will NEVER INSTALL SHADCN COMPONENTS USING `npx shadcn-ui@latest` it will always be `npx shadcn@latest`
     - Motion ("npm install motion" [used to be Framer Motion])
       - When using motion, it's very important to use `import { motion } from "motion/react"` for client-side components and `import * as motion from "motion/react-client"` for server-side components.
   deployment:
