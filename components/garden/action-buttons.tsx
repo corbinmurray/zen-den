@@ -10,10 +10,8 @@ interface ActionButtonsProps {
 
 export function ActionButtons({ onSave, onShare, onClear }: ActionButtonsProps) {
 	return (
-		<div className="space-y-2">
-			<h4 className="text-sm font-medium mb-2">Actions</h4>
-
-			<div className="grid grid-cols-2 gap-2">
+		<div className="space-y-3">
+			<div className="grid grid-cols-2 gap-3">
 				<Button onClick={onSave} className="w-full">
 					<SaveIcon className="mr-1 h-4 w-4" />
 					Save
@@ -25,7 +23,7 @@ export function ActionButtons({ onSave, onShare, onClear }: ActionButtonsProps) 
 				</Button>
 			</div>
 
-			<Button onClick={onClear} variant="ghost" className="w-full text-destructive hover:text-destructive hover:bg-destructive/10">
+			<Button onClick={onClear} className="w-full border border-destructive bg-transparent text-destructive hover:bg-destructive hover:text-foreground">
 				<TrashIcon className="mr-1 h-4 w-4" />
 				Clear Garden
 			</Button>
