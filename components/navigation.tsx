@@ -1,5 +1,6 @@
 "use client";
 
+import { ThemeToggle } from "@/components/theme-toggle";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Menu } from "lucide-react";
@@ -37,18 +38,23 @@ export function Navigation() {
 							{route.label}
 						</Link>
 					))}
+					<ThemeToggle />
 					<Button>Get Started</Button>
 				</nav>
 
 				{/* Mobile Navigation */}
 				<Sheet open={isOpen} onOpenChange={setIsOpen}>
 					<SheetTrigger asChild className="md:hidden">
-						<Button variant="ghost" size="icon">
+						<Button variant="ghost" size="icon" className="mr-2">
 							<Menu className="h-5 w-5" />
 							<span className="sr-only">Toggle menu</span>
 						</Button>
 					</SheetTrigger>
 					<SheetContent side="right" className="w-[240px] sm:w-[300px]">
+						<div className="flex items-center justify-between pt-4">
+							<span className="text-lg font-semibold">Menu</span>
+							<ThemeToggle />
+						</div>
 						<nav className="flex flex-col gap-4 mt-8">
 							{routes.map((route) => (
 								<Link
@@ -65,6 +71,11 @@ export function Navigation() {
 						</nav>
 					</SheetContent>
 				</Sheet>
+
+				{/* Mobile Theme Toggle (Visible outside sheet) */}
+				<div className="flex items-center md:hidden">
+					<ThemeToggle />
+				</div>
 			</div>
 		</header>
 	);
