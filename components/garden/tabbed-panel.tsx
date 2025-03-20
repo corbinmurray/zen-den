@@ -1,11 +1,8 @@
-"use client";
-
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ElementOption } from "@/lib/types";
 import { ActionButtons } from "./action-buttons";
 import { AtmosphereSettings, type AtmosphereSettings as AtmosphereSettingsType } from "./atmosphere-settings";
 import { ElementPanel } from "./element-panel";
-import { GardenSettings } from "./garden-settings";
 
 interface TabbedPanelProps {
 	onAddElement: (element: ElementOption) => void;
@@ -26,14 +23,10 @@ interface TabbedPanelProps {
 
 export function TabbedPanel({
 	onAddElement,
-	background,
-	onBackgroundChange,
 	soundEnabled,
 	onSoundToggle,
 	currentSound,
 	onSoundChange,
-	showOutlines,
-	onShowOutlinesChange,
 	atmosphereSettings = {
 		timeOfDay: "day",
 		weather: "clear",

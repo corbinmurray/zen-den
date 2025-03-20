@@ -2,7 +2,7 @@
 
 import { AtmosphereSettings, GardenElement } from "@/lib/types";
 import * as motion from "motion/react-client";
-import { forwardRef, useCallback, useEffect, useRef, useState } from "react";
+import React, { forwardRef, useCallback, useEffect, useRef, useState } from "react";
 
 interface CanvasProps {
 	elements: GardenElement[];
@@ -13,6 +13,373 @@ interface CanvasProps {
 	atmosphereSettings?: AtmosphereSettings;
 	readonly?: boolean;
 }
+
+// Define separate components for weather effects
+const RainEffect = React.memo(function RainEffect() {
+	return (
+		<div className="absolute inset-0 bg-blue-900/10 pointer-events-none">
+			{/* Rain drops falling */}
+			{Array.from({ length: 35 }).map((_, i) => {
+				// Pre-calculate random values to avoid regeneration on re-renders
+				const randLeft = (i * 2.87) % 100;
+				const randTop = i % 10;
+				const randY = 30 + ((i * 1.7) % 50);
+				const randX = ((i % 11) - 5) * 3;
+				const randDuration = 1.2 + (i % 7) * 0.1;
+				const randDelay = (i % 5) * 0.4;
+
+				return (
+					<motion.div
+						key={`rain-${i}`}
+						className="absolute w-[1px] h-[7px] bg-blue-200/70"
+						style={{
+							left: `${randLeft}%`,
+							top: `-${randTop}px`,
+						}}
+						animate={{
+							y: `${randY}vh`,
+							x: `${randX}px`,
+							opacity: [0.8, 0.6, 0.4],
+						}}
+						transition={{
+							duration: randDuration,
+							repeat: Infinity,
+							ease: "easeIn",
+							delay: randDelay,
+							times: [0, 0.7, 1],
+							repeatDelay: (i % 3) * 0.1,
+						}}
+					/>
+				);
+			})}
+
+			{/* Water ripples/pools at the bottom */}
+			<div className="absolute bottom-0 left-0 right-0 h-[30px] overflow-hidden">
+				{Array.from({ length: 12 }).map((_, i) => {
+					const randWidth = 8 + (i % 8) * 2;
+					const randLeft = (i * 8.33) % 100;
+					const randBottom = i % 10;
+					const randDuration = 1.5 + (i % 5) * 0.2;
+					const randDelay = (i * 0.42) % 5;
+
+					return (
+						<motion.div
+							key={`pool-${i}`}
+							className="absolute rounded-full bg-blue-200/20"
+							style={{
+								width: `${randWidth}px`,
+								height: `${randWidth}px`,
+								left: `${randLeft}%`,
+								bottom: `${randBottom}px`,
+							}}
+							initial={{ scale: 0, opacity: 0.7 }}
+							animate={{
+								scale: [0, 1.5, 2],
+								opacity: [0.7, 0.5, 0],
+							}}
+							transition={{
+								duration: randDuration,
+								repeat: Infinity,
+								delay: randDelay,
+								times: [0, 0.4, 1],
+								ease: "easeOut",
+							}}
+						/>
+					);
+				})}
+				{/* Water puddle base */}
+				<div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-blue-200/30 to-blue-200/5 h-[15px]"></div>
+			</div>
+		</div>
+	);
+});
+
+const SnowEffect = React.memo(function SnowEffect() {
+	return (
+		<div className="absolute inset-0 bg-blue-100/5 pointer-events-none">
+			{/* Snowflakes falling */}
+			{Array.from({ length: 35 }).map((_, i) => {
+				// Pre-calculate random values to avoid regeneration on re-renders
+				const randWidth = 2 + (i % 5) * 0.6;
+				const randLeft = (i * 2.87) % 100;
+				const randY = 50 + ((i * 1.5) % 40);
+				const randDuration = 5 + (i % 8);
+				const randDelay = (i * 0.8) % 5;
+				const sinOffset = i % 2 === 0 ? 60 * Math.sin(i * 0.5) : 45 * Math.cos(i * 0.5);
+
+				return (
+					<motion.div
+						key={`snow-${i}`}
+						className="absolute rounded-full bg-white/80"
+						style={{
+							width: `${randWidth}px`,
+							height: `${randWidth}px`,
+							left: `${randLeft}%`,
+							top: `-${i % 10}px`,
+							filter: "blur(0.2px)",
+						}}
+						animate={{
+							y: `${randY}vh`,
+							x: `calc(${i % 10}% + ${sinOffset}px)`,
+							rotate: 360,
+							opacity: [0.9, 0.8, 0.7],
+						}}
+						transition={{
+							duration: randDuration,
+							repeat: Infinity,
+							ease: [0.1, 0.3, 0.9, 0.1],
+							delay: randDelay,
+							repeatDelay: (i % 5) * 0.1,
+						}}
+					/>
+				);
+			})}
+
+			{/* Snow accumulation at the bottom */}
+			<div className="absolute bottom-0 left-0 right-0 overflow-hidden">
+				{/* Snow drifts (uneven snow piles) */}
+				<svg width="100%" height="30" viewBox="0 0 1000 30" preserveAspectRatio="none">
+					<path
+						d="M0,30 Q50,10 100,20 Q150,30 200,15 Q250,5 300,25 Q350,15 400,20 Q450,10 500,25 Q550,15 600,20 Q650,5 700,15 Q750,25 800,10 Q850,20 900,25 Q950,15 1000,20 L1000,30 L0,30 Z"
+						fill="rgba(255, 255, 255, 0.3)"
+					/>
+					<path
+						d="M0,30 Q70,20 140,25 Q210,15 280,20 Q350,25 420,15 Q490,25 560,20 Q630,15 700,25 Q770,15 840,20 Q910,25 1000,15 L1000,30 L0,30 Z"
+						fill="rgba(255, 255, 255, 0.5)"
+					/>
+				</svg>
+
+				{/* Occasional snowflake landing animation */}
+				{Array.from({ length: 8 }).map((_, i) => {
+					const randWidth = 3 + (i % 4);
+					const randLeft = (i * 12.5) % 100;
+					const randBottom = 4 + ((i * 1.9) % 15);
+					const randDuration = 1.2 + (i % 4) * 0.2;
+					const randDelay = i * 1.3;
+					const randRepeatDelay = i % 8;
+
+					return (
+						<motion.div
+							key={`snowland-${i}`}
+							className="absolute rounded-full bg-white/40"
+							style={{
+								width: `${randWidth}px`,
+								height: `${randWidth}px`,
+								left: `${randLeft}%`,
+								bottom: `${randBottom}px`,
+							}}
+							initial={{ scale: 0, opacity: 0 }}
+							animate={{
+								scale: [0, 1.2, 1],
+								opacity: [0, 0.7, 0.5],
+							}}
+							transition={{
+								duration: randDuration,
+								repeat: Infinity,
+								delay: randDelay,
+								times: [0, 0.3, 1],
+								ease: "easeOut",
+								repeatDelay: randRepeatDelay,
+							}}
+						/>
+					);
+				})}
+			</div>
+		</div>
+	);
+});
+
+const CloudEffect = React.memo(function CloudEffect() {
+	return (
+		<div className="absolute inset-0 bg-gray-400/10 backdrop-blur-[1px] pointer-events-none">
+			{Array.from({ length: 5 }).map((_, i) => {
+				const yPos = 30 + i * 40;
+				const opacity = 0.2 + i * 0.08;
+				const scale = 0.8 + (i % 5) * 0.1;
+				const duration = 120 - i * 15;
+				const delay = i * 20;
+
+				return (
+					<motion.div
+						key={`cloud-${i}`}
+						className="absolute bg-white/20 rounded-full w-[100px] h-[60px] blur-md"
+						initial={{
+							x: -150,
+							y: yPos,
+							opacity: opacity,
+							scale: scale,
+						}}
+						animate={{
+							x: `${120}%`,
+						}}
+						transition={{
+							duration: duration,
+							repeat: Infinity,
+							repeatType: "loop",
+							delay: delay,
+							ease: "linear",
+						}}
+					/>
+				);
+			})}
+		</div>
+	);
+});
+
+const LeavesEffect = React.memo(function LeavesEffect({ intensity }: { intensity: number }) {
+	const particleCount = Math.floor(20 * intensity);
+
+	return (
+		<div className="absolute inset-0 pointer-events-none">
+			{Array.from({ length: particleCount }).map((_, i) => {
+				const scale = 0.6 + (i % 10) * 0.05;
+				const startX = ((i * 3.87) % 120) - 10;
+				const endY = 100 + (i % 10);
+				const rotateDir = i % 2 === 0 ? 360 : -360;
+				const duration = 15 + (i % 10);
+				const delay = (i * 0.8) % 15;
+				const sinOffset = Math.sin((i + 1) * Math.PI * 2) * 150;
+
+				return (
+					<motion.div
+						key={`leaf-${i}`}
+						className="absolute"
+						initial={{
+							x: `${startX}%`,
+							y: -30,
+							rotate: (i * 36) % 360,
+							scale: scale,
+						}}
+						animate={{
+							y: `${endY}%`,
+							x: `calc(${(i * 5) % 100}% + ${sinOffset}px)`,
+							rotate: rotateDir,
+						}}
+						transition={{
+							duration: duration,
+							repeat: Infinity,
+							delay: delay,
+							ease: [0.1, 0.4, 0.2, 0.8],
+						}}>
+						<svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+							<path d="M12 2C6.5 2 2 6.5 2 12C2 17.5 6.5 22 12 22C17.5 22 22 17.5 22 12C22 6.5 17.5 2 12 2Z" fill="#DC2626" fillOpacity="0.5" />
+							<path d="M12 5C12 5 9 9 9 12C9 15 12 19 12 19C12 19 15 15 15 12C15 9 12 5 12 5Z" fill="#991B1B" fillOpacity="0.8" />
+						</svg>
+					</motion.div>
+				);
+			})}
+		</div>
+	);
+});
+
+const BlossomsEffect = React.memo(function BlossomsEffect({ intensity }: { intensity: number }) {
+	const particleCount = Math.floor(20 * intensity);
+
+	return (
+		<div className="absolute inset-0 pointer-events-none">
+			{Array.from({ length: particleCount }).map((_, i) => {
+				const scale = 0.5 + (i % 12) * 0.05;
+				const startX = ((i * 3.87) % 120) - 10;
+				const endY = 100 + (i % 10);
+				const rotateAmount = 360 * (i % 2 === 0 ? 2 : -2);
+				const duration = 12 + (i % 8);
+				const delay = (i * 0.7) % 10;
+				const sinOffset = Math.sin((i + 1) * 0.5 * Math.PI) * 120;
+
+				return (
+					<motion.div
+						key={`blossom-${i}`}
+						className="absolute"
+						initial={{
+							x: `${startX}%`,
+							y: -20,
+							rotate: (i * 20) % 180,
+							scale: scale,
+						}}
+						animate={{
+							y: `${endY}%`,
+							x: `calc(${(i * 5) % 100}% + ${sinOffset}px)`,
+							rotate: rotateAmount,
+						}}
+						transition={{
+							duration: duration,
+							repeat: Infinity,
+							delay: delay,
+							ease: [0.1, 0.3, 0.6, 0.9],
+						}}>
+						<svg width="10" height="10" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+							<circle cx="12" cy="12" r="4" fill="#FDF2F8" />
+							<circle cx="12" cy="12" r="2" fill="#FBCFE8" />
+						</svg>
+					</motion.div>
+				);
+			})}
+		</div>
+	);
+});
+
+const ButterfliesEffect = React.memo(function ButterfliesEffect({ intensity }: { intensity: number }) {
+	const particleCount = Math.floor(20 * intensity);
+
+	return (
+		<div className="absolute inset-0 pointer-events-none">
+			{Array.from({ length: Math.ceil(particleCount / 2) }).map((_, i) => {
+				const scale = 0.6 + (i % 10) * 0.04;
+				const x1 = (i * 9) % 90;
+				const x2 = (i * 9 + 30) % 90;
+				const x3 = (i * 9 + 60) % 90;
+				const y1 = (i * 9) % 90;
+				const y2 = (i * 9 + 30) % 90;
+				const y3 = (i * 9 + 60) % 90;
+				const rotate1 = (i % 5) * 4 - 10;
+				const rotate2 = ((i + 2) % 5) * 4 - 10;
+				const rotate3 = ((i + 4) % 5) * 4 - 10;
+
+				return (
+					<motion.div
+						key={`butterfly-${i}`}
+						className="absolute"
+						initial={{
+							x: `${((i * 6) % 120) - 10}%`,
+							y: `${((i * 6) % 120) - 10}%`,
+							scale: scale,
+						}}
+						animate={{
+							x: [`${x1}%`, `${x2}%`, `${x3}%`],
+							y: [`${y1}%`, `${y2}%`, `${y3}%`],
+							rotate: [rotate1, rotate2, rotate3],
+						}}
+						transition={{
+							duration: 25,
+							times: [0, 0.5, 1],
+							repeat: Infinity,
+							repeatType: "mirror",
+							delay: i % 5,
+						}}>
+						<svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+							<motion.path
+								d="M12 5C8 5 6 8 6 12C6 16 8 19 12 19C16 19 18 16 18 12C18 8 16 5 12 5Z"
+								fill="#FBBF24"
+								animate={{
+									d: [
+										"M12 5C8 5 6 8 6 12C6 16 8 19 12 19C16 19 18 16 18 12C18 8 16 5 12 5Z",
+										"M12 5C8 7 6 8 6 12C6 16 8 17 12 19C16 17 18 16 18 12C18 8 16 7 12 5Z",
+										"M12 5C8 5 6 8 6 12C6 16 8 19 12 19C16 19 18 16 18 12C18 8 16 5 12 5Z",
+									],
+								}}
+								transition={{
+									duration: 0.8,
+									repeat: Infinity,
+									repeatType: "mirror",
+								}}
+							/>
+						</svg>
+					</motion.div>
+				);
+			})}
+		</div>
+	);
+});
 
 export const Canvas = forwardRef<HTMLDivElement, CanvasProps>(function Canvas(
 	{
@@ -42,9 +409,6 @@ export const Canvas = forwardRef<HTMLDivElement, CanvasProps>(function Canvas(
 	// Add resize dragging state
 	const [isResizing, setIsResizing] = useState(false);
 	const [resizeDirection, setResizeDirection] = useState<string | null>(null);
-
-	// Store loaded images in a map
-	const imagesRef = useRef<Map<string, HTMLImageElement>>(new Map());
 
 	// Track mouse position for drag operations
 	const mousePositionRef = useRef({ x: 0, y: 0 });
@@ -667,12 +1031,6 @@ export const Canvas = forwardRef<HTMLDivElement, CanvasProps>(function Canvas(
 		}
 	};
 
-	const handleRemove = (id: string, e: React.MouseEvent) => {
-		e.stopPropagation();
-		e.preventDefault();
-		onElementRemove(id);
-	};
-
 	// Function to render the SVG content for each element type
 	const renderElementSVG = (type: string) => {
 		// Check if this is a custom element (type starts with "custom-")
@@ -857,210 +1215,23 @@ export const Canvas = forwardRef<HTMLDivElement, CanvasProps>(function Canvas(
 	};
 
 	// Get the appropriate weather effect class
-	const getWeatherEffect = () => {
-		if (atmosphereSettings.weather === "clear") return null;
+	const weatherEffectComponent =
+		atmosphereSettings.weather === "clear" ? null : atmosphereSettings.weather === "rainy" ? (
+			<RainEffect />
+		) : atmosphereSettings.weather === "snowy" ? (
+			<SnowEffect />
+		) : atmosphereSettings.weather === "cloudy" ? (
+			<CloudEffect />
+		) : null;
 
-		return (
-			<div className="absolute inset-0 pointer-events-none z-10">
-				{atmosphereSettings.weather === "rainy" && (
-					<div className="absolute inset-0 bg-blue-900/10 backdrop-blur-[1px]">
-						{Array.from({ length: 20 }).map((_, i) => (
-							<motion.div
-								key={`rain-${i}`}
-								className="absolute w-[1px] h-[10px] bg-blue-200/60"
-								initial={{
-									x: `${Math.random() * 100}%`,
-									y: -10,
-									opacity: 0.7,
-								}}
-								animate={{
-									y: `${100 + Math.random() * 10}%`,
-									opacity: 0.3,
-								}}
-								transition={{
-									duration: 0.8 + Math.random() * 0.6,
-									repeat: Infinity,
-									delay: Math.random() * 2,
-								}}
-							/>
-						))}
-					</div>
-				)}
-
-				{atmosphereSettings.weather === "snowy" && (
-					<div className="absolute inset-0 bg-blue-100/5 backdrop-blur-[1px]">
-						{Array.from({ length: 15 }).map((_, i) => (
-							<motion.div
-								key={`snow-${i}`}
-								className="absolute w-[4px] h-[4px] rounded-full bg-white/80"
-								initial={{
-									x: `${Math.random() * 100}%`,
-									y: -10,
-									opacity: 0.9,
-								}}
-								animate={{
-									y: `${100 + Math.random() * 10}%`,
-									x: `calc(${Math.random() * 100}% + ${Math.sin(Math.random() * Math.PI * 2) * 50}px)`,
-									opacity: 0.7,
-								}}
-								transition={{
-									duration: 6 + Math.random() * 4,
-									repeat: Infinity,
-									delay: Math.random() * 5,
-									ease: "linear",
-								}}
-							/>
-						))}
-					</div>
-				)}
-
-				{atmosphereSettings.weather === "cloudy" && (
-					<div className="absolute inset-0 bg-gray-400/10 backdrop-blur-[1px]">
-						{Array.from({ length: 3 }).map((_, i) => (
-							<motion.div
-								key={`cloud-${i}`}
-								className="absolute bg-white/20 rounded-full w-[100px] h-[60px] blur-md"
-								initial={{
-									x: -100,
-									y: 50 + i * 30,
-									opacity: 0.2 + i * 0.1,
-								}}
-								animate={{
-									x: `${100 + Math.random() * 10}%`,
-								}}
-								transition={{
-									duration: 90 - i * 10,
-									repeat: Infinity,
-									repeatType: "loop",
-									delay: i * 30,
-									ease: "linear",
-								}}
-							/>
-						))}
-					</div>
-				)}
-			</div>
-		);
-	};
-
-	// Get seasonal effects
-	const getSeasonalEffects = () => {
-		if (!atmosphereSettings.effects.length) return null;
-
-		const intensity = atmosphereSettings.effectsIntensity / 100; // Convert to 0-1 scale
-		const particleCount = Math.floor(15 * intensity);
-
-		return (
-			<div className="absolute inset-0 pointer-events-none z-20">
-				{atmosphereSettings.effects.includes("leaves") && (
-					<div className="absolute inset-0">
-						{Array.from({ length: particleCount }).map((_, i) => (
-							<motion.div
-								key={`leaf-${i}`}
-								className="absolute"
-								initial={{
-									x: `${Math.random() * 100}%`,
-									y: -20,
-									rotate: Math.random() * 360,
-								}}
-								animate={{
-									y: `${100 + Math.random() * 10}%`,
-									x: `calc(${Math.random() * 100}% + ${Math.sin(Math.random() * Math.PI * 2) * 100}px)`,
-									rotate: Math.random() * 360 * (Math.random() > 0.5 ? 1 : -1),
-								}}
-								transition={{
-									duration: 10 + Math.random() * 5,
-									repeat: Infinity,
-									delay: Math.random() * 10,
-									ease: "linear",
-								}}>
-								<svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-									<path d="M12 2C6.5 2 2 6.5 2 12C2 17.5 6.5 22 12 22C17.5 22 22 17.5 22 12C22 6.5 17.5 2 12 2Z" fill="#DC2626" fillOpacity="0.5" />
-									<path d="M12 5C12 5 9 9 9 12C9 15 12 19 12 19C12 19 15 15 15 12C15 9 12 5 12 5Z" fill="#991B1B" fillOpacity="0.8" />
-								</svg>
-							</motion.div>
-						))}
-					</div>
-				)}
-
-				{atmosphereSettings.effects.includes("blossoms") && (
-					<div className="absolute inset-0">
-						{Array.from({ length: particleCount }).map((_, i) => (
-							<motion.div
-								key={`blossom-${i}`}
-								className="absolute"
-								initial={{
-									x: `${Math.random() * 100}%`,
-									y: -20,
-									rotate: Math.random() * 360,
-								}}
-								animate={{
-									y: `${100 + Math.random() * 10}%`,
-									x: `calc(${Math.random() * 100}% + ${Math.sin(Math.random() * Math.PI * 2) * 70}px)`,
-									rotate: Math.random() * 360,
-								}}
-								transition={{
-									duration: 8 + Math.random() * 6,
-									repeat: Infinity,
-									delay: Math.random() * 5,
-									ease: "linear",
-								}}>
-								<svg width="10" height="10" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-									<circle cx="12" cy="12" r="4" fill="#FDF2F8" />
-									<circle cx="12" cy="12" r="2" fill="#FBCFE8" />
-								</svg>
-							</motion.div>
-						))}
-					</div>
-				)}
-
-				{atmosphereSettings.effects.includes("butterflies") && (
-					<div className="absolute inset-0">
-						{Array.from({ length: Math.ceil(particleCount / 2) }).map((_, i) => (
-							<motion.div
-								key={`butterfly-${i}`}
-								className="absolute"
-								initial={{
-									x: `${Math.random() * 100}%`,
-									y: `${Math.random() * 100}%`,
-									scale: 0.6 + Math.random() * 0.4,
-								}}
-								animate={{
-									x: [`${Math.random() * 90}%`, `${Math.random() * 90}%`, `${Math.random() * 90}%`, `${Math.random() * 90}%`],
-									y: [`${Math.random() * 90}%`, `${Math.random() * 90}%`, `${Math.random() * 90}%`, `${Math.random() * 90}%`],
-									rotate: Math.random() * 40 - 20,
-								}}
-								transition={{
-									duration: 20,
-									times: [0, 0.3, 0.6, 1],
-									repeat: Infinity,
-									delay: Math.random() * 2,
-								}}>
-								<svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-									<motion.path
-										d="M12 5C8 5 6 8 6 12C6 16 8 19 12 19C16 19 18 16 18 12C18 8 16 5 12 5Z"
-										fill="#FBBF24"
-										animate={{
-											d: [
-												"M12 5C8 5 6 8 6 12C6 16 8 19 12 19C16 19 18 16 18 12C18 8 16 5 12 5Z",
-												"M12 5C8 7 6 8 6 12C6 16 8 17 12 19C16 17 18 16 18 12C18 8 16 7 12 5Z",
-												"M12 5C8 5 6 8 6 12C6 16 8 19 12 19C16 19 18 16 18 12C18 8 16 5 12 5Z",
-											],
-										}}
-										transition={{
-											duration: 1,
-											repeat: Infinity,
-											repeatType: "mirror",
-										}}
-									/>
-								</svg>
-							</motion.div>
-						))}
-					</div>
-				)}
-			</div>
-		);
-	};
+	// Get seasonal effects component
+	const seasonalEffectsComponent = !atmosphereSettings.effects.length ? null : (
+		<div className="absolute inset-0 z-20">
+			{atmosphereSettings.effects.includes("leaves") && <LeavesEffect intensity={atmosphereSettings.effectsIntensity / 100} />}
+			{atmosphereSettings.effects.includes("blossoms") && <BlossomsEffect intensity={atmosphereSettings.effectsIntensity / 100} />}
+			{atmosphereSettings.effects.includes("butterflies") && <ButterfliesEffect intensity={atmosphereSettings.effectsIntensity / 100} />}
+		</div>
+	);
 
 	return (
 		<div>
@@ -1075,10 +1246,10 @@ export const Canvas = forwardRef<HTMLDivElement, CanvasProps>(function Canvas(
 					filter: getTimeOfDayOverlay(),
 				}}>
 				{/* Weather effects */}
-				{getWeatherEffect()}
+				<div className="absolute inset-0 z-10 pointer-events-none">{weatherEffectComponent}</div>
 
 				{/* Seasonal effects */}
-				{getSeasonalEffects()}
+				<div className="absolute inset-0 z-20 pointer-events-none">{seasonalEffectsComponent}</div>
 
 				{/* Render all garden elements */}
 				{elements.map((element) => {
@@ -1401,28 +1572,6 @@ function XIcon(props: React.SVGProps<SVGSVGElement>) {
 			{...props}>
 			<line x1="18" y1="6" x2="6" y2="18"></line>
 			<line x1="6" y1="6" x2="18" y2="18"></line>
-		</svg>
-	);
-}
-
-function BorderIcon(props: React.SVGProps<SVGSVGElement>) {
-	return (
-		<svg
-			xmlns="http://www.w3.org/2000/svg"
-			width="24"
-			height="24"
-			viewBox="0 0 24 24"
-			fill="none"
-			stroke="currentColor"
-			strokeWidth="2"
-			strokeLinecap="round"
-			strokeLinejoin="round"
-			{...props}>
-			<rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
-			<line x1="3" y1="9" x2="21" y2="9" />
-			<line x1="3" y1="15" x2="21" y2="15" />
-			<line x1="9" y1="3" x2="9" y2="21" />
-			<line x1="15" y1="3" x2="15" y2="21" />
 		</svg>
 	);
 }
