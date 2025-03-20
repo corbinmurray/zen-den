@@ -45,7 +45,7 @@ export function GardenViewer() {
 					// Load garden data
 					setElements(garden.elements || []);
 					setBackground(garden.background || "/backgrounds/zen-garden-bg.svg");
-					setGardenName(garden.name || "Zen Garden");
+					setGardenName(garden.gardenName || "Zen Garden");
 					setAtmosphereSettings(
 						garden.atmosphereSettings || {
 							timeOfDay: "day",
@@ -54,9 +54,6 @@ export function GardenViewer() {
 							effectsIntensity: 50,
 						}
 					);
-					toast.success("Garden loaded", {
-						description: `Viewing ${garden.name || "zen garden"}`,
-					});
 				} else {
 					toast.error("Garden not found", {
 						description: "The garden you're looking for could not be found.",
@@ -83,7 +80,6 @@ export function GardenViewer() {
 
 	// Handle garden edit navigation
 	const handleEdit = () => {
-		// Navigate to garden creator with this garden id
 		window.location.href = `/garden?id=${gardenId}`;
 	};
 
