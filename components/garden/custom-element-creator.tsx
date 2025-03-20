@@ -4,13 +4,18 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ElementOption } from "@/lib/types";
-import { useState } from "react";
+import { Eraser, Paintbrush, Trash } from "lucide-react";
+import { JSX, useState } from "react";
 import { v4 as uuidv4 } from "uuid";
 
 // Define grid size
-const GRID_SIZE = 15;
-const CANVAS_SIZE = 100;
+const GRID_SIZE = 40;
+const CANVAS_SIZE = 500;
 const CELL_SIZE = CANVAS_SIZE / GRID_SIZE;
+const createEmptyGrid = () =>
+	Array(GRID_SIZE)
+		.fill(null)
+		.map(() => Array(GRID_SIZE).fill(null));
 
 // Define color palette that matches our aesthetic
 const COLOR_PALETTE = [
@@ -34,14 +39,9 @@ interface CustomElementCreatorProps {
 }
 
 export function CustomElementCreator({ onSaveElement, onCancel }: CustomElementCreatorProps) {
-	const [grid, setGrid] = useState<Array<Array<string | null>>>(() =>
-		Array(GRID_SIZE)
-			.fill(null)
-			.map(() => Array(GRID_SIZE).fill(null))
-	);
+	const [grid, setGrid] = useState<Array<Array<string | null>>>(createEmptyGrid());
 	const [currentColor, setCurrentColor] = useState(COLOR_PALETTE[0]);
 	const [elementName, setElementName] = useState("Custom Element");
-	const [elementDescription, setElementDescription] = useState("");
 	const [selectedTool, setSelectedTool] = useState<"paint" | "erase">("paint");
 	const [isDrawing, setIsDrawing] = useState(false);
 
@@ -104,7 +104,6 @@ export function CustomElementCreator({ onSaveElement, onCancel }: CustomElementC
 		const customElement: ElementOption = {
 			type: `custom-${uuidv4().slice(0, 8)}`,
 			name: elementName,
-			description: elementDescription || `Custom element: ${elementName}`,
 			imagePath: svgString,
 			preview: svgString,
 			category: "custom",
@@ -114,149 +113,104 @@ export function CustomElementCreator({ onSaveElement, onCancel }: CustomElementC
 	};
 
 	return (
-		<div className="flex flex-col">
-			<div className="grid gap-4 mb-4 grid-cols-1 md:grid-cols-2">
-				<div>
-					<Label htmlFor="element-name">Element Name</Label>
-					<Input id="element-name" value={elementName} onChange={(e) => setElementName(e.target.value)} className="mt-1" />
-				</div>
-				<div>
-					<Label htmlFor="element-description">Description (Optional)</Label>
-					<Input
-						id="element-description"
-						value={elementDescription}
-						onChange={(e) => setElementDescription(e.target.value)}
-						className="mt-1"
-						placeholder="Briefly describe this element..."
-					/>
+		<div className="flex flex-col gap-6">
+			<div>
+				<Label htmlFor="element-name">Element Name</Label>
+				<Input id="element-name" value={elementName} onChange={(e) => setElementName(e.target.value)} className="mt-1 max-w-sm" />
+			</div>
+
+			<div className="flex-1 flex flex-col">
+				{/* Color palette */}
+				<div className="mb-4">
+					<span className="text-sm font-medium block mb-2">Colors</span>
+					<div className="flex flex-wrap gap-2">
+						{COLOR_PALETTE.map((color) => (
+							<Button
+								key={color}
+								className={`size-8 p-0 rounded-full border-2 ${currentColor === color ? "ring-primary ring-2 scale-110" : "border-transparent"}`}
+								style={{ backgroundColor: color }}
+								onClick={() => setCurrentColor(color)}
+								aria-label={`Select color ${color}`}
+							/>
+						))}
+					</div>
 				</div>
 			</div>
 
-			<div className="flex flex-col gap-4 md:flex-row md:items-start mb-4">
-				<div className="flex-1">
-					<div className="flex justify-between items-center mb-2">
-						<span className="text-sm font-medium">Editor</span>
-						<div className="flex gap-2">
-							<Button size="sm" variant={selectedTool === "paint" ? "default" : "outline"} onClick={() => setSelectedTool("paint")}>
-								<svg
-									xmlns="http://www.w3.org/2000/svg"
-									width="16"
-									height="16"
-									viewBox="0 0 24 24"
-									fill="none"
-									stroke="currentColor"
-									strokeWidth="2"
-									strokeLinecap="round"
-									strokeLinejoin="round"
-									className="mr-1">
-									<path d="M12 19l7-7 3 3-7 7-3-3z"></path>
-									<path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"></path>
-									<path d="M2 2l7.586 7.586"></path>
-									<circle cx="11" cy="11" r="2"></circle>
-								</svg>
-								Paint
-							</Button>
-							<Button size="sm" variant={selectedTool === "erase" ? "default" : "outline"} onClick={() => setSelectedTool("erase")}>
-								<svg
-									xmlns="http://www.w3.org/2000/svg"
-									width="16"
-									height="16"
-									viewBox="0 0 24 24"
-									fill="none"
-									stroke="currentColor"
-									strokeWidth="2"
-									strokeLinecap="round"
-									strokeLinejoin="round"
-									className="mr-1">
-									<path d="M20 20h-8.3a1 1 0 0 1-.7-.3L2.3 11a1 1 0 0 1 0-1.4l6.9-6.9a1 1 0 0 1 1.4 0L19 11a1 1 0 0 1 0 1.4l-8.7 8.7a1 1 0 0 1-.7.3H4"></path>
-								</svg>
-								Erase
-							</Button>
-						</div>
-					</div>
-
-					{/* Grid editor */}
-					<div
-						className="border border-border rounded-md overflow-hidden bg-white"
-						style={{
-							width: "100%",
-							aspectRatio: "1/1",
-							display: "grid",
-							gridTemplateColumns: `repeat(${GRID_SIZE}, 1fr)`,
-							gridTemplateRows: `repeat(${GRID_SIZE}, 1fr)`,
-						}}
-						onMouseUp={() => setIsDrawing(false)}
-						onMouseLeave={() => setIsDrawing(false)}
-						onTouchEnd={() => setIsDrawing(false)}>
-						{grid.map((row, rowIndex) =>
-							row.map((cell, colIndex) => (
-								<div
-									key={`${rowIndex}-${colIndex}`}
-									className="border border-border/20 cursor-pointer"
-									style={{
-										backgroundColor: cell || "transparent",
-										position: "relative",
-									}}
-									onMouseDown={() => handleCellInteraction(rowIndex, colIndex)}
-									onMouseOver={() => handleCellInteraction(rowIndex, colIndex, true)}
-									onTouchStart={() => handleCellInteraction(rowIndex, colIndex)}
-									onTouchMove={(e) => {
-										e.preventDefault(); // Prevent scrolling during drawing
-
-										// Get touch position and find corresponding cell
-										const touch = e.touches[0];
-										const rect = e.currentTarget.getBoundingClientRect();
-
-										// Calculate position relative to the grid
-										const relativeX = touch.clientX - rect.left;
-										const relativeY = touch.clientY - rect.top;
-
-										// Calculate cell coordinates
-										const cellWidth = rect.width / GRID_SIZE;
-										const cellHeight = rect.height / GRID_SIZE;
-
-										const cellX = Math.floor(relativeX / cellWidth);
-										const cellY = Math.floor(relativeY / cellHeight);
-
-										// Check if within bounds
-										if (cellX >= 0 && cellX < GRID_SIZE && cellY >= 0 && cellY < GRID_SIZE) {
-											handleCellInteraction(cellY, cellX, true);
-										}
-									}}
-									data-row={rowIndex}
-									data-col={colIndex}
-								/>
-							))
-						)}
+			<div className="flex-1">
+				<div className="flex justify-around mb-2 w-full">
+					<div className="flex gap-6">
+						<Button size="sm" variant={selectedTool === "paint" ? "default" : "outline"} onClick={() => setSelectedTool("paint")}>
+							<Paintbrush />
+							Paint
+						</Button>
+						<Button size="sm" variant={selectedTool === "erase" ? "default" : "outline"} onClick={() => setSelectedTool("erase")}>
+							<Eraser />
+							Erase
+						</Button>
+						<Button
+							size="sm"
+							className="border border-destructive text-destructive bg-transparent hover:bg-destructive hover:text-foreground"
+							onClick={() => setGrid(createEmptyGrid())}>
+							<Trash />
+							Clear
+						</Button>
 					</div>
 				</div>
 
-				<div className="flex-1 flex flex-col">
-					{/* Color palette */}
-					<div className="mb-4">
-						<span className="text-sm font-medium block mb-2">Colors</span>
-						<div className="flex flex-wrap gap-2">
-							{COLOR_PALETTE.map((color, index) => (
-								<button
-									key={index}
-									className={`w-8 h-8 rounded-full border-2 ${currentColor === color ? "border-primary" : "border-transparent"}`}
-									style={{ backgroundColor: color }}
-									onClick={() => setCurrentColor(color)}
-									aria-label={`Select color ${color}`}
-								/>
-							))}
-						</div>
-					</div>
+				{/* Grid editor */}
+				<div
+					className="border border-border rounded-md overflow-hidden bg-white"
+					style={{
+						width: "100%",
+						aspectRatio: "1/1",
+						display: "grid",
+						gridTemplateColumns: `repeat(${GRID_SIZE}, 1fr)`,
+						gridTemplateRows: `repeat(${GRID_SIZE}, 1fr)`,
+					}}
+					onMouseUp={() => setIsDrawing(false)}
+					onMouseLeave={() => setIsDrawing(false)}
+					onTouchEnd={() => setIsDrawing(false)}>
+					{grid.map((row, rowIndex) =>
+						row.map((cell, colIndex) => (
+							<div
+								key={`${rowIndex}-${colIndex}`}
+								className="border border-border/20 cursor-cell"
+								style={{
+									backgroundColor: cell || "transparent",
+									position: "relative",
+								}}
+								onMouseDown={() => handleCellInteraction(rowIndex, colIndex)}
+								onMouseOver={() => handleCellInteraction(rowIndex, colIndex, true)}
+								onTouchStart={() => handleCellInteraction(rowIndex, colIndex)}
+								onTouchMove={(e) => {
+									e.preventDefault(); // Prevent scrolling during drawing
 
-					{/* Preview */}
-					<div className="mb-4">
-						<span className="text-sm font-medium block mb-2">Preview</span>
-						<div className="border border-border rounded-md overflow-hidden bg-white p-2" style={{ width: "100%", aspectRatio: "1/1" }}>
-							<svg viewBox={`0 0 ${CANVAS_SIZE} ${CANVAS_SIZE}`} xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
-								{generateSvgFromGrid()}
-							</svg>
-						</div>
-					</div>
+									// Get touch position and find corresponding cell
+									const touch = e.touches[0];
+									const rect = e.currentTarget.getBoundingClientRect();
+
+									// Calculate position relative to the grid
+									const relativeX = touch.clientX - rect.left;
+									const relativeY = touch.clientY - rect.top;
+
+									// Calculate cell coordinates
+									const cellWidth = rect.width / GRID_SIZE;
+									const cellHeight = rect.height / GRID_SIZE;
+
+									const cellX = Math.floor(relativeX / cellWidth);
+									const cellY = Math.floor(relativeY / cellHeight);
+
+									// Check if within bounds
+									if (cellX >= 0 && cellX < GRID_SIZE && cellY >= 0 && cellY < GRID_SIZE) {
+										handleCellInteraction(cellY, cellX, true);
+									}
+								}}
+								data-row={rowIndex}
+								data-col={colIndex}
+							/>
+						))
+					)}
 				</div>
 			</div>
 

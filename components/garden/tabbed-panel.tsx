@@ -47,30 +47,30 @@ export function TabbedPanel({
 }: TabbedPanelProps) {
 	return (
 		<div className="flex flex-col h-full overflow-hidden bg-card rounded-lg border border-border">
-			<Tabs defaultValue="elements" className="flex flex-col h-full">
+			<Tabs defaultValue="elements" className="flex flex-col h-full p-1">
 				<div className="border-b border-border px-2 flex-shrink-0">
 					<TabsList className="h-12 w-full justify-start bg-transparent">
 						<TabsTrigger
 							value="elements"
-							className="flex items-center gap-1 px-3 py-2 text-xs data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:rounded-none data-[state=active]:bg-transparent min-w-[80px]">
+							className="flex items-center gap-1 px-3 py-2 text-xs data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:rounded-none data-[state=active]:bg-transparent min-w-[80px] hover:cursor-pointer hover:text-foreground">
 							<ElementsIcon className="h-4 w-4" />
 							<span>Elements</span>
 						</TabsTrigger>
 						<TabsTrigger
 							value="settings"
-							className="flex items-center gap-1 px-3 py-2 text-xs data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:rounded-none data-[state=active]:bg-transparent min-w-[80px]">
+							className="flex items-center gap-1 px-3 py-2 text-xs data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:rounded-none data-[state=active]:bg-transparent min-w-[80px] hover:cursor-pointer hover:text-foreground">
 							<SettingsIcon className="h-4 w-4" />
 							<span>Settings</span>
 						</TabsTrigger>
 						<TabsTrigger
 							value="atmosphere"
-							className="flex items-center gap-1 px-3 py-2 text-xs data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:rounded-none data-[state=active]:bg-transparent min-w-[95px]">
+							className="flex items-center gap-1 px-3 py-2 text-xs data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:rounded-none data-[state=active]:bg-transparent min-w-[95px] hover:cursor-pointer hover:text-foreground">
 							<AtmosphereIcon className="h-4 w-4" />
 							<span>Atmosphere</span>
 						</TabsTrigger>
 						<TabsTrigger
 							value="sounds"
-							className="flex items-center gap-1 px-3 py-2 text-xs data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:rounded-none data-[state=active]:bg-transparent min-w-[80px]">
+							className="flex items-center gap-1 px-3 py-2 text-xs data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:rounded-none data-[state=active]:bg-transparent min-w-[80px] hover:cursor-pointer hover:text-foreground">
 							<SoundIcon className="h-4 w-4" />
 							<span>Sounds</span>
 						</TabsTrigger>
