@@ -15,7 +15,7 @@ export function Navigation() {
 	const routes = [
 		{ href: "/", label: "Home" },
 		{ href: "/gallery", label: "Gallery" },
-		{ href: "/create", label: "Create Your Garden" },
+		{ href: "/garden", label: "Create Your Garden" },
 		{ href: "/about", label: "About" },
 	];
 
