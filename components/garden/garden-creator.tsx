@@ -54,6 +54,41 @@ export function GardenCreator() {
 		};
 	}, []);
 
+	// Check if there's a garden to load
+	useEffect(() => {
+		try {
+			// Check if there's a garden to load from localStorage
+			const gardenToLoad = localStorage.getItem("zenGardenToLoad");
+
+			if (gardenToLoad) {
+				const garden = JSON.parse(gardenToLoad);
+
+				// Set garden elements and settings
+				setElements(garden.elements || []);
+				setBackground(garden.background || "/backgrounds/zen-default.jpg");
+
+				// Set atmosphere settings if available
+				if (garden.atmosphereSettings) {
+					setAtmosphereSettings(garden.atmosphereSettings);
+				}
+
+				// Clear the stored garden after loading
+				localStorage.removeItem("zenGardenToLoad");
+
+				toast.success("Garden loaded", {
+					description: "Your garden has been loaded from the gallery.",
+				});
+			}
+		} catch (error) {
+			console.error("Failed to load garden:", error);
+			toast.error("Failed to load garden", {
+				description: "There was a problem loading your garden.",
+			});
+			// Clear potentially corrupted data
+			localStorage.removeItem("zenGardenToLoad");
+		}
+	}, []);
+
 	// Use callback to prevent unnecessary recreations of this function
 	const handleAddElement = useCallback(
 		(elementOption: ElementOption) => {
@@ -101,52 +136,134 @@ export function GardenCreator() {
 
 	// Handle saving garden to local storage
 	const handleSave = () => {
-		const garden = {
-			elements,
-			background,
-			timestamp: new Date().toISOString(),
-			atmosphereSettings,
-		};
+		// Prompt the user to name their garden
+		toast.info("Name your garden", {
+			description: "Give your zen garden a name to help you identify it in your gallery.",
+			action: {
+				label: "Save",
+				onClick: (data) => {
+					// Default name if none provided
+					const gardenName = data?.name?.trim() || `Zen Garden ${new Date().toLocaleDateString()}`;
 
-		try {
-			// Save to local storage
-			const savedGardens = JSON.parse(localStorage.getItem("zenGardens") || "[]");
-			localStorage.setItem("zenGardens", JSON.stringify([...savedGardens, garden]));
+					const garden = {
+						elements,
+						background,
+						timestamp: new Date().toISOString(),
+						atmosphereSettings,
+						name: gardenName,
+					};
 
-			toast.success("Garden saved", {
-				description: "Your zen garden has been saved successfully.",
-			});
-		} catch (error) {
-			console.error("Failed to save garden:", error);
-			toast.error("Save failed", {
-				description: "Failed to save your garden. Please try again.",
-			});
-		}
+					try {
+						// Save to local storage
+						const savedGardens = JSON.parse(localStorage.getItem("zenGardens") || "[]");
+						localStorage.setItem("zenGardens", JSON.stringify([...savedGardens, garden]));
+
+						toast.success("Garden saved", {
+							description: `"${gardenName}" has been saved to your gallery.`,
+						});
+					} catch (error) {
+						console.error("Failed to save garden:", error);
+						toast.error("Save failed", {
+							description: "Failed to save your garden. Please try again.",
+						});
+					}
+				},
+			},
+			cancel: {
+				label: "Cancel",
+				onClick: () => {},
+			},
+			// Add an input field for the garden name
+			inputs: [
+				{
+					name: "name",
+					placeholder: "My Zen Garden",
+					type: "text",
+				},
+			],
+		});
 	};
 
 	// Handle sharing (generate a shareable link)
 	const handleShare = () => {
-		// This would typically involve a backend to store the garden
-		// For now, we'll just copy garden data to clipboard as a demo
-		const gardenData = JSON.stringify({
-			elements,
-			background,
-			atmosphereSettings,
-		});
+		// Prompt the user to name their garden before sharing
+		toast.info("Name your garden", {
+			description: "Give your zen garden a name before sharing it.",
+			action: {
+				label: "Share",
+				onClick: (data) => {
+					// Default name if none provided
+					const gardenName = data?.name?.trim() || `Zen Garden ${new Date().toLocaleDateString()}`;
 
-		navigator.clipboard
-			.writeText(gardenData)
-			.then(() => {
-				toast.success("Copied to clipboard", {
-					description: "In a full implementation, this would generate a shareable link.",
-				});
-			})
-			.catch((err) => {
-				console.error("Failed to copy garden data:", err);
-				toast.error("Share failed", {
-					description: "Failed to copy garden data. Please try again.",
-				});
-			});
+					// First, save the garden to generate a timestamp ID if it's not already saved
+					const timestamp = new Date().toISOString();
+					const garden = {
+						elements,
+						background,
+						timestamp,
+						atmosphereSettings,
+						name: gardenName,
+					};
+
+					try {
+						// Save to local storage if not already saved
+						const savedGardens = JSON.parse(localStorage.getItem("zenGardens") || "[]");
+
+						// Check if this exact garden is already saved
+						let existingGardenId = null;
+						const isAlreadySaved = savedGardens.some((savedGarden: any) => {
+							// Simple check - if elements length and background match
+							if (savedGarden.elements.length === elements.length && savedGarden.background === background) {
+								existingGardenId = savedGarden.timestamp;
+								return true;
+							}
+							return false;
+						});
+
+						// If not already saved, save it now
+						if (!isAlreadySaved) {
+							localStorage.setItem("zenGardens", JSON.stringify([...savedGardens, garden]));
+							existingGardenId = timestamp;
+						}
+
+						// Create the shareable link
+						const shareUrl = `${window.location.origin}/view?id=${existingGardenId}`;
+
+						// Copy to clipboard
+						navigator.clipboard
+							.writeText(shareUrl)
+							.then(() => {
+								toast.success("Link copied to clipboard", {
+									description: `Share this link to let others view "${gardenName}".`,
+								});
+							})
+							.catch((err) => {
+								console.error("Failed to copy garden link:", err);
+								toast.error("Failed to copy link", {
+									description: "Your shareable link is: " + shareUrl,
+								});
+							});
+					} catch (error) {
+						console.error("Failed to share garden:", error);
+						toast.error("Share failed", {
+							description: "Failed to create a shareable link. Please try again.",
+						});
+					}
+				},
+			},
+			cancel: {
+				label: "Cancel",
+				onClick: () => {},
+			},
+			// Add an input field for the garden name
+			inputs: [
+				{
+					name: "name",
+					placeholder: "My Zen Garden",
+					type: "text",
+				},
+			],
+		});
 	};
 
 	// Handle clearing the canvas
