@@ -633,6 +633,17 @@ export const Canvas = forwardRef<HTMLDivElement, CanvasProps>(function Canvas(
 
 	// Function to render the SVG content for each element type
 	const renderElementSVG = (type: string) => {
+		// Check if this is a custom element (type starts with "custom-")
+		if (type.startsWith("custom-")) {
+			// Find the element by type instead of id
+			const customElement = elements.find((el) => el.type === type);
+			if (customElement && customElement.imagePath) {
+				// Render the SVG content from imagePath
+				return <div dangerouslySetInnerHTML={{ __html: customElement.imagePath }} className="w-full h-full" />;
+			}
+			return null;
+		}
+
 		switch (type) {
 			case "rock":
 				return (

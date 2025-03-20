@@ -156,6 +156,9 @@ export function ElementPanel({ onAddElement }: ElementPanelProps) {
 
 	const filteredCustomElements = customElements.filter((el) => el.name.toLowerCase().includes(debouncedSearchTerm.toLowerCase()));
 
+	// Combine all elements into a single array for the flat list view
+	const allElements = [...filteredStandardElements, ...filteredCustomElements];
+
 	const handleElementClick = (element: ElementOption) => {
 		// Enhanced visual feedback during addition
 		setAddInProgress(true);
@@ -404,7 +407,7 @@ export function ElementPanel({ onAddElement }: ElementPanelProps) {
 				/>
 
 				{/* Show message if no elements found */}
-				{filteredStandardElements.length === 0 && filteredCustomElements.length === 0 && (
+				{allElements.length === 0 && (
 					<div className="flex flex-col items-center justify-center py-8 text-muted-foreground">
 						<svg
 							xmlns="http://www.w3.org/2000/svg"
@@ -425,112 +428,11 @@ export function ElementPanel({ onAddElement }: ElementPanelProps) {
 					</div>
 				)}
 
-				{/* Custom elements section */}
-				{filteredCustomElements.length > 0 && (
-					<div className="mb-6">
-						<h3 className="text-sm font-medium mb-2 flex items-center">
-							<svg
-								xmlns="http://www.w3.org/2000/svg"
-								width="14"
-								height="14"
-								viewBox="0 0 24 24"
-								fill="none"
-								stroke="currentColor"
-								strokeWidth="2"
-								strokeLinecap="round"
-								strokeLinejoin="round"
-								className="mr-1.5">
-								<path d="M12 19l7-7 3 3-7 7-3-3z"></path>
-								<path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"></path>
-								<circle cx="11" cy="11" r="2"></circle>
-							</svg>
-							Custom Elements
-						</h3>
-						<div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-							{filteredCustomElements.map((element) => (
-								<motion.div
-									key={element.type}
-									className={`flex flex-col items-center p-2 rounded-md bg-background hover:bg-secondary border 
-										${addedElement === element.type ? "border-primary shadow-lg" : "border-border"} 
-										cursor-pointer relative overflow-hidden`}
-									whileHover={{ scale: 1.05 }}
-									whileTap={{ scale: 0.95 }}
-									onClick={() => !addInProgress && handleElementClick(element)}
-									transition={{ duration: 0.2 }}>
-									<div className="relative w-16 h-16 mb-1">
-										<div dangerouslySetInnerHTML={{ __html: element.preview }} />
-
-										{/* Enhanced animation for element being added */}
-										{addedElement === element.type && (
-											<>
-												<motion.div
-													className="absolute inset-0 bg-primary/15 rounded-md"
-													initial={{ opacity: 0.8 }}
-													animate={{ opacity: 0 }}
-													transition={{ duration: 0.7 }}
-												/>
-												<motion.div
-													className="absolute inset-0 border-2 border-primary rounded-md"
-													initial={{ opacity: 0.8 }}
-													animate={{ opacity: 0 }}
-													transition={{ duration: 0.5 }}
-												/>
-											</>
-										)}
-									</div>
-									<span className="text-xs text-center">{element.name}</span>
-
-									{/* Add indicator for adding functionality */}
-									<div className="absolute top-1 right-1 bg-background/90 rounded-full p-0.5 shadow-sm">
-										<svg
-											xmlns="http://www.w3.org/2000/svg"
-											width="10"
-											height="10"
-											viewBox="0 0 24 24"
-											fill="none"
-											stroke="currentColor"
-											strokeWidth="2"
-											strokeLinecap="round"
-											strokeLinejoin="round"
-											className="text-primary">
-											<path d="M5 12h14" />
-											<path d="M12 5v14" />
-										</svg>
-									</div>
-
-									{/* Delete button */}
-									<div
-										className="absolute top-1 left-1 bg-background/90 rounded-full p-0.5 shadow-sm hover:bg-destructive/10"
-										onClick={(e) => handleDeleteCustomElement(element.type, e)}
-										aria-label="Delete custom element">
-										<svg
-											xmlns="http://www.w3.org/2000/svg"
-											width="10"
-											height="10"
-											viewBox="0 0 24 24"
-											fill="none"
-											stroke="currentColor"
-											strokeWidth="2"
-											strokeLinecap="round"
-											strokeLinejoin="round"
-											className="text-destructive">
-											<path d="M3 6h18" />
-											<path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
-											<path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
-										</svg>
-									</div>
-								</motion.div>
-							))}
-						</div>
-					</div>
-				)}
-
-				{/* Standard elements section */}
-				{filteredStandardElements.length > 0 && (
+				{/* All elements in a single flat list */}
+				{allElements.length > 0 && (
 					<div>
-						{filteredCustomElements.length > 0 && <h3 className="text-sm font-medium mb-2">Standard Elements</h3>}
 						<div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-							{filteredStandardElements.map((element) => (
+							{allElements.map((element) => (
 								<motion.div
 									key={element.type}
 									className={`flex flex-col items-center p-2 rounded-md bg-background hover:bg-secondary border 
@@ -541,7 +443,7 @@ export function ElementPanel({ onAddElement }: ElementPanelProps) {
 									onClick={() => !addInProgress && handleElementClick(element)}
 									transition={{ duration: 0.2 }}>
 									<div className="relative w-16 h-16 mb-1">
-										{renderElementPreview(element.type)}
+										{element.category === "custom" ? <div dangerouslySetInnerHTML={{ __html: element.preview }} /> : renderElementPreview(element.type)}
 
 										{/* Enhanced animation for element being added */}
 										{addedElement === element.type && (
@@ -580,6 +482,30 @@ export function ElementPanel({ onAddElement }: ElementPanelProps) {
 											<path d="M12 5v14" />
 										</svg>
 									</div>
+
+									{/* Delete button - only for custom elements */}
+									{element.category === "custom" && (
+										<div
+											className="absolute top-1 left-1 bg-background/90 rounded-full p-0.5 shadow-sm hover:bg-destructive/10"
+											onClick={(e) => handleDeleteCustomElement(element.type, e)}
+											aria-label="Delete custom element">
+											<svg
+												xmlns="http://www.w3.org/2000/svg"
+												width="10"
+												height="10"
+												viewBox="0 0 24 24"
+												fill="none"
+												stroke="currentColor"
+												strokeWidth="2"
+												strokeLinecap="round"
+												strokeLinejoin="round"
+												className="text-destructive">
+												<path d="M3 6h18" />
+												<path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
+												<path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
+											</svg>
+										</div>
+									)}
 								</motion.div>
 							))}
 						</div>
