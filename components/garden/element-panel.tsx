@@ -49,12 +49,12 @@ interface ElementPanelProps {
 }
 
 export function ElementPanel({ onAddElement }: ElementPanelProps) {
-	const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+	// Not using category filtering for now, but might in the future
 	const [addedElement, setAddedElement] = useState<string | null>(null);
 	const [addInProgress, setAddInProgress] = useState(false);
 
 	// Filter elements based on category if needed
-	const displayedElements = selectedCategory ? ELEMENT_OPTIONS.filter((el) => el.type === selectedCategory) : ELEMENT_OPTIONS;
+	const displayedElements = ELEMENT_OPTIONS;
 
 	const handleElementClick = (element: ElementOption) => {
 		// Enhanced visual feedback during addition
@@ -154,7 +154,7 @@ export function ElementPanel({ onAddElement }: ElementPanelProps) {
 				{displayedElements.map((element) => (
 					<motion.div
 						key={element.type}
-						className={`flex flex-col items-center p-2 rounded-md bg-background hover:bg-muted border 
+						className={`flex flex-col items-center p-2 rounded-md bg-background hover:bg-secondary border 
 							${addedElement === element.type ? "border-primary shadow-lg" : "border-border"} 
 							cursor-pointer relative overflow-hidden`}
 						whileHover={{ scale: 1.05 }}
@@ -185,7 +185,7 @@ export function ElementPanel({ onAddElement }: ElementPanelProps) {
 						<span className="text-xs text-center">{element.name}</span>
 
 						{/* Add indicator for adding functionality */}
-						<div className="absolute top-1 right-1 bg-background/90 backdrop-blur-[2px] rounded-full p-0.5 shadow-sm">
+						<div className="absolute top-1 right-1 bg-background/90 rounded-full p-0.5 shadow-sm">
 							<svg
 								xmlns="http://www.w3.org/2000/svg"
 								width="10"
