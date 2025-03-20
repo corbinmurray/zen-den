@@ -8,7 +8,7 @@ export function Footer() {
 
 	return (
 		<footer className="border-t bg-background/90 backdrop-blur-sm">
-			<div className="mx-auto max-w-7xl px-6 py-12 md:flex md:items-center md:justify-between lg:px-8">
+			<div className="container mx-auto px-6 py-12 md:flex md:items-center md:justify-between lg:px-8">
 				<div className="flex justify-center space-x-6 md:order-2">
 					<Link href="https://github.com" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-foreground" aria-label="GitHub">
 						<Github className="h-5 w-5" />
