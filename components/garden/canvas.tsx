@@ -2,7 +2,7 @@
 
 import { AtmosphereSettings, GardenElement } from "@/lib/types";
 import * as motion from "motion/react-client";
-import { forwardRef, useEffect, useRef, useState } from "react";
+import { forwardRef, useCallback, useEffect, useRef, useState } from "react";
 
 interface CanvasProps {
 	elements: GardenElement[];
@@ -54,18 +54,20 @@ export const Canvas = forwardRef<HTMLDivElement, CanvasProps>(function Canvas(
 	// Track element scales for immediate updates during resize
 	const [elementScales, setElementScales] = useState<Map<string, number>>(new Map());
 
+	// Update canvas bounds when container size changes
+	const updateBounds = useCallback(() => {
+		if (canvasContainerRef.current) {
+			const rect = canvasContainerRef.current.getBoundingClientRect();
+			setCanvasBounds({
+				width: rect.width,
+				height: rect.height,
+			});
+		}
+	}, []);
+
 	// Handle ResizeObserver for canvas size
 	useEffect(() => {
 		if (!canvasRef.current) return;
-
-		const updateBounds = () => {
-			if (canvasRef.current) {
-				const { width, height } = canvasRef.current.getBoundingClientRect();
-				if (Math.abs(canvasBounds.width - width) > 1 || Math.abs(canvasBounds.height - height) > 1) {
-					setCanvasBounds({ width, height });
-				}
-			}
-		};
 
 		// Initial update
 		updateBounds();
@@ -77,7 +79,7 @@ export const Canvas = forwardRef<HTMLDivElement, CanvasProps>(function Canvas(
 		return () => {
 			resizeObserver.disconnect();
 		};
-	}, [canvasBounds.width, canvasBounds.height]);
+	}, [updateBounds]);
 
 	// Initialize element positions and scales
 	useEffect(() => {
@@ -106,70 +108,8 @@ export const Canvas = forwardRef<HTMLDivElement, CanvasProps>(function Canvas(
 	}, [elements]);
 
 	// Handle mouse events
-	useEffect(() => {
-		if (!canvasRef.current) return;
-
-		const container = canvasRef.current;
-		canvasContainerRef.current = container;
-
-		// Helper function to determine if a point is within the actual visible shape of an element
-		const isPointInShape = (elementType: string, x: number, y: number, elementX: number, elementY: number, size: number, rotation: number) => {
-			// Convert coordinates relative to element center
-			const centerX = elementX + size / 2;
-			const centerY = elementY + size / 2;
-
-			// Account for rotation by rotating the point in the opposite direction
-			const rotationRad = (rotation * Math.PI) / 180;
-			const rotatedX = Math.cos(-rotationRad) * (x - centerX) - Math.sin(-rotationRad) * (y - centerY) + centerX;
-			const rotatedY = Math.sin(-rotationRad) * (x - centerX) + Math.cos(-rotationRad) * (y - centerY) + centerY;
-
-			// Get normalized coordinates within the element (0 to 1)
-			const normalizedX = (rotatedX - elementX) / size;
-			const normalizedY = (rotatedY - elementY) / size;
-
-			// Check if we're outside the element's bounds
-			if (normalizedX < 0 || normalizedX > 1 || normalizedY < 0 || normalizedY > 1) {
-				return false;
-			}
-
-			// For more precise hit testing based on element type
-			switch (elementType) {
-				case "rock":
-				case "rock-flat":
-				case "rock-tall":
-				case "bonsai":
-				case "cherry":
-				case "pine":
-				case "moss":
-				case "water":
-				case "sand":
-					// For these elements, use an elliptical hit area
-					const distX = (normalizedX - 0.5) * 2; // -1 to 1
-					const distY = (normalizedY - 0.5) * 2; // -1 to 1
-					// Check if the point is within an ellipse
-					return distX * distX + distY * distY <= 1;
-
-				case "bamboo":
-				case "grass":
-					// Narrower hit area for thin vertical plants
-					const centerDist = Math.abs(normalizedX - 0.5);
-					return centerDist < 0.15 && normalizedY > 0.2;
-
-				case "lantern":
-				case "bridge":
-				case "pagoda":
-					// For structural elements, use a slightly reduced rectangular hit area
-					return normalizedX > 0.1 && normalizedX < 0.9 && normalizedY > 0.1 && normalizedY < 0.9;
-
-				default:
-					// Default to a circular hit area with 80% of the full radius
-					const dx = normalizedX - 0.5;
-					const dy = normalizedY - 0.5;
-					return dx * dx + dy * dy <= 0.16; // 0.16 = (0.4)²
-			}
-		};
-
-		const handleMouseDown = (e: MouseEvent) => {
+	const handleMouseDown = useCallback(
+		(e: MouseEvent) => {
 			// Skip if clicked on button or control
 			if (
 				(e.target as HTMLElement).tagName === "BUTTON" ||
@@ -179,6 +119,9 @@ export const Canvas = forwardRef<HTMLDivElement, CanvasProps>(function Canvas(
 			) {
 				return;
 			}
+
+			if (!canvasContainerRef.current) return;
+			const container = canvasContainerRef.current;
 
 			// Check if we're clicking on a resize handle
 			const resizeHandle = (e.target as HTMLElement).closest(".resize-handle");
@@ -228,17 +171,24 @@ export const Canvas = forwardRef<HTMLDivElement, CanvasProps>(function Canvas(
 			} else {
 				setSelectedElementId(null);
 			}
-		};
+		},
+		[elements, elementPositions, elementScales]
+	);
 
-		// Controls click handler
-		const handleControlsClick = (e: MouseEvent) => {
-			// If the click was on a control element, prevent it from triggering drag
-			if ((e.target as HTMLElement).closest(".controls")) {
-				e.stopPropagation();
-			}
-		};
+	// Controls click handler
+	const handleControlsClick = useCallback((e: MouseEvent) => {
+		// If the click was on a control element, prevent it from triggering drag
+		if ((e.target as HTMLElement).closest(".controls")) {
+			e.stopPropagation();
+		}
+	}, []);
 
-		const handleMouseMove = (e: MouseEvent) => {
+	// Handle mouse move
+	const handleMouseMove = useCallback(
+		(e: MouseEvent) => {
+			if (!canvasContainerRef.current) return;
+			const container = canvasContainerRef.current;
+
 			const rect = container.getBoundingClientRect();
 			const x = e.clientX - rect.left;
 			const y = e.clientY - rect.top;
@@ -327,52 +277,53 @@ export const Canvas = forwardRef<HTMLDivElement, CanvasProps>(function Canvas(
 					});
 				}
 			}
-		};
+		},
+		[canvasBounds.height, canvasBounds.width, draggedElement, elementPositions, elementScales, elements, isDragging, isResizing, resizeDirection]
+	);
 
-		const handleMouseUp = () => {
-			if (isResizing && draggedElement) {
-				const element = elements.find((el) => el.id === draggedElement);
-				const newScale = elementScales.get(draggedElement);
-				const newPosition = elementPositions.get(draggedElement);
+	// Handle mouse up
+	const handleMouseUp = useCallback(() => {
+		if (isResizing && draggedElement) {
+			const element = elements.find((el) => el.id === draggedElement);
+			const newScale = elementScales.get(draggedElement);
+			const newPosition = elementPositions.get(draggedElement);
 
-				if (element && newScale && newPosition) {
-					// Update the element position and scale through the parent callback
-					onElementUpdate({
-						...element,
-						scale: newScale,
-						position: newPosition,
-					});
-				}
-
-				setIsResizing(false);
-				setDraggedElement(null);
-				setResizeDirection(null);
-			} else if (isDragging && draggedElement) {
-				const element = elements.find((el) => el.id === draggedElement);
-				const newPosition = elementPositions.get(draggedElement);
-
-				if (element && newPosition) {
-					// Update the element position through the parent callback
-					onElementUpdate({
-						...element,
-						position: newPosition,
-					});
-				}
-
-				setIsDragging(false);
-				setDraggedElement(null);
+			if (element && newScale && newPosition) {
+				// Update the element position and scale through the parent callback
+				onElementUpdate({
+					...element,
+					scale: newScale,
+					position: newPosition,
+				});
 			}
-		};
 
-		// Attach event listeners
-		container.addEventListener("mousedown", handleMouseDown);
-		container.addEventListener("click", handleControlsClick);
-		window.addEventListener("mousemove", handleMouseMove);
-		window.addEventListener("mouseup", handleMouseUp);
+			setIsResizing(false);
+			setDraggedElement(null);
+			setResizeDirection(null);
+		} else if (isDragging && draggedElement) {
+			const element = elements.find((el) => el.id === draggedElement);
+			const newPosition = elementPositions.get(draggedElement);
 
-		// Touch events for mobile
-		const handleTouchStart = (e: TouchEvent) => {
+			if (element && newPosition) {
+				// Update the element position through the parent callback
+				onElementUpdate({
+					...element,
+					position: newPosition,
+				});
+			}
+
+			setIsDragging(false);
+			setDraggedElement(null);
+		}
+	}, [draggedElement, elements, elementPositions, elementScales, isDragging, isResizing, onElementUpdate]);
+
+	// Touch events for mobile
+	const handleTouchStart = useCallback(
+		(e: TouchEvent) => {
 			if (e.touches.length === 1) {
+				if (!canvasContainerRef.current) return;
+				const container = canvasContainerRef.current;
+
 				// Check if we're touching a resize handle
 				const touch = e.touches[0];
 				const element = document.elementFromPoint(touch.clientX, touch.clientY);
@@ -422,10 +373,16 @@ export const Canvas = forwardRef<HTMLDivElement, CanvasProps>(function Canvas(
 					setSelectedElementId(null);
 				}
 			}
-		};
+		},
+		[elements, elementPositions, elementScales]
+	);
 
-		const handleTouchMove = (e: TouchEvent) => {
+	const handleTouchMove = useCallback(
+		(e: TouchEvent) => {
 			if (e.touches.length === 1) {
+				if (!canvasContainerRef.current) return;
+				const container = canvasContainerRef.current;
+
 				const touch = e.touches[0];
 				const rect = container.getBoundingClientRect();
 				const x = touch.clientX - rect.left;
@@ -510,57 +467,122 @@ export const Canvas = forwardRef<HTMLDivElement, CanvasProps>(function Canvas(
 					e.preventDefault(); // Prevent scrolling when dragging
 				}
 			}
-		};
+		},
+		[canvasBounds.height, canvasBounds.width, draggedElement, elementPositions, elementScales, elements, isDragging, isResizing, resizeDirection]
+	);
 
-		const handleTouchEnd = () => {
-			if (isResizing && draggedElement) {
-				const element = elements.find((el) => el.id === draggedElement);
-				const newScale = elementScales.get(draggedElement);
-				const newPosition = elementPositions.get(draggedElement);
+	const handleTouchEnd = useCallback(() => {
+		if (isResizing && draggedElement) {
+			const element = elements.find((el) => el.id === draggedElement);
+			const newScale = elementScales.get(draggedElement);
+			const newPosition = elementPositions.get(draggedElement);
 
-				if (element && newScale && newPosition) {
-					onElementUpdate({
-						...element,
-						scale: newScale,
-						position: newPosition,
-					});
-				}
-
-				setIsResizing(false);
-				setDraggedElement(null);
-				setResizeDirection(null);
-			} else if (isDragging && draggedElement) {
-				const element = elements.find((el) => el.id === draggedElement);
-				const newPosition = elementPositions.get(draggedElement);
-
-				if (element && newPosition) {
-					onElementUpdate({
-						...element,
-						position: newPosition,
-					});
-				}
-
-				setIsDragging(false);
-				setDraggedElement(null);
+			if (element && newScale && newPosition) {
+				onElementUpdate({
+					...element,
+					scale: newScale,
+					position: newPosition,
+				});
 			}
-		};
 
-		// Setup event listeners
-		if (canvasContainerRef.current) {
-			updateBounds();
+			setIsResizing(false);
+			setDraggedElement(null);
+			setResizeDirection(null);
+		} else if (isDragging && draggedElement) {
+			const element = elements.find((el) => el.id === draggedElement);
+			const newPosition = elementPositions.get(draggedElement);
 
-			// Only add interactive event listeners if not in readonly mode
-			if (!readonly) {
-				// Mouse events
-				canvasContainerRef.current.addEventListener("mousedown", handleMouseDown);
-				canvasContainerRef.current.addEventListener("mousemove", handleMouseMove);
-				document.addEventListener("mouseup", handleMouseUp);
-
-				// Touch events for mobile
-				canvasContainerRef.current.addEventListener("touchstart", handleTouchStart, { passive: false });
-				canvasContainerRef.current.addEventListener("touchmove", handleTouchMove, { passive: false });
-				document.addEventListener("touchend", handleTouchEnd);
+			if (element && newPosition) {
+				onElementUpdate({
+					...element,
+					position: newPosition,
+				});
 			}
+
+			setIsDragging(false);
+			setDraggedElement(null);
+		}
+	}, [draggedElement, elements, elementPositions, elementScales, isDragging, isResizing, onElementUpdate]);
+
+	// Helper function to determine if a point is within an element's shape
+	const isPointInShape = useCallback((elementType: string, x: number, y: number, elementX: number, elementY: number, size: number, rotation: number) => {
+		// Convert coordinates relative to element center
+		const centerX = elementX + size / 2;
+		const centerY = elementY + size / 2;
+
+		// Account for rotation by rotating the point in the opposite direction
+		const rotationRad = (rotation * Math.PI) / 180;
+		const rotatedX = Math.cos(-rotationRad) * (x - centerX) - Math.sin(-rotationRad) * (y - centerY) + centerX;
+		const rotatedY = Math.sin(-rotationRad) * (x - centerX) + Math.cos(-rotationRad) * (y - centerY) + centerY;
+
+		// Get normalized coordinates within the element (0 to 1)
+		const normalizedX = (rotatedX - elementX) / size;
+		const normalizedY = (rotatedY - elementY) / size;
+
+		// Check if we're outside the element's bounds
+		if (normalizedX < 0 || normalizedX > 1 || normalizedY < 0 || normalizedY > 1) {
+			return false;
+		}
+
+		// For more precise hit testing based on element type
+		switch (elementType) {
+			case "rock":
+			case "rock-flat":
+			case "rock-tall":
+			case "bonsai":
+			case "cherry":
+			case "pine":
+			case "moss":
+			case "water":
+			case "sand":
+				// For these elements, use an elliptical hit area
+				const distX = (normalizedX - 0.5) * 2; // -1 to 1
+				const distY = (normalizedY - 0.5) * 2; // -1 to 1
+				// Check if the point is within an ellipse
+				return distX * distX + distY * distY <= 1;
+
+			case "bamboo":
+			case "grass":
+				// Narrower hit area for thin vertical plants
+				const centerDist = Math.abs(normalizedX - 0.5);
+				return centerDist < 0.15 && normalizedY > 0.2;
+
+			case "lantern":
+			case "bridge":
+			case "pagoda":
+				// For structural elements, use a slightly reduced rectangular hit area
+				return normalizedX > 0.1 && normalizedX < 0.9 && normalizedY > 0.1 && normalizedY < 0.9;
+
+			default:
+				// Default to a circular hit area with 80% of the full radius
+				const dx = normalizedX - 0.5;
+				const dy = normalizedY - 0.5;
+				return dx * dx + dy * dy <= 0.16; // 0.16 = (0.4)²
+		}
+	}, []);
+
+	// Set up event listeners
+	useEffect(() => {
+		if (!canvasRef.current) return;
+
+		// Store canvas container reference
+		canvasContainerRef.current = canvasRef.current;
+
+		// Update canvas bounds initially
+		updateBounds();
+
+		// Only add interactive event listeners if not in readonly mode
+		if (!readonly) {
+			// Mouse events
+			canvasContainerRef.current.addEventListener("mousedown", handleMouseDown);
+			canvasContainerRef.current.addEventListener("click", handleControlsClick);
+			window.addEventListener("mousemove", handleMouseMove);
+			window.addEventListener("mouseup", handleMouseUp);
+
+			// Touch events for mobile
+			canvasContainerRef.current.addEventListener("touchstart", handleTouchStart as EventListener, { passive: false });
+			canvasContainerRef.current.addEventListener("touchmove", handleTouchMove as EventListener, { passive: false });
+			document.addEventListener("touchend", handleTouchEnd as EventListener);
 		}
 
 		// Always add resize event listener, even in readonly mode
@@ -570,24 +592,16 @@ export const Canvas = forwardRef<HTMLDivElement, CanvasProps>(function Canvas(
 			// Clean up event listeners
 			if (canvasContainerRef.current && !readonly) {
 				canvasContainerRef.current.removeEventListener("mousedown", handleMouseDown);
-				canvasContainerRef.current.removeEventListener("mousemove", handleMouseMove);
-				canvasContainerRef.current.removeEventListener("touchstart", handleTouchStart);
-				canvasContainerRef.current.removeEventListener("touchmove", handleTouchMove);
+				canvasContainerRef.current.removeEventListener("click", handleControlsClick);
+				canvasContainerRef.current.removeEventListener("touchstart", handleTouchStart as EventListener);
+				canvasContainerRef.current.removeEventListener("touchmove", handleTouchMove as EventListener);
 			}
-			document.removeEventListener("mouseup", handleMouseUp);
-			document.removeEventListener("touchend", handleTouchEnd);
+			window.removeEventListener("mousemove", handleMouseMove);
+			window.removeEventListener("mouseup", handleMouseUp);
+			document.removeEventListener("touchend", handleTouchEnd as EventListener);
 			window.removeEventListener("resize", updateBounds);
 		};
-	}, [
-		updateBounds,
-		handleMouseDown,
-		handleMouseMove,
-		handleMouseUp,
-		handleTouchStart,
-		handleTouchMove,
-		handleTouchEnd,
-		readonly, // Make sure useEffect reruns if readonly status changes
-	]);
+	}, [handleMouseDown, handleMouseMove, handleMouseUp, handleTouchStart, handleTouchMove, handleTouchEnd, handleControlsClick, updateBounds, readonly]);
 
 	// Handle rotate and scale functions
 	const handleRotate = (id: string, change: number, e?: React.MouseEvent) => {
