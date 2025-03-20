@@ -18,7 +18,6 @@ export interface GardenData {
 	elements: GardenElement[];
 	background: string;
 	timestamp: string;
-	name?: string;
 	atmosphereSettings?: AtmosphereSettings;
 }
 

@@ -1,7 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { GardenData, GardenElement } from "@/lib/types";
+import { GardenData } from "@/lib/types";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -68,119 +68,6 @@ export function SavedGardens() {
 		}
 	};
 
-	// Function to render a simple SVG preview of an element
-	const renderElementPreview = (type: string, scale: number, position: { x: number; y: number }, rotation: number) => {
-		// Very simplified SVG rendering to create small preview thumbnails
-		switch (type) {
-			case "rock":
-			case "rock-flat":
-			case "rock-tall":
-				return (
-					<div
-						className="absolute w-8 h-8 rounded-full bg-neutral-400"
-						style={{
-							left: `${position.x / 3}px`,
-							top: `${position.y / 3}px`,
-							transform: `scale(${scale * 0.6}) rotate(${rotation}deg)`,
-							opacity: 0.85,
-						}}
-					/>
-				);
-			case "bamboo":
-			case "pine":
-			case "grass":
-				return (
-					<div
-						className="absolute w-6 h-10 bg-green-700 rounded-t-full"
-						style={{
-							left: `${position.x / 3}px`,
-							top: `${position.y / 3}px`,
-							transform: `scale(${scale * 0.6}) rotate(${rotation}deg)`,
-							opacity: 0.85,
-						}}
-					/>
-				);
-			case "cherry":
-			case "bonsai":
-				return (
-					<div
-						className="absolute w-8 h-8 bg-green-600 rounded-full"
-						style={{
-							left: `${position.x / 3}px`,
-							top: `${position.y / 3}px`,
-							transform: `scale(${scale * 0.6}) rotate(${rotation}deg)`,
-							opacity: 0.85,
-						}}
-					/>
-				);
-			case "water":
-				return (
-					<div
-						className="absolute w-12 h-8 bg-blue-300 rounded-full"
-						style={{
-							left: `${position.x / 3}px`,
-							top: `${position.y / 3}px`,
-							transform: `scale(${scale * 0.6}) rotate(${rotation}deg)`,
-							opacity: 0.7,
-						}}
-					/>
-				);
-			case "sand":
-				return (
-					<div
-						className="absolute w-16 h-8 bg-amber-100 rounded-full"
-						style={{
-							left: `${position.x / 3}px`,
-							top: `${position.y / 3}px`,
-							transform: `scale(${scale * 0.6}) rotate(${rotation}deg)`,
-							opacity: 0.7,
-						}}
-					/>
-				);
-			case "moss":
-				return (
-					<div
-						className="absolute w-10 h-6 bg-green-500 rounded-full"
-						style={{
-							left: `${position.x / 3}px`,
-							top: `${position.y / 3}px`,
-							transform: `scale(${scale * 0.6}) rotate(${rotation}deg)`,
-							opacity: 0.8,
-						}}
-					/>
-				);
-			case "lantern":
-			case "bridge":
-			case "pagoda":
-				return (
-					<div
-						className="absolute w-6 h-10 bg-amber-800 rounded-sm"
-						style={{
-							left: `${position.x / 3}px`,
-							top: `${position.y / 3}px`,
-							transform: `scale(${scale * 0.6}) rotate(${rotation}deg)`,
-							opacity: 0.85,
-						}}
-					/>
-				);
-			default:
-				if (type.startsWith("custom-")) {
-					return (
-						<div
-							className="absolute w-8 h-8 bg-primary rounded-md"
-							style={{
-								left: `${position.x / 3}px`,
-								top: `${position.y / 3}px`,
-								transform: `scale(${scale * 0.6}) rotate(${rotation}deg)`,
-								opacity: 0.7,
-							}}
-						/>
-					);
-				}
-				return null;
-		}
-	};
-
 	if (savedGardens.length === 0) {
 		return (
 			<div className="p-6 bg-card border border-border rounded-lg text-center">
@@ -195,7 +82,7 @@ export function SavedGardens() {
 			<h2 className="text-xl font-semibold">Your Saved Gardens</h2>
 
 			<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-				{savedGardens.map((garden) => (
+				{savedGardens.map((garden, index) => (
 					<div key={garden.timestamp} className="border border-border rounded-lg overflow-hidden bg-card">
 						<div
 							className="aspect-video relative"
@@ -203,25 +90,10 @@ export function SavedGardens() {
 								backgroundImage: `url(${garden.background})`,
 								backgroundSize: "cover",
 								backgroundPosition: "center",
-								filter:
-									garden.atmosphereSettings?.timeOfDay === "night"
-										? "brightness(0.6)"
-										: garden.atmosphereSettings?.timeOfDay === "sunset"
-										? "brightness(0.8) sepia(0.2)"
-										: "brightness(1)",
 							}}>
-							{/* Render a few elements as a preview */}
-							<div className="absolute inset-0 overflow-hidden">
-								{garden.elements.slice(0, 5).map((element: GardenElement, i) => (
-									<div key={i}>{renderElementPreview(element.type, element.scale, element.position, element.rotation)}</div>
-								))}
-							</div>
-
-							{/* Garden name as an overlay */}
-							<div className="absolute inset-0 flex items-end justify-start p-2">
-								<div className="bg-background/80 backdrop-blur-sm px-3 py-2 rounded-md text-sm font-medium">
-									{garden.name || `Garden ${new Date(garden.timestamp).toLocaleDateString()}`}
-								</div>
+							{/* Garden preview would render elements here in a full implementation */}
+							<div className="absolute inset-0 flex items-center justify-center">
+								<span className="bg-background/80 backdrop-blur-sm px-3 py-1 rounded-md text-sm">Garden {index + 1}</span>
 							</div>
 						</div>
 

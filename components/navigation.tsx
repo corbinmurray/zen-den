@@ -24,7 +24,7 @@ export function Navigation() {
 			<div className="container mx-auto flex h-16 items-center justify-between">
 				<div className="flex items-center gap-2">
 					<Link href="/" className="flex items-center gap-2">
-						<span className="text-xl font-semibold text-primary">Zen Den</span>
+						<span className="text-2xl font-semibold text-primary">Zen Den</span>
 					</Link>
 				</div>
 
@@ -34,14 +34,11 @@ export function Navigation() {
 						<Link
 							key={route.href}
 							href={route.href}
-							className={`text-sm transition-colors hover:text-primary ${pathname === route.href ? "text-foreground font-medium" : "text-muted"}`}>
+							className={`transition-colors hover:text-primary ${pathname === route.href ? "text-foreground font-medium" : "text-muted"}`}>
 							{route.label}
 						</Link>
 					))}
 					<ThemeToggle />
-					<Link href="/garden">
-						<Button>Create Garden</Button>
-					</Link>
 				</nav>
 
 				{/* Mobile Navigation */}
@@ -63,7 +60,7 @@ export function Navigation() {
 									key={route.href}
 									href={route.href}
 									onClick={() => setIsOpen(false)}
-									className={`text-sm transition-colors hover:text-primary ${pathname === route.href ? "text-foreground font-medium" : "text-muted"}`}>
+									className={`transition-colors hover:text-primary ${pathname === route.href ? "text-foreground font-medium" : "text-muted"}`}>
 									{route.label}
 								</Link>
 							))}
