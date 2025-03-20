@@ -110,6 +110,63 @@ export const Canvas = forwardRef<HTMLDivElement, CanvasProps>(function Canvas(
 		const container = canvasRef.current;
 		canvasContainerRef.current = container;
 
+		// Helper function to determine if a point is within the actual visible shape of an element
+		const isPointInShape = (elementType: string, x: number, y: number, elementX: number, elementY: number, size: number, rotation: number) => {
+			// Convert coordinates relative to element center
+			const centerX = elementX + size / 2;
+			const centerY = elementY + size / 2;
+
+			// Account for rotation by rotating the point in the opposite direction
+			const rotationRad = (rotation * Math.PI) / 180;
+			const rotatedX = Math.cos(-rotationRad) * (x - centerX) - Math.sin(-rotationRad) * (y - centerY) + centerX;
+			const rotatedY = Math.sin(-rotationRad) * (x - centerX) + Math.cos(-rotationRad) * (y - centerY) + centerY;
+
+			// Get normalized coordinates within the element (0 to 1)
+			const normalizedX = (rotatedX - elementX) / size;
+			const normalizedY = (rotatedY - elementY) / size;
+
+			// Check if we're outside the element's bounds
+			if (normalizedX < 0 || normalizedX > 1 || normalizedY < 0 || normalizedY > 1) {
+				return false;
+			}
+
+			// For more precise hit testing based on element type
+			switch (elementType) {
+				case "rock":
+				case "rock-flat":
+				case "rock-tall":
+				case "bonsai":
+				case "cherry":
+				case "pine":
+				case "moss":
+				case "water":
+				case "sand":
+					// For these elements, use an elliptical hit area
+					const distX = (normalizedX - 0.5) * 2; // -1 to 1
+					const distY = (normalizedY - 0.5) * 2; // -1 to 1
+					// Check if the point is within an ellipse
+					return distX * distX + distY * distY <= 1;
+
+				case "bamboo":
+				case "grass":
+					// Narrower hit area for thin vertical plants
+					const centerDist = Math.abs(normalizedX - 0.5);
+					return centerDist < 0.15 && normalizedY > 0.2;
+
+				case "lantern":
+				case "bridge":
+				case "pagoda":
+					// For structural elements, use a slightly reduced rectangular hit area
+					return normalizedX > 0.1 && normalizedX < 0.9 && normalizedY > 0.1 && normalizedY < 0.9;
+
+				default:
+					// Default to a circular hit area with 80% of the full radius
+					const dx = normalizedX - 0.5;
+					const dy = normalizedY - 0.5;
+					return dx * dx + dy * dy <= 0.16; // 0.16 = (0.4)²
+			}
+		};
+
 		const handleMouseDown = (e: MouseEvent) => {
 			// Skip if clicked on button or control
 			if (
@@ -151,10 +208,11 @@ export const Canvas = forwardRef<HTMLDivElement, CanvasProps>(function Canvas(
 			// Find if we clicked on an element (in reverse order for proper z-index)
 			const clickedElementIndex = [...elements].reverse().findIndex((element) => {
 				const pos = elementPositions.get(element.id) || element.position;
-				const size = 100 * (elementScales.get(element.id) || element.scale);
+				const scale = elementScales.get(element.id) || element.scale;
+				const size = 100 * scale;
 
-				// Check if click is within the element bounds
-				return x >= pos.x && x <= pos.x + size && y >= pos.y && y <= pos.y + size;
+				// Use more precise hit testing
+				return isPointInShape(element.type, x, y, pos.x, pos.y, size, element.rotation);
 			});
 
 			if (clickedElementIndex !== -1) {
@@ -346,7 +404,9 @@ export const Canvas = forwardRef<HTMLDivElement, CanvasProps>(function Canvas(
 					const pos = elementPositions.get(element.id) || element.position;
 					const scale = elementScales.get(element.id) || element.scale;
 					const size = 100 * scale;
-					return x >= pos.x && x <= pos.x + size && y >= pos.y && y <= pos.y + size;
+
+					// Use the same precise hit testing for touch
+					return isPointInShape(element.type, x, y, pos.x, pos.y, size, element.rotation);
 				});
 
 				if (clickedElementIndex !== -1) {
@@ -582,6 +642,21 @@ export const Canvas = forwardRef<HTMLDivElement, CanvasProps>(function Canvas(
 						<ellipse cx="40" cy="50" rx="10" ry="8" fill="#CFCFCF" opacity="0.6" />
 					</svg>
 				);
+			case "rock-flat":
+				return (
+					<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
+						<ellipse cx="50" cy="70" rx="45" ry="20" fill="#9B9B9B" />
+						<ellipse cx="50" cy="70" rx="35" ry="15" fill="#B0B0B0" />
+						<ellipse cx="60" cy="65" rx="10" ry="5" fill="#CFCFCF" opacity="0.5" />
+					</svg>
+				);
+			case "rock-tall":
+				return (
+					<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
+						<path d="M40,80 Q30,30 50,20 Q70,30 60,80 Z" fill="#8B8B8B" />
+						<path d="M45,75 Q40,35 50,25 Q60,35 55,75 Z" fill="#A3A3A3" />
+					</svg>
+				);
 			case "bamboo":
 				return (
 					<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
@@ -611,6 +686,38 @@ export const Canvas = forwardRef<HTMLDivElement, CanvasProps>(function Canvas(
 						<circle cx="60" cy="15" r="8" fill="#228B22" />
 					</svg>
 				);
+			case "cherry":
+				return (
+					<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
+						<rect x="45" y="60" width="10" height="25" fill="#8B4513" />
+						<path d="M50 20 C20 50, 40 20, 50 50" stroke="#8B4513" strokeWidth="4" fill="none" />
+						<path d="M50 20 C80 50, 60 20, 50 50" stroke="#8B4513" strokeWidth="4" fill="none" />
+						<circle cx="35" cy="25" r="12" fill="#FFB7C5" />
+						<circle cx="50" cy="20" r="15" fill="#FFB7C5" />
+						<circle cx="65" cy="25" r="12" fill="#FFB7C5" />
+						<circle cx="28" cy="35" r="10" fill="#FFB7C5" />
+						<circle cx="72" cy="35" r="10" fill="#FFB7C5" />
+					</svg>
+				);
+			case "pine":
+				return (
+					<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
+						<rect x="45" y="60" width="10" height="25" fill="#8B4513" />
+						<polygon points="30,60 70,60 50,20" fill="#2D5016" />
+						<polygon points="35,50 65,50 50,25" fill="#3A6B1E" />
+						<polygon points="38,40 62,40 50,20" fill="#4C8C27" />
+					</svg>
+				);
+			case "grass":
+				return (
+					<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
+						<path d="M30,80 C40,30 45,70 50,30" stroke="#4C8C27" strokeWidth="3" fill="none" />
+						<path d="M35,80 C50,35 55,60 60,35" stroke="#65A30D" strokeWidth="3" fill="none" />
+						<path d="M40,80 C45,40 50,50 55,25" stroke="#4C8C27" strokeWidth="3" fill="none" />
+						<path d="M45,80 C60,40 65,60 70,30" stroke="#65A30D" strokeWidth="3" fill="none" />
+						<path d="M50,80 C55,30 60,50 65,25" stroke="#4C8C27" strokeWidth="3" fill="none" />
+					</svg>
+				);
 			case "lantern":
 				return (
 					<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
@@ -622,6 +729,30 @@ export const Canvas = forwardRef<HTMLDivElement, CanvasProps>(function Canvas(
 						<rect x="45" y="15" width="10" height="5" fill="#7F7F7F" />
 						<rect x="48" y="10" width="4" height="5" fill="#7F7F7F" />
 						<rect x="40" y="45" width="20" height="5" fill="#7F7F7F" opacity="0.5" />
+					</svg>
+				);
+			case "bridge":
+				return (
+					<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
+						<path d="M20,50 C40,30 60,30 80,50" stroke="#8B4513" strokeWidth="5" fill="none" />
+						<rect x="20" y="50" width="60" height="5" fill="#A0522D" />
+						<rect x="20" y="55" width="5" height="15" fill="#8B4513" />
+						<rect x="75" y="55" width="5" height="15" fill="#8B4513" />
+						<rect x="30" y="55" width="5" height="10" fill="#8B4513" />
+						<rect x="65" y="55" width="5" height="10" fill="#8B4513" />
+						<rect x="45" y="55" width="10" height="7" fill="#8B4513" />
+					</svg>
+				);
+			case "pagoda":
+				return (
+					<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
+						<rect x="40" y="70" width="20" height="10" fill="#8B4513" />
+						<rect x="35" y="60" width="30" height="10" fill="#A0522D" />
+						<path d="M30 60 L70 60 L50 45 Z" fill="#C13B3B" />
+						<rect x="40" y="45" width="20" height="8" fill="#A0522D" />
+						<path d="M35 45 L65 45 L50 30 Z" fill="#C13B3B" />
+						<rect x="45" y="30" width="10" height="5" fill="#A0522D" />
+						<path d="M40 30 L60 30 L50 20 Z" fill="#C13B3B" />
 					</svg>
 				);
 			case "sand":
@@ -641,6 +772,16 @@ export const Canvas = forwardRef<HTMLDivElement, CanvasProps>(function Canvas(
 						<ellipse cx="40" cy="45" rx="5" ry="3" fill="#FFFFFF" opacity="0.6" />
 						<ellipse cx="55" cy="60" rx="8" ry="5" fill="#8DB4C2" opacity="0.5" />
 						<path d="M30 50 Q40 45, 50 50 Q60 55, 70 50" stroke="#FFFFFF" strokeWidth="1" fill="none" opacity="0.5" />
+					</svg>
+				);
+			case "moss":
+				return (
+					<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
+						<ellipse cx="50" cy="60" rx="35" ry="20" fill="#4B7F52" />
+						<ellipse cx="50" cy="60" rx="30" ry="17" fill="#5C9E64" />
+						<ellipse cx="35" cy="55" rx="7" ry="4" fill="#76BC7F" opacity="0.7" />
+						<ellipse cx="60" cy="65" rx="8" ry="5" fill="#76BC7F" opacity="0.5" />
+						<ellipse cx="50" cy="50" rx="5" ry="3" fill="#76BC7F" opacity="0.6" />
 					</svg>
 				);
 			default:
@@ -913,13 +1054,15 @@ export const Canvas = forwardRef<HTMLDivElement, CanvasProps>(function Canvas(
 									transform: `rotate(${element.rotation}deg)`,
 									position: "relative",
 								}}>
-								{/* Element outline */}
+								{/* Element outline - only show when selected or explicitly requested */}
 								{(showOutlines || element.id === selectedElementId) && (
 									<div
-										className="absolute inset-0 border-2 border-dashed rounded-md pointer-events-none"
+										className={`absolute inset-0 ${element.id === selectedElementId ? "border-2" : "border"} ${
+											element.id === selectedElementId ? "border-dashed" : "border-dotted"
+										} rounded-md pointer-events-none`}
 										style={{
-											borderColor: element.id === selectedElementId ? "rgba(99, 102, 241, 0.8)" : "rgba(156, 163, 175, 0.5)",
-											backgroundColor: "rgba(99, 102, 241, 0.05)",
+											borderColor: element.id === selectedElementId ? "rgba(99, 102, 241, 0.8)" : "rgba(156, 163, 175, 0.3)",
+											backgroundColor: element.id === selectedElementId ? "rgba(99, 102, 241, 0.05)" : "transparent",
 										}}
 									/>
 								)}

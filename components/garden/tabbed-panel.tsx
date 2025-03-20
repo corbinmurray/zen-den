@@ -1,14 +1,11 @@
 "use client";
 
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ElementOption } from "@/lib/types";
-import { useState } from "react";
 import { ActionButtons } from "./action-buttons";
 import { AtmosphereSettings, type AtmosphereSettings as AtmosphereSettingsType } from "./atmosphere-settings";
 import { ElementPanel } from "./element-panel";
 import { GardenSettings } from "./garden-settings";
-
-// Tab identifiers
-type TabId = "elements" | "settings" | "atmosphere" | "sounds";
 
 interface TabbedPanelProps {
 	onAddElement: (element: ElementOption) => void;
@@ -48,158 +45,143 @@ export function TabbedPanel({
 	onShare,
 	onClear,
 }: TabbedPanelProps) {
-	const [activeTab, setActiveTab] = useState<TabId>("elements");
-
 	return (
 		<div className="flex flex-col h-full overflow-hidden bg-card rounded-lg border border-border">
-			{/* Tab Navigation */}
-			<div className="flex border-b border-border overflow-x-auto">
-				<TabButton id="elements" active={activeTab === "elements"} onClick={() => setActiveTab("elements")}>
-					<ElementsIcon className="h-4 w-4 mr-2" />
-					Elements
-				</TabButton>
+			<Tabs defaultValue="elements" className="flex flex-col h-full">
+				<div className="border-b border-border px-2 flex-shrink-0">
+					<TabsList className="h-12 w-full justify-start bg-transparent">
+						<TabsTrigger
+							value="elements"
+							className="flex items-center gap-1 px-3 py-2 text-xs data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:rounded-none data-[state=active]:bg-transparent min-w-[80px]">
+							<ElementsIcon className="h-4 w-4" />
+							<span>Elements</span>
+						</TabsTrigger>
+						<TabsTrigger
+							value="settings"
+							className="flex items-center gap-1 px-3 py-2 text-xs data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:rounded-none data-[state=active]:bg-transparent min-w-[80px]">
+							<SettingsIcon className="h-4 w-4" />
+							<span>Settings</span>
+						</TabsTrigger>
+						<TabsTrigger
+							value="atmosphere"
+							className="flex items-center gap-1 px-3 py-2 text-xs data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:rounded-none data-[state=active]:bg-transparent min-w-[95px]">
+							<AtmosphereIcon className="h-4 w-4" />
+							<span>Atmosphere</span>
+						</TabsTrigger>
+						<TabsTrigger
+							value="sounds"
+							className="flex items-center gap-1 px-3 py-2 text-xs data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:rounded-none data-[state=active]:bg-transparent min-w-[80px]">
+							<SoundIcon className="h-4 w-4" />
+							<span>Sounds</span>
+						</TabsTrigger>
+					</TabsList>
+				</div>
 
-				<TabButton id="settings" active={activeTab === "settings"} onClick={() => setActiveTab("settings")}>
-					<SettingsIcon className="h-4 w-4 mr-2" />
-					Settings
-				</TabButton>
+				<div className="flex-1 overflow-hidden relative">
+					<TabsContent value="elements" className="absolute inset-0 overflow-auto p-2 mt-0 border-0">
+						<ElementPanel onAddElement={onAddElement} />
+					</TabsContent>
 
-				<TabButton id="atmosphere" active={activeTab === "atmosphere"} onClick={() => setActiveTab("atmosphere")}>
-					<AtmosphereIcon className="h-4 w-4 mr-2" />
-					Atmosphere
-				</TabButton>
+					<TabsContent value="settings" className="absolute inset-0 overflow-auto p-3 mt-0 border-0">
+						<GardenSettings
+							background={background}
+							onBackgroundChange={onBackgroundChange}
+							soundEnabled={soundEnabled}
+							onSoundToggle={onSoundToggle}
+							currentSound={currentSound}
+							onSoundChange={onSoundChange}
+							showOutlines={showOutlines}
+							onShowOutlinesChange={onShowOutlinesChange}
+						/>
+					</TabsContent>
 
-				<TabButton id="sounds" active={activeTab === "sounds"} onClick={() => setActiveTab("sounds")}>
-					<SoundIcon className="h-4 w-4 mr-2" />
-					Sounds
-				</TabButton>
-			</div>
+					<TabsContent value="atmosphere" className="absolute inset-0 overflow-auto p-3 mt-0 border-0">
+						<AtmosphereSettings settings={atmosphereSettings} onSettingsChange={onAtmosphereChange} />
+					</TabsContent>
 
-			{/* Tab Content */}
-			<div className="flex-1 overflow-y-auto p-4">
-				{activeTab === "elements" && <ElementPanel onAddElement={onAddElement} />}
-
-				{activeTab === "settings" && (
-					<GardenSettings
-						background={background}
-						onBackgroundChange={onBackgroundChange}
-						soundEnabled={soundEnabled}
-						onSoundToggle={onSoundToggle}
-						currentSound={currentSound}
-						onSoundChange={onSoundChange}
-						showOutlines={showOutlines}
-						onShowOutlinesChange={onShowOutlinesChange}
-					/>
-				)}
-
-				{activeTab === "atmosphere" && <AtmosphereSettings settings={atmosphereSettings} onSettingsChange={onAtmosphereChange} />}
-
-				{activeTab === "sounds" && (
-					<div className="space-y-4">
-						<h3 className="text-lg font-medium">Sound Settings</h3>
-						<div className="mt-2">
-							<div className="flex items-center space-x-2 mb-3">
-								<SoundIcon className="h-5 w-5 text-primary" />
-								<span className="text-sm font-medium">Ambient Audio</span>
-							</div>
-
-							<p className="text-xs text-muted mb-4">
-								Enhance your zen experience with calming background sounds. Toggle sounds on or off and select your preferred ambient audio.
-							</p>
-
-							<div className="mt-4 mb-8">
-								<div className="flex items-center space-x-2 mb-2">
-									<button
-										className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out ${
-											soundEnabled ? "bg-primary" : "bg-muted"
-										}`}
-										onClick={onSoundToggle}
-										role="switch"
-										aria-checked={soundEnabled}>
-										<span
-											className={`pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow transform ring-0 transition duration-200 ease-in-out ${
-												soundEnabled ? "translate-x-5" : "translate-x-0"
-											}`}
-										/>
-									</button>
-									<span className="text-sm">{soundEnabled ? "Sound On" : "Sound Off"}</span>
+					<TabsContent value="sounds" className="absolute inset-0 overflow-auto p-3 mt-0 border-0">
+						<div className="space-y-4">
+							<h3 className="text-lg font-medium">Sound Settings</h3>
+							<div className="mt-2">
+								<div className="flex items-center space-x-2 mb-3">
+									<SoundIcon className="h-5 w-5 text-primary" />
+									<span className="text-sm font-medium">Ambient Audio</span>
 								</div>
 
-								{soundEnabled && (
-									<div className="mt-4 space-y-3">
-										<h4 className="text-sm font-medium">Select Sound</h4>
-										<SoundOption
-											id="water"
-											name="Water Trickling"
-											path="/sounds/water-trickling.mp3"
-											selected={currentSound === "/sounds/water-trickling.mp3"}
-											onClick={() => onSoundChange("/sounds/water-trickling.mp3")}
-										/>
-										<SoundOption
-											id="chimes"
-											name="Wind Chimes"
-											path="/sounds/wind-chimes.mp3"
-											selected={currentSound === "/sounds/wind-chimes.mp3"}
-											onClick={() => onSoundChange("/sounds/wind-chimes.mp3")}
-										/>
-										<SoundOption
-											id="ambient"
-											name="Ambient Music"
-											path="/sounds/ambient-zen.mp3"
-											selected={currentSound === "/sounds/ambient-zen.mp3"}
-											onClick={() => onSoundChange("/sounds/ambient-zen.mp3")}
-										/>
-										<SoundOption
-											id="birds"
-											name="Bird Sounds"
-											path="/sounds/birds.mp3"
-											selected={currentSound === "/sounds/birds.mp3"}
-											onClick={() => onSoundChange("/sounds/birds.mp3")}
-										/>
-									</div>
-								)}
-							</div>
+								<p className="text-xs text-muted mb-4">
+									Enhance your zen experience with calming background sounds. Toggle sounds on or off and select your preferred ambient audio.
+								</p>
 
-							<div className="bg-muted/30 border border-border rounded-md p-3 mt-6">
-								<div className="flex items-start gap-2 text-xs text-muted">
-									<div className="mt-1 shrink-0">ℹ️</div>
-									<p>Sound may not play automatically due to browser restrictions. If no sound is playing, try interacting with the page first.</p>
+								<div className="mt-4 mb-8">
+									<div className="flex items-center space-x-2 mb-2">
+										<button
+											className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out ${
+												soundEnabled ? "bg-primary" : "bg-muted"
+											}`}
+											onClick={onSoundToggle}
+											role="switch"
+											aria-checked={soundEnabled}>
+											<span
+												className={`pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow transform ring-0 transition duration-200 ease-in-out ${
+													soundEnabled ? "translate-x-5" : "translate-x-0"
+												}`}
+											/>
+										</button>
+										<span className="text-sm">{soundEnabled ? "Sound On" : "Sound Off"}</span>
+									</div>
+
+									{soundEnabled && (
+										<div className="mt-4 space-y-3">
+											<h4 className="text-sm font-medium">Select Sound</h4>
+											<SoundOption
+												id="water"
+												name="Water Trickling"
+												path="/sounds/water-trickling.mp3"
+												selected={currentSound === "/sounds/water-trickling.mp3"}
+												onClick={() => onSoundChange("/sounds/water-trickling.mp3")}
+											/>
+											<SoundOption
+												id="chimes"
+												name="Wind Chimes"
+												path="/sounds/wind-chimes.mp3"
+												selected={currentSound === "/sounds/wind-chimes.mp3"}
+												onClick={() => onSoundChange("/sounds/wind-chimes.mp3")}
+											/>
+											<SoundOption
+												id="ambient"
+												name="Ambient Music"
+												path="/sounds/ambient-zen.mp3"
+												selected={currentSound === "/sounds/ambient-zen.mp3"}
+												onClick={() => onSoundChange("/sounds/ambient-zen.mp3")}
+											/>
+											<SoundOption
+												id="birds"
+												name="Bird Sounds"
+												path="/sounds/birds.mp3"
+												selected={currentSound === "/sounds/birds.mp3"}
+												onClick={() => onSoundChange("/sounds/birds.mp3")}
+											/>
+										</div>
+									)}
+								</div>
+
+								<div className="bg-muted/30 border border-border rounded-md p-3 mt-6">
+									<div className="flex items-start gap-2 text-xs text-muted">
+										<div className="mt-1 shrink-0">ℹ️</div>
+										<p>Sound may not play automatically due to browser restrictions. If no sound is playing, try interacting with the page first.</p>
+									</div>
 								</div>
 							</div>
 						</div>
-					</div>
-				)}
-			</div>
+					</TabsContent>
+				</div>
 
-			{/* Action Buttons - Fixed at Bottom */}
-			<div className="mt-auto border-t border-border p-4">
-				<ActionButtons onSave={onSave} onShare={onShare} onClear={onClear} />
-			</div>
+				{/* Action Buttons - Fixed at Bottom */}
+				<div className="mt-auto border-t border-border p-4">
+					<ActionButtons onSave={onSave} onShare={onShare} onClear={onClear} />
+				</div>
+			</Tabs>
 		</div>
-	);
-}
-
-// Tab Button Component
-interface TabButtonProps {
-	id: string;
-	active: boolean;
-	onClick: () => void;
-	children: React.ReactNode;
-}
-
-function TabButton({ id, active, onClick, children }: TabButtonProps) {
-	return (
-		<button
-			id={`tab-${id}`}
-			role="tab"
-			aria-selected={active}
-			aria-controls={`tabpanel-${id}`}
-			className={`flex items-center px-4 py-2 text-sm font-medium transition-colors ${
-				active ? "text-primary border-b-2 border-primary" : "text-muted hover:text-foreground hover:bg-muted/30"
-			}`}
-			onClick={onClick}>
-			{children}
-		</button>
 	);
 }
 

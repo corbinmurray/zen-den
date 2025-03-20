@@ -56,15 +56,29 @@ export function GardenCreator() {
 	// Use callback to prevent unnecessary recreations of this function
 	const handleAddElement = useCallback(
 		(elementOption: ElementOption) => {
-			// Place new element in center of visible canvas
+			// Calculate center of visible canvas
 			const centerX = Math.max(0, canvasSize.width / 2 - 50); // 50 is half of baseSize
 			const centerY = Math.max(0, canvasSize.height / 2 - 50);
+
+			// Create random offset around the center (±20% of canvas size)
+			const offsetRange = {
+				x: Math.min(100, canvasSize.width * 0.2),
+				y: Math.min(100, canvasSize.height * 0.2),
+			};
+
+			// Generate random position with offset from center
+			const randomX = centerX + (Math.random() * offsetRange.x * 2 - offsetRange.x);
+			const randomY = centerY + (Math.random() * offsetRange.y * 2 - offsetRange.y);
+
+			// Keep position within canvas bounds
+			const boundedX = Math.max(10, Math.min(canvasSize.width - 110, randomX));
+			const boundedY = Math.max(10, Math.min(canvasSize.height - 110, randomY));
 
 			// Create a copy with a unique ID
 			const newElement: GardenElement = {
 				...elementOption,
 				id: `${elementOption.type}-${Date.now()}`,
-				position: { x: centerX, y: centerY },
+				position: { x: boundedX, y: boundedY },
 				rotation: 0,
 				scale: 1,
 			};
@@ -157,7 +171,7 @@ export function GardenCreator() {
 		<div className="flex flex-col space-y-4">
 			<div className="flex flex-col md:flex-row gap-4">
 				{/* Left panel with tabbed interface */}
-				<div className="w-full md:w-80 h-[60vh] md:h-[70vh]">
+				<div className="w-full md:w-96 h-[60vh] md:h-[70vh]">
 					<TabbedPanel
 						onAddElement={handleAddElement}
 						background={background}
