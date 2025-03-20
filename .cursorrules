@@ -34,6 +34,7 @@ folder_structure:
 Frontend Performance & UX Guidelines
 ========================
 performance_guidelines:
+  - Never insert "use client" without asking or ensuring it absolutely needs to be a client component.
   - Ensure **Fast TTFB (<100ms)** via optimized Next.js server rendering
   - Use **React.memo & lazy loading** for performance-critical components
   - Optimize animations with **Motion’s documentation**
