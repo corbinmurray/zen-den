@@ -166,16 +166,17 @@ export const Canvas = forwardRef<HTMLDivElement, CanvasProps>(function Canvas(
 			setElementPositions(newPositions);
 			setElementScales(newScales);
 		}
-	}, [elements]); // Only depend on elements changing
+	}, [elements, elementPositions, elementScales]); // Fixed dependency array
 
 	// Pass canvasRef through to parent component if needed
+	// eslint-disable-next-line react-hooks/exhaustive-deps
 	useEffect(() => {
 		if (ref && typeof ref === "function") {
 			ref(canvasRef.current);
 		} else if (ref) {
 			ref.current = canvasRef.current;
 		}
-	}, [ref]);
+	}, [ref]); // Include ref in the dependency array
 
 	// Sync refs with state
 	useEffect(() => {
@@ -1370,43 +1371,6 @@ function RotateRightIcon(props: React.SVGProps<SVGSVGElement>) {
 			{...props}>
 			<path d="M17.1818 10.1818C17.1818 10.1818 16.3455 8.85 14.5064 7.5C12.8455 6.25 10.8182 5.5 8.86365 5.5C7.86365 5.5 11.8637 5.5 7.86365 5.5M6.86365 9V5.5H10.3637"></path>
 			<path d="M11.5 19.5C7.91015 19.5 5 16.5899 5 13C5 9.41015 7.91015 6.5 11.5 6.5C15.0899 6.5 18 9.41015 18 13C18 16.5899 15.0899 19.5 11.5 19.5Z"></path>
-		</svg>
-	);
-}
-
-function PlusIcon(props: React.SVGProps<SVGSVGElement>) {
-	return (
-		<svg
-			xmlns="http://www.w3.org/2000/svg"
-			width="24"
-			height="24"
-			viewBox="0 0 24 24"
-			fill="none"
-			stroke="currentColor"
-			strokeWidth="2"
-			strokeLinecap="round"
-			strokeLinejoin="round"
-			{...props}>
-			<line x1="12" y1="5" x2="12" y2="19"></line>
-			<line x1="5" y1="12" x2="19" y2="12"></line>
-		</svg>
-	);
-}
-
-function MinusIcon(props: React.SVGProps<SVGSVGElement>) {
-	return (
-		<svg
-			xmlns="http://www.w3.org/2000/svg"
-			width="24"
-			height="24"
-			viewBox="0 0 24 24"
-			fill="none"
-			stroke="currentColor"
-			strokeWidth="2"
-			strokeLinecap="round"
-			strokeLinejoin="round"
-			{...props}>
-			<line x1="5" y1="12" x2="19" y2="12"></line>
 		</svg>
 	);
 }

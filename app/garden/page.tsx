@@ -1,6 +1,6 @@
 import { GardenCreator } from "@/components/garden/garden-creator";
 
-export default function GardenPage({ searchParams }: { searchParams?: { id?: string } }) {
+export default function GardenPage() {
 	// We don't need to do anything with the id parameter here
 	// GardenCreator will read it from the URL with useEffect
 
