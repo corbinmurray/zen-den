@@ -3,11 +3,12 @@
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { ElementOption } from "@/lib/types";
+import { ElementOption, GardenItem } from "@/lib/types";
 import { Search } from "lucide-react";
 import { motion } from "motion/react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
+import { v4 as uuidv4 } from "uuid";
 import { CustomElementCreator } from "./custom-element-creator";
 
 // Sample elements with SVG-based images
@@ -120,7 +121,7 @@ const ELEMENT_OPTIONS: ElementOption[] = [
 ];
 
 interface ElementPanelProps {
-	onAddElement: (element: ElementOption) => void;
+	onAddElement: (element: GardenItem) => void;
 }
 
 export function ElementPanel({ onAddElement }: ElementPanelProps) {
@@ -165,8 +166,20 @@ export function ElementPanel({ onAddElement }: ElementPanelProps) {
 		setAddInProgress(true);
 		setAddedElement(element.type);
 
+		// Convert ElementOption to GardenItem with required properties
+		const gardenItem: GardenItem = {
+			id: uuidv4(),
+			type: element.type,
+			name: element.name,
+			imagePath: element.imagePath,
+			position: { x: Math.random() * 300, y: Math.random() * 300 }, // Random initial position
+			rotation: 0,
+			scale: 1,
+			zIndex: Date.now(), // Use timestamp for z-index to place newer items on top
+		};
+
 		// Add the element to the garden
-		onAddElement(element);
+		onAddElement(gardenItem);
 
 		// Reset states after animation period
 		setTimeout(() => {
@@ -188,8 +201,20 @@ export function ElementPanel({ onAddElement }: ElementPanelProps) {
 			console.error("Failed to save custom element:", error);
 		}
 
+		// Convert ElementOption to GardenItem with required properties
+		const gardenItem: GardenItem = {
+			id: uuidv4(),
+			type: element.type,
+			name: element.name,
+			imagePath: element.imagePath,
+			position: { x: Math.random() * 300, y: Math.random() * 300 }, // Random initial position
+			rotation: 0,
+			scale: 1,
+			zIndex: Date.now(), // Use timestamp for z-index to place newer items on top
+		};
+
 		// Add element to the garden
-		onAddElement(element);
+		onAddElement(gardenItem);
 
 		// Close the creator
 		setDialogOpen(false);
@@ -441,7 +466,7 @@ export function ElementPanel({ onAddElement }: ElementPanelProps) {
 							<line x1="12" y1="8" x2="12" y2="12" />
 							<line x1="12" y1="16" x2="12.01" y2="16" />
 						</svg>
-						<p className="text-sm">No elements found for "{debouncedSearchTerm}"</p>
+						<p className="text-sm">No elements found for &quot;{debouncedSearchTerm}&quot;</p>
 					</div>
 				)}
 
@@ -460,7 +485,11 @@ export function ElementPanel({ onAddElement }: ElementPanelProps) {
 									onClick={() => !addInProgress && handleElementClick(element)}
 									transition={{ duration: 0.2 }}>
 									<div className="relative w-16 h-16 mb-1">
-										{element.category === "custom" ? <div dangerouslySetInnerHTML={{ __html: element.preview }} /> : renderElementPreview(element.type)}
+										{element.category === "custom" && element.preview ? (
+											<div dangerouslySetInnerHTML={{ __html: element.preview }} />
+										) : (
+											renderElementPreview(element.type)
+										)}
 
 										{/* Enhanced animation for element being added */}
 										{addedElement === element.type && (

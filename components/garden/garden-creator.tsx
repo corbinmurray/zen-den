@@ -6,7 +6,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Garden } from "@/lib/types";
 import { useZenGardenStore } from "@/providers/zen-garden-store-provider";
-import { useGardenEditorStore } from "@/stores/garden-editor-store";
 import { useCallback, useEffect, useRef } from "react";
 import { toast } from "sonner";
 import { v4 as uuidv4 } from "uuid";
@@ -14,22 +13,6 @@ import { Canvas } from "./canvas";
 import { TabbedPanel } from "./tabbed-panel";
 
 export function GardenCreator() {
-	// Get only the necessary values and actions from garden editor store
-	const {
-		gardenItems,
-		atmosphere,
-		selectedGardenId,
-		saveDialogOpen,
-		gardenName,
-		showOutlines,
-
-		setCanvasSize,
-		setSelectedGardenId,
-		setSaveDialogOpen,
-		setGardenName,
-		loadGarden,
-	} = useGardenEditorStore();
-
 	// Get zen garden store for saving/loading gardens
 	const { gardens, add: addGarden, update: updateGarden } = useZenGardenStore((state) => state);
 
@@ -152,7 +135,7 @@ export function GardenCreator() {
 
 				{/* Right side canvas */}
 				<div className="flex-1">
-					<Canvas ref={canvasRef} elements={gardenItems} showOutlines={showOutlines} atmosphere={atmosphere} />
+					<Canvas ref={canvasRef} elements={gardenItems} atmosphere={atmosphere} />
 				</div>
 			</div>
 
