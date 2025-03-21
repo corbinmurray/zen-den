@@ -32,7 +32,6 @@ export function TabbedPanel({
 	addGardenItem,
 	clearGardenItems,
 	setSaveDialogOpen,
-	setShareAfterSave,
 	handleShare,
 }: TabbedPanelProps) {
 	const { update: updateGarden } = useZenGardenStore((state) => state);
