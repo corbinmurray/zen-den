@@ -48,6 +48,7 @@ const ZenPattern = () => (
 	</svg>
 );
 
+
 export default function GalleryPage() {
 	const { gardens, remove: removeGarden } = useZenGardenStore((state) => state);
 
@@ -81,8 +82,8 @@ export default function GalleryPage() {
 									Created on {new Date(garden.createdAt).toLocaleDateString()} at {new Date(garden.createdAt).toLocaleTimeString()}
 								</div>
 
-								<div className="flex flex-col space-y-3">
-									<div className="flex space-x-3">
+								<div className="flex flex-col space-y-2">
+									<div className="flex space-x-2">
 										<Link href={`/garden?id=${garden.id}`} className="flex-1">
 											<Button size="sm" variant="outline" className="w-full">
 												<Edit className="h-3.5 w-3.5 mr-2" />
@@ -101,7 +102,8 @@ export default function GalleryPage() {
 									<Button
 										onClick={() => (garden.id ? removeGarden(garden.id) : null)}
 										size="sm"
-										className="border border-destructive text-destructive bg-inherit hover:bg-destructive hover:text-foreground">
+										variant="ghost"
+										className="text-destructive hover:bg-destructive/10 hover:text-destructive">
 										<Trash className="h-3.5 w-3.5 mr-2" />
 										Delete
 									</Button>

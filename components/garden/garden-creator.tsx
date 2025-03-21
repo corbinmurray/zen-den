@@ -28,8 +28,6 @@ export function GardenCreator() {
 		setSaveDialogOpen,
 		setGardenName,
 		loadGarden,
-		updateGardenItem,
-		removeGardenItem,
 	} = useGardenEditorStore();
 
 	// Get zen garden store for saving/loading gardens
@@ -157,8 +155,6 @@ export function GardenCreator() {
 					<Canvas
 						ref={canvasRef}
 						elements={gardenItems}
-						onElementUpdate={updateGardenItem}
-						onElementRemove={removeGardenItem}
 						showOutlines={showOutlines}
 						atmosphere={atmosphere}
 					/>
