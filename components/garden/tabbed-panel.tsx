@@ -48,7 +48,7 @@ export function TabbedPanel({
 	return (
 		<div className="flex flex-col h-full overflow-hidden bg-card rounded-lg border border-border">
 			<Tabs defaultValue="elements" className="flex flex-col h-full p-1">
-				<div className="border-b border-border px-2 flex-shrink-0">
+				<div className="border-b border-border flex-shrink-0">
 					<TabsList className="h-12 w-full justify-start bg-transparent">
 						<TabsTrigger
 							value="elements"
@@ -177,7 +177,7 @@ export function TabbedPanel({
 				</div>
 
 				{/* Action Buttons - Fixed at Bottom */}
-				<div className="mt-auto border-t border-border p-4">
+				<div className="mt-auto border-t border-border px-3 py-2">
 					<ActionButtons onSave={onSave} onShare={onShare} onClear={onClear} />
 				</div>
 			</Tabs>
