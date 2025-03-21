@@ -2,45 +2,95 @@
 
 import { Canvas } from "@/components/garden/canvas";
 import { Button } from "@/components/ui/button";
-import { Atmosphere } from "@/lib/types";
+import { Atmosphere, Garden } from "@/lib/types";
 import { useZenGardenStore } from "@/providers/zen-garden-store-provider";
 import { ArrowLeft, Edit } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 
 export function GardenViewer() {
 	const searchParams = useSearchParams();
 	const router = useRouter();
 	const gardenId = searchParams.get("id");
-	const { getGardenById } = useZenGardenStore((state) => state);
+	const { getGardenById, add: addGarden } = useZenGardenStore((state) => state);
 
 	const [isLoading, setIsLoading] = useState(true);
-	const garden = gardenId ? getGardenById(gardenId) : undefined;
+	const [garden, setGarden] = useState<Garden | undefined>(undefined);
 
 	const defaultAtmosphere: Atmosphere = {
 		timeOfDay: "day",
 		weather: "clear",
 	};
 
+	// Fetch garden from API
+	const fetchGardenFromApi = useCallback(
+		async (id: string) => {
+			try {
+				const response = await fetch(`/api/share/${id}`);
+
+				if (!response.ok) {
+					throw new Error("Garden not found");
+				}
+
+				const data = await response.json();
+
+				if (!data.garden) {
+					throw new Error("Invalid garden data");
+				}
+
+				const fetchedGarden = data.garden;
+
+				// Add the garden to the store for future access
+				addGarden(fetchedGarden);
+
+				// Set the garden in component state
+				setGarden(fetchedGarden);
+
+				return true;
+			} catch (error) {
+				console.error("Error fetching garden from API:", error);
+				return false;
+			}
+		},
+		[addGarden]
+	);
+
 	useEffect(() => {
-		// Set loading to false after initialization
-		setIsLoading(false);
+		async function loadGarden() {
+			if (!gardenId) {
+				setIsLoading(false);
+				toast.error("Garden not found", {
+					description: "No garden ID was provided.",
+				});
+				return;
+			}
 
-		if (!gardenId) {
-			toast.error("Garden not found", {
-				description: "The garden you're looking for could not be found.",
-			});
-			return;
+			// First check if the garden exists in the store
+			const storeGarden = getGardenById(gardenId);
+
+			if (storeGarden) {
+				// Garden found in store, set it directly
+				setGarden(storeGarden);
+				setIsLoading(false);
+				return;
+			}
+
+			// If not in store, try to fetch from API
+			const success = await fetchGardenFromApi(gardenId);
+
+			if (!success) {
+				toast.error("Garden not found", {
+					description: "The garden you're looking for could not be found.",
+				});
+			}
+
+			setIsLoading(false);
 		}
 
-		if (!garden) {
-			toast.error("Garden not found", {
-				description: "The garden you're looking for could not be found.",
-			});
-		}
-	}, [gardenId, garden]);
+		loadGarden();
+	}, [gardenId, getGardenById, fetchGardenFromApi]);
 
 	const handleEdit = () => {
 		router.push(`/garden?id=${gardenId}`);

@@ -7,7 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Atmosphere, ElementOption, Garden, GardenItem } from "@/lib/types";
 import { useZenGardenStore } from "@/providers/zen-garden-store-provider";
 import { SaveIcon, Share, TrashIcon } from "lucide-react";
-import { Dispatch, SetStateAction, useCallback } from "react";
+import { Dispatch, SetStateAction, useCallback, useState } from "react";
 import { toast } from "sonner";
 
 interface TabbedPanelProps {
@@ -20,7 +20,6 @@ interface TabbedPanelProps {
 	clearGardenItems: () => void;
 	setSaveDialogOpen: Dispatch<SetStateAction<boolean>>;
 	setShareAfterSave: Dispatch<SetStateAction<boolean>>;
-	handleShare: () => void;
 }
 
 export function TabbedPanel({
@@ -32,9 +31,10 @@ export function TabbedPanel({
 	addGardenItem,
 	clearGardenItems,
 	setSaveDialogOpen,
-	handleShare,
+	setShareAfterSave,
 }: TabbedPanelProps) {
 	const { update: updateGarden } = useZenGardenStore((state) => state);
+	const [isSharing, setIsSharing] = useState(false);
 
 	// Handle adding an element to the garden
 	const handleAddElement = useCallback(
@@ -80,6 +80,59 @@ export function TabbedPanel({
 			setSaveDialogOpen(true);
 		}
 	}, [selectedGardenId, updateGarden, gardenName, gardenItems, atmosphere, setSaveDialogOpen]);
+
+	// Handle share button click
+	const handleShare = useCallback(async () => {
+		// If garden is not saved yet, prompt to save first
+		if (!selectedGardenId) {
+			setShareAfterSave(true);
+			setSaveDialogOpen(true);
+			return;
+		}
+
+		try {
+			setIsSharing(true);
+
+			// Create the garden object
+			const garden: Garden = {
+				id: selectedGardenId,
+				name: gardenName,
+				items: gardenItems,
+				atmosphere: atmosphere,
+				lastModifiedAt: Date.now(),
+			};
+
+			// Call the share API
+			const response = await fetch("/api/share", {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+				},
+				body: JSON.stringify({ garden }),
+			});
+
+			if (!response.ok) {
+				throw new Error("Failed to create share link");
+			}
+
+			const { shareUrl } = await response.json();
+
+			// Copy to clipboard
+			await navigator.clipboard.writeText(shareUrl);
+
+			// Show success toast
+			toast.success("Share link created!", {
+				description: "Share link has been copied to your clipboard.",
+			});
+		} catch (error) {
+			console.error("Error sharing garden:", error);
+			toast.error("Failed to create share link", {
+				description: "Please try again later.",
+			});
+		} finally {
+			setIsSharing(false);
+		}
+	}, [selectedGardenId, gardenName, gardenItems, atmosphere, setShareAfterSave, setSaveDialogOpen]);
 
 	// Handle clear button click
 	const handleClear = useCallback(() => {
@@ -140,9 +193,9 @@ export function TabbedPanel({
 								Save
 							</Button>
 
-							<Button onClick={handleShare} variant="outline" className="w-full">
+							<Button onClick={handleShare} variant="outline" className="w-full" disabled={isSharing}>
 								<Share className="mr-1 h-4 w-4" />
-								Share
+								{isSharing ? "Creating URL..." : "Share"}
 							</Button>
 						</div>
 
