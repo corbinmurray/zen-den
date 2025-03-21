@@ -1,6 +1,5 @@
 import Database from "better-sqlite3";
 import fs from "fs";
-import { nanoid } from "nanoid";
 import path from "path";
 import { Garden } from "./types";
 
@@ -24,14 +23,17 @@ db.exec(`
 `);
 
 /**
- * Store garden data and return a unique ID
+ * Store garden data using the garden's ID
  */
 export function storeGarden(garden: Garden): string {
-	// Generate a short ID (7 characters is sufficient for a garden sharing app)
-	const id = nanoid(7);
+	if (!garden.id) {
+		throw new Error("Garden must have an ID before storing");
+	}
+
+	const id = garden.id;
 
 	const stmt = db.prepare(`
-    INSERT INTO shared_gardens (id, garden_data, created_at)
+    INSERT OR REPLACE INTO shared_gardens (id, garden_data, created_at)
     VALUES (?, ?, ?)
   `);
 

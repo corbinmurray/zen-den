@@ -5,6 +5,7 @@ import { ElementPanel } from "@/components/garden/element-panel";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Atmosphere, ElementOption, Garden, GardenItem } from "@/lib/types";
+import { copyToClipboard, generateGardenId, shareGarden } from "@/lib/utils";
 import { useZenGardenStore } from "@/providers/zen-garden-store-provider";
 import { SaveIcon, Share, TrashIcon } from "lucide-react";
 import { Dispatch, SetStateAction, useCallback, useState } from "react";
@@ -41,7 +42,7 @@ export function TabbedPanel({
 		(element: ElementOption) => {
 			// Generate a new garden item from the element option
 			const gardenItem: GardenItem = {
-				id: crypto.randomUUID(),
+				id: generateGardenId(),
 				type: element.type,
 				name: element.name,
 				imagePath: element.imagePath,
@@ -102,23 +103,9 @@ export function TabbedPanel({
 				lastModifiedAt: Date.now(),
 			};
 
-			// Call the share API
-			const response = await fetch("/api/share", {
-				method: "POST",
-				headers: {
-					"Content-Type": "application/json",
-				},
-				body: JSON.stringify({ garden }),
-			});
-
-			if (!response.ok) {
-				throw new Error("Failed to create share link");
-			}
-
-			const { shareUrl } = await response.json();
-
-			// Copy to clipboard
-			await navigator.clipboard.writeText(shareUrl);
+			// Use shared utility function to generate and copy the share URL
+			const shareUrl = await shareGarden(garden);
+			await copyToClipboard(shareUrl);
 
 			// Show success toast
 			toast.success("Share link created!", {

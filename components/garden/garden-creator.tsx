@@ -5,10 +5,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Atmosphere, Garden, GardenItem } from "@/lib/types";
+import { generateGardenId } from "@/lib/utils";
 import { useZenGardenStore } from "@/providers/zen-garden-store-provider";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
-import { v4 as uuidv4 } from "uuid";
 import { Canvas } from "./canvas";
 import { TabbedPanel } from "./tabbed-panel";
 
@@ -42,6 +42,8 @@ export function GardenCreator() {
 
 	// Load garden handler
 	const loadGarden = useCallback((garden: Garden) => {
+		if (!garden) return;
+
 		setSelectedGardenId(garden.id || null);
 		setGardenName(garden.name || "My Zen Garden");
 		setGardenItems(garden.items || []);
@@ -55,6 +57,16 @@ export function GardenCreator() {
 		async (gardenId: string) => {
 			setIsLoading(true);
 			try {
+				// First check if a garden with this ID already exists in our store
+				const existingGarden = gardens.find((g: Garden) => g.id === gardenId);
+
+				if (existingGarden) {
+					// We already have this garden, just load it
+					loadGarden(existingGarden);
+					setIsLoading(false);
+					return;
+				}
+
 				const response = await fetch(`/api/share/${gardenId}`);
 
 				if (!response.ok) {
@@ -69,8 +81,10 @@ export function GardenCreator() {
 
 				const garden = data.garden;
 
-				// Add the garden to the store
-				addGarden(garden);
+				// Add the garden to the store only if it doesn't already exist
+				if (!gardens.some((g: Garden) => g.id === garden.id)) {
+					addGarden(garden);
+				}
 
 				// Load garden data into state
 				loadGarden({
@@ -81,9 +95,12 @@ export function GardenCreator() {
 					lastModifiedAt: garden.lastModifiedAt || Date.now(),
 				});
 
-				toast.success("Garden loaded", {
-					description: `"${garden.name || "Garden"}" has been loaded from shared link.`,
-				});
+				// Only show toast for gardens loaded from shared links that weren't previously in the store
+				if (!existingGarden) {
+					toast.success("Garden loaded", {
+						description: `"${garden.name || "Garden"}" has been loaded from shared link.`,
+					});
+				}
 			} catch (error) {
 				console.error("Error fetching garden from API:", error);
 				toast.error("Garden not found", {
@@ -93,7 +110,7 @@ export function GardenCreator() {
 				setIsLoading(false);
 			}
 		},
-		[addGarden, loadGarden]
+		[addGarden, loadGarden, gardens]
 	);
 
 	// Get canvas size when component mounts
@@ -134,16 +151,10 @@ export function GardenCreator() {
 				const garden = gardens?.find((g: Garden) => g.id === gardenId);
 
 				if (garden) {
-					// Load garden data from store
-					loadGarden({
-						id: gardenId,
-						name: garden.name || "My Zen Garden",
-						items: garden.items || [],
-						atmosphere: garden.atmosphere,
-						lastModifiedAt: garden.lastModifiedAt || Date.now(),
-					});
+					// Load garden data from store - no need for API call or toast notification
+					loadGarden(garden);
 				} else {
-					// If not in store, try to fetch from API
+					// Only if not found in store, try to fetch from API
 					fetchGardenFromApi(gardenId);
 				}
 			} catch (error) {
@@ -162,7 +173,7 @@ export function GardenCreator() {
 
 			try {
 				// Create a unique ID for the garden if it doesn't have one
-				const gardenId = selectedGardenId || uuidv4();
+				const gardenId = selectedGardenId || generateGardenId();
 
 				// Create garden object
 				const garden: Garden = {
