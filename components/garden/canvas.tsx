@@ -37,6 +37,8 @@ export const Canvas = forwardRef<HTMLDivElement, CanvasProps>(function Canvas(
 	const [elementPositions, setElementPositions] = useState<Map<string, { x: number; y: number }>>(new Map());
 	const [elementScales, setElementScales] = useState<Map<string, number>>(new Map());
 	const processedElementsRef = useRef(new Set<string>());
+	const [copiedElement, setCopiedElement] = useState<GardenItem | null>(null);
+	const [showCopyFeedback, setShowCopyFeedback] = useState(false);
 
 	const updateBounds = useCallback(() => {
 		if (canvasContainerRef.current) {
@@ -279,12 +281,16 @@ export const Canvas = forwardRef<HTMLDivElement, CanvasProps>(function Canvas(
 							scaleChange = ((Math.abs(deltaX) + Math.abs(deltaY)) / 200) * (deltaX + deltaY > 0 ? 1 : -1);
 							break;
 						case "right":
-						case "left":
 							scaleChange = deltaX / 100;
 							break;
+						case "left":
+							scaleChange = -deltaX / 100;
+							break;
 						case "bottom":
-						case "top":
 							scaleChange = deltaY / 100;
+							break;
+						case "top":
+							scaleChange = -deltaY / 100;
 							break;
 					}
 
@@ -298,10 +304,11 @@ export const Canvas = forwardRef<HTMLDivElement, CanvasProps>(function Canvas(
 						return newScales;
 					});
 
-					// When resizing, also update the position to keep the element centered
+					// Calculate position adjustment to keep element centered as it scales
 					const baseSize = 100;
 					const oldSize = baseSize * oldScale;
 					const newSize = baseSize * newScale;
+					const size = newSize; // Define size variable for use in constraints
 					const sizeChange = (newSize - oldSize) / 2;
 
 					// Get current position
@@ -309,8 +316,8 @@ export const Canvas = forwardRef<HTMLDivElement, CanvasProps>(function Canvas(
 
 					// Adjust position to maintain center with proper boundary constraints
 					const newPosition = {
-						x: Math.max(0, Math.min(currentPos.x - sizeChange, canvasBounds.width - newSize)),
-						y: Math.max(0, Math.min(currentPos.y - sizeChange, canvasBounds.height - newSize)),
+						x: Math.max(-size * 0.75, Math.min(currentPos.x - sizeChange, canvasBounds.width - size * 0.25)),
+						y: Math.max(-size * 0.75, Math.min(currentPos.y - sizeChange, canvasBounds.height - size * 0.25)),
 					};
 
 					// Update positions in state to reflect the scaling
@@ -331,9 +338,10 @@ export const Canvas = forwardRef<HTMLDivElement, CanvasProps>(function Canvas(
 					const currentScale = elementScales.get(element.id) || element.scale;
 					const size = 100 * currentScale;
 
-					// Calculate new position with proper constraints to keep element fully visible
-					const newX = Math.max(0, Math.min(currentPos.x + deltaX, canvasBounds.width - size));
-					const newY = Math.max(0, Math.min(currentPos.y + deltaY, canvasBounds.height - size));
+					// Calculate new position with constraints that allow elements to extend outside,
+					// but keep at least 25% of the element visible
+					const newX = Math.max(-size * 0.75, Math.min(currentPos.x + deltaX, canvasBounds.width - size * 0.25));
+					const newY = Math.max(-size * 0.75, Math.min(currentPos.y + deltaY, canvasBounds.height - size * 0.25));
 
 					// Update position in our local state for immediate visual feedback
 					setElementPositions((prevPositions) => {
@@ -472,12 +480,16 @@ export const Canvas = forwardRef<HTMLDivElement, CanvasProps>(function Canvas(
 								scaleChange = ((Math.abs(deltaX) + Math.abs(deltaY)) / 200) * (deltaX + deltaY > 0 ? 1 : -1);
 								break;
 							case "right":
-							case "left":
 								scaleChange = deltaX / 100;
 								break;
+							case "left":
+								scaleChange = -deltaX / 100;
+								break;
 							case "bottom":
-							case "top":
 								scaleChange = deltaY / 100;
+								break;
+							case "top":
+								scaleChange = -deltaY / 100;
 								break;
 						}
 
@@ -490,17 +502,18 @@ export const Canvas = forwardRef<HTMLDivElement, CanvasProps>(function Canvas(
 							return newScales;
 						});
 
-						// Position adjustments for resizing
+						// Calculate position adjustment to keep element centered as it scales
 						const baseSize = 100;
 						const oldSize = baseSize * oldScale;
 						const newSize = baseSize * newScale;
+						const size = newSize; // Define size variable for use in constraints
 						const sizeChange = (newSize - oldSize) / 2;
 
 						const currentPos = elementPositions.get(element.id) || element.position;
 
 						const newPosition = {
-							x: Math.max(0, Math.min(currentPos.x - sizeChange, canvasBounds.width - newSize)),
-							y: Math.max(0, Math.min(currentPos.y - sizeChange, canvasBounds.height - newSize)),
+							x: Math.max(-size * 0.75, Math.min(currentPos.x - sizeChange, canvasBounds.width - size * 0.25)),
+							y: Math.max(-size * 0.75, Math.min(currentPos.y - sizeChange, canvasBounds.height - size * 0.25)),
 						};
 
 						setElementPositions((prevPositions) => {
@@ -521,8 +534,8 @@ export const Canvas = forwardRef<HTMLDivElement, CanvasProps>(function Canvas(
 						const size = 100 * currentScale;
 
 						// Apply same constraints for touch events
-						const newX = Math.max(0, Math.min(currentPos.x + deltaX, canvasBounds.width - size));
-						const newY = Math.max(0, Math.min(currentPos.y + deltaY, canvasBounds.height - size));
+						const newX = Math.max(-size * 0.75, Math.min(currentPos.x + deltaX, canvasBounds.width - size * 0.25));
+						const newY = Math.max(-size * 0.75, Math.min(currentPos.y + deltaY, canvasBounds.height - size * 0.25));
 
 						setElementPositions((prevPositions) => {
 							const newPositions = new Map(prevPositions);
@@ -624,6 +637,17 @@ export const Canvas = forwardRef<HTMLDivElement, CanvasProps>(function Canvas(
 		const element = elements.find((el) => el.id === id);
 
 		if (element) {
+			// Calculate new rotation value, ensuring it stays within 0-360 range
+			const currentRotation = element.rotation || 0;
+			const newRotation = (currentRotation + change + 360) % 360;
+
+			// Create an updated element with the new rotation
+			const updatedElement = { ...element, rotation: newRotation };
+
+			// If we have an onElementUpdate callback, call it with the updated element
+			if (onElementUpdate) {
+				onElementUpdate(updatedElement);
+			}
 		}
 	};
 
@@ -642,6 +666,7 @@ export const Canvas = forwardRef<HTMLDivElement, CanvasProps>(function Canvas(
 			const baseSize = 100;
 			const oldSize = baseSize * oldScale;
 			const newSize = baseSize * newScale;
+			const size = newSize; // Define size variable for use in constraints
 			const sizeChange = (newSize - oldSize) / 2;
 
 			// Get current position (from our state or element)
@@ -649,8 +674,8 @@ export const Canvas = forwardRef<HTMLDivElement, CanvasProps>(function Canvas(
 
 			// Adjust position to maintain center with proper boundary constraints
 			const newPosition = {
-				x: Math.max(0, Math.min(currentPos.x - sizeChange, canvasBounds.width - newSize)),
-				y: Math.max(0, Math.min(currentPos.y - sizeChange, canvasBounds.height - newSize)),
+				x: Math.max(-size * 0.75, Math.min(currentPos.x - sizeChange, canvasBounds.width - size * 0.25)),
+				y: Math.max(-size * 0.75, Math.min(currentPos.y - sizeChange, canvasBounds.height - size * 0.25)),
 			};
 
 			// Update scales in state
@@ -862,6 +887,87 @@ export const Canvas = forwardRef<HTMLDivElement, CanvasProps>(function Canvas(
 			<CloudEffect />
 		) : null;
 
+	// Handle copy/paste functionality
+	const handleCopyElement = useCallback(
+		(id: string, e?: React.MouseEvent) => {
+			if (e) {
+				e.stopPropagation();
+				e.preventDefault();
+			}
+
+			const element = elements.find((el) => el.id === id);
+			if (element) {
+				setCopiedElement({ ...element });
+
+				// Show feedback briefly
+				setShowCopyFeedback(true);
+				setTimeout(() => setShowCopyFeedback(false), 1500);
+			}
+		},
+		[elements]
+	);
+
+	const handlePasteElement = useCallback(() => {
+		if (copiedElement && onElementUpdate) {
+			// Create a new element based on the copied one
+			const newElement = {
+				...copiedElement,
+				id: `${copiedElement.id.split("-copy-")[0]}-copy-${Date.now().toString(36)}`, // Generate a unique ID
+				position: {
+					// Offset the position slightly to make it visible
+					x: (copiedElement.position.x + 20) % (canvasBounds.width - 50),
+					y: (copiedElement.position.y + 20) % (canvasBounds.height - 50),
+				},
+			};
+
+			// Check if this ID somehow already exists in our elements
+			if (elements.find((el) => el.id === newElement.id)) {
+				// If ID already exists, update it
+				onElementUpdate(newElement);
+			} else {
+				// Otherwise it's a new element to add
+				onElementUpdate(newElement);
+
+				// After a short delay, select the new element
+				setTimeout(() => {
+					setSelectedElementId(newElement.id);
+				}, 100);
+			}
+		}
+	}, [copiedElement, canvasBounds.width, canvasBounds.height, onElementUpdate, elements]);
+
+	// Handle keyboard shortcuts for copy/paste
+	useEffect(() => {
+		if (readonly) return;
+
+		const handleKeyDown = (e: KeyboardEvent) => {
+			// Check if we're in an input field or textarea
+			if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
+				return;
+			}
+
+			// Copy: Ctrl+C or Cmd+C
+			if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "c" && selectedElementId) {
+				const element = elements.find((el) => el.id === selectedElementId);
+				if (element) {
+					setCopiedElement({ ...element });
+					setShowCopyFeedback(true);
+					setTimeout(() => setShowCopyFeedback(false), 1500);
+					e.preventDefault(); // Prevent default browser copy behavior
+				}
+			}
+
+			// Paste: Ctrl+V or Cmd+V
+			if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "v" && copiedElement) {
+				handlePasteElement();
+				e.preventDefault(); // Prevent default browser paste behavior
+			}
+		};
+
+		document.addEventListener("keydown", handleKeyDown);
+		return () => document.removeEventListener("keydown", handleKeyDown);
+	}, [elements, selectedElementId, copiedElement, handlePasteElement, readonly]);
+
 	return (
 		<div>
 			<div
@@ -900,31 +1006,49 @@ export const Canvas = forwardRef<HTMLDivElement, CanvasProps>(function Canvas(
 									height: size,
 									transform: `rotate(${element.rotation}deg)`,
 									position: "relative",
+									boxSizing: "border-box",
+									border: element.id === selectedElementId ? "2px dashed var(--primary)" : "none",
+									borderRadius: "4px",
+									boxShadow: element.id === selectedElementId ? "0 0 0 1px rgba(0,0,0,0.05), 0 0 0 4px rgba(var(--primary), 0.15)" : "none",
 								}}>
 								<div className="relative w-full h-full">{renderElementSVG(element.type)}</div>
 
-								{/* Resize handles - only show for selected element when not readonly */}
+								{/* Resize regions - only show for selected element when not readonly */}
 								{element.id === selectedElementId && !readonly && (
 									<>
-										{/* Corner resize handle */}
+										{/* Corner resize region */}
 										<div
-											className="resize-handle absolute bottom-0 right-0 w-6 h-6 bg-primary/20 rounded-br-md border-r border-b border-primary z-10 cursor-nwse-resize"
+											className="resize-handle absolute bottom-0 right-0 w-8 h-8 bg-transparent hover:bg-primary/25 transition-colors duration-150 z-10 cursor-nwse-resize rounded-br-sm"
 											data-element-id={element.id}
 											data-direction="corner"
 										/>
 
-										{/* Right edge resize handle */}
+										{/* Right edge resize region */}
 										<div
-											className="resize-handle absolute top-1/2 right-0 w-4 h-8 -translate-y-1/2 bg-primary/20 border-r border-primary z-10 cursor-ew-resize"
+											className="resize-handle absolute top-0 right-0 w-5 h-full bg-transparent hover:bg-primary/25 transition-colors duration-150 z-10 cursor-ew-resize"
 											data-element-id={element.id}
 											data-direction="right"
 										/>
 
-										{/* Bottom edge resize handle */}
+										{/* Bottom edge resize region */}
 										<div
-											className="resize-handle absolute bottom-0 left-1/2 h-4 w-8 -translate-x-1/2 bg-primary/20 border-b border-primary z-10 cursor-ns-resize"
+											className="resize-handle absolute bottom-0 left-0 h-5 w-full bg-transparent hover:bg-primary/25 transition-colors duration-150 z-10 cursor-ns-resize"
 											data-element-id={element.id}
 											data-direction="bottom"
+										/>
+
+										{/* Left edge resize region */}
+										<div
+											className="resize-handle absolute top-0 left-0 w-5 h-full bg-transparent hover:bg-primary/25 transition-colors duration-150 z-10 cursor-ew-resize"
+											data-element-id={element.id}
+											data-direction="left"
+										/>
+
+										{/* Top edge resize region */}
+										<div
+											className="resize-handle absolute top-0 left-0 h-5 w-full bg-transparent hover:bg-primary/25 transition-colors duration-150 z-10 cursor-ns-resize"
+											data-element-id={element.id}
+											data-direction="top"
 										/>
 									</>
 								)}
@@ -982,6 +1106,18 @@ export const Canvas = forwardRef<HTMLDivElement, CanvasProps>(function Canvas(
 										}}
 										aria-label="Scale up">
 										<PlusIcon className="h-4 w-4" />
+									</button>
+
+									<button
+										type="button"
+										className="p-1 hover:bg-muted relative"
+										onMouseDown={(e) => {
+											e.stopPropagation();
+											e.preventDefault();
+											handleCopyElement(element.id, e);
+										}}
+										aria-label="Copy">
+										<CopyIcon className="h-4 w-4" />
 									</button>
 
 									<button
@@ -1090,6 +1226,14 @@ export const Canvas = forwardRef<HTMLDivElement, CanvasProps>(function Canvas(
 					</div>
 				)}
 			</div>
+
+			{/* Copy feedback toast notification */}
+			{showCopyFeedback && (
+				<div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-card border border-border px-4 py-2 rounded-md shadow-md z-50 flex items-center gap-2 animate-in fade-in slide-in-from-bottom-4 duration-300">
+					<CopyIcon className="h-4 w-4 text-primary" />
+					<span className="text-sm font-medium">Element copied! Press Ctrl+V to paste</span>
+				</div>
+			)}
 		</div>
 	);
 });
@@ -1189,7 +1333,26 @@ function XIcon(props: React.SVGProps<SVGSVGElement>) {
 	);
 }
 
-// Define separate components for weather effects
+// Add the CopyIcon component along with the other icons
+function CopyIcon(props: React.SVGProps<SVGSVGElement>) {
+	return (
+		<svg
+			xmlns="http://www.w3.org/2000/svg"
+			width="24"
+			height="24"
+			viewBox="0 0 24 24"
+			fill="none"
+			stroke="currentColor"
+			strokeWidth="2"
+			strokeLinecap="round"
+			strokeLinejoin="round"
+			{...props}>
+			<rect x="8" y="8" width="12" height="12" rx="2" ry="2"></rect>
+			<path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"></path>
+		</svg>
+	);
+}
+
 const RainEffect = React.memo(function RainEffect() {
 	return (
 		<div className="absolute inset-0 bg-blue-900/10 pointer-events-none">
