@@ -7,7 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Atmosphere, ElementOption, Garden, GardenItem } from "@/lib/types";
 import { copyToClipboard, generateGardenId, shareGarden } from "@/lib/utils";
 import { useZenGardenStore } from "@/providers/zen-garden-store-provider";
-import { SaveIcon, Share, TrashIcon } from "lucide-react";
+import { SaveIcon, TrashIcon } from "lucide-react";
 import { Dispatch, SetStateAction, useCallback, useState } from "react";
 import { toast } from "sonner";
 
@@ -172,25 +172,17 @@ export function TabbedPanel({
 				</div>
 
 				{/* Action Buttons - Fixed at Bottom */}
-				<div className="mt-auto border-t border-border px-3 py-2">
-					<div className="space-y-3">
-						<div className="grid grid-cols-2 gap-3">
-							<Button onClick={handleSave} className="w-full">
-								<SaveIcon className="mr-1 h-4 w-4" />
-								Save
-							</Button>
-
-							<Button onClick={handleShare} variant="outline" className="w-full" disabled={isSharing}>
-								<Share className="mr-1 h-4 w-4" />
-								{isSharing ? "Creating URL..." : "Share"}
-							</Button>
-						</div>
-
+				<div className="mt-auto border-t border-border px-3 py-3">
+					<div className="flex flex-row justify-between">
 						<Button
 							onClick={handleClear}
-							className="w-full border border-destructive bg-transparent text-destructive hover:bg-destructive hover:text-foreground">
-							<TrashIcon className="mr-1 h-4 w-4" />
+							className="border border-destructive bg-transparent text-destructive hover:bg-destructive hover:text-foreground">
+							<TrashIcon />
 							Clear Garden
+						</Button>
+						<Button onClick={handleSave}>
+							<SaveIcon />
+							Save
 						</Button>
 					</div>
 				</div>
