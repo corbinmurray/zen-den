@@ -32,6 +32,7 @@ alwaysApply: true
     ### UI and Styling
     - Use modern UI frameworks (e.g., Tailwind CSS, Shadcn UI) for styling.
     - Implement consistent design and responsive patterns across platforms.
+    - If you need to use icons, then only use lucide icons library. Do not create your own without asking.
 
     ### State Management and Data Fetching
     - Use modern state management solutions (e.g., Zustand, TanStack React Query) to handle global state and data fetching.
