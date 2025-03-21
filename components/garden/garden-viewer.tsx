@@ -1,5 +1,6 @@
 "use client";
 
+import { Canvas } from "@/components/garden/canvas";
 import { Button } from "@/components/ui/button";
 import { Atmosphere } from "@/lib/types";
 import { useZenGardenStore } from "@/providers/zen-garden-store-provider";
@@ -8,7 +9,6 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { Canvas } from "./canvas";
 
 export function GardenViewer() {
 	const searchParams = useSearchParams();
@@ -84,7 +84,7 @@ export function GardenViewer() {
 					<div className="absolute inset-0 flex flex-col items-center justify-center p-8 text-center">
 						<div className="bg-muted/30 rounded-lg p-6 max-w-md">
 							<h2 className="text-xl font-semibold mb-2">Garden Not Found</h2>
-							<p className="text-muted mb-4">The garden you're looking for could not be found or has no elements.</p>
+							<p className="text-muted mb-4">The garden you&apos;re looking for could not be found or has no elements.</p>
 							<Link href="/gallery">
 								<Button>View Gallery</Button>
 							</Link>

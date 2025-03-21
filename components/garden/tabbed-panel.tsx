@@ -4,15 +4,16 @@ import { AtmosphereSettings } from "@/components/garden/atmosphere-settings";
 import { ElementPanel } from "@/components/garden/element-panel";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ElementOption } from "@/lib/types";
+import { ElementOption, Garden } from "@/lib/types";
+import { useZenGardenStore } from "@/providers/zen-garden-store-provider";
 import { useGardenEditorStore } from "@/stores/garden-editor-store";
 import { SaveIcon, Share, TrashIcon } from "lucide-react";
 import { useCallback } from "react";
 import { toast } from "sonner";
 
 export function TabbedPanel() {
-	// Get values and actions from garden editor store
 	const { atmosphere, selectedGardenId, addGardenItem, clearGardenItems, setAtmosphere, setSaveDialogOpen, setShareAfterSave } = useGardenEditorStore();
+	const { update: updateGarden } = useZenGardenStore((state) => state);
 
 	// Handle adding an element to the garden
 	const handleAddElement = useCallback(
@@ -24,20 +25,35 @@ export function TabbedPanel() {
 
 	// Handle save button click
 	const handleSave = useCallback(() => {
-		// If garden already has an ID, just update it without prompting for a name
 		if (selectedGardenId) {
-			// We'll handle the actual save in the GardenCreator component
-			// This just triggers the callback
-			useGardenEditorStore.getState().setSaveDialogOpen(true);
+			// Get the current state
+			const state = useGardenEditorStore.getState();
+			const { gardenItems, atmosphere, gardenName } = state;
+
+			// Create the garden object
+			const garden: Garden = {
+				id: selectedGardenId,
+				name: gardenName,
+				items: gardenItems,
+				atmosphere: atmosphere,
+				lastModifiedAt: Date.now(),
+			};
+
+			// Update the existing garden
+			updateGarden(garden);
+
+			// Show success toast
+			toast.success("Garden updated", {
+				description: `"${gardenName}" has been updated successfully.`,
+			});
 		} else {
-			// Open dialog for new gardens to get a name
+			// If it's a new garden, show the dialog to name it
 			setSaveDialogOpen(true);
 		}
-	}, [selectedGardenId, setSaveDialogOpen]);
+	}, [selectedGardenId, updateGarden, setSaveDialogOpen]);
 
 	// Handle share button click
 	const handleShare = useCallback(() => {
-		// If garden is not saved yet, open the save dialog first
 		if (!selectedGardenId) {
 			setShareAfterSave(true);
 			setSaveDialogOpen(true);
@@ -47,8 +63,6 @@ export function TabbedPanel() {
 			return;
 		}
 
-		// We'll handle the actual share in the GardenCreator component
-		// This just triggers the store updates that will lead to sharing
 		useGardenEditorStore.getState().setShareAfterSave(true);
 		setTimeout(() => {
 			const state = useGardenEditorStore.getState();
