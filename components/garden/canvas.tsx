@@ -6,8 +6,6 @@ import React, { forwardRef, useCallback, useEffect, useRef, useState } from "rea
 
 interface CanvasProps {
 	elements: GardenItem[];
-	onElementUpdate: (element: GardenItem) => void;
-	onElementRemove: (id: string) => void;
 	showOutlines?: boolean;
 	atmosphere?: Atmosphere;
 	readonly?: boolean;
@@ -381,14 +379,11 @@ const CloudEffect = React.memo(function CloudEffect() {
 	);
 });
 
-
 export const Canvas = forwardRef<HTMLDivElement, CanvasProps>(function Canvas(
 	{
 		elements,
-		onElementUpdate,
-		onElementRemove,
 		showOutlines = false,
-		atmosphere= {
+		atmosphere = {
 			timeOfDay: "day",
 			weather: "clear",
 		},
@@ -400,23 +395,14 @@ export const Canvas = forwardRef<HTMLDivElement, CanvasProps>(function Canvas(
 	const canvasRef = useRef<HTMLDivElement>(null);
 	const canvasContainerRef = useRef<HTMLDivElement | null>(null);
 	const [canvasBounds, setCanvasBounds] = useState({ width: 0, height: 0 });
-
-	// Keep track of the dragging state
 	const [isDragging, setIsDragging] = useState(false);
 	const [draggedElement, setDraggedElement] = useState<string | null>(null);
-	// Add resize dragging state
 	const [isResizing, setIsResizing] = useState(false);
 	const [resizeDirection, setResizeDirection] = useState<string | null>(null);
-
-	// Track mouse position for drag operations
 	const mousePositionRef = useRef({ x: 0, y: 0 });
-
-	// Track element positions for rendering
 	const [elementPositions, setElementPositions] = useState<Map<string, { x: number; y: number }>>(new Map());
-	// Track element scales for immediate updates during resize
 	const [elementScales, setElementScales] = useState<Map<string, number>>(new Map());
 
-	// Update canvas bounds when container size changes
 	const updateBounds = useCallback(() => {
 		if (canvasContainerRef.current) {
 			const rect = canvasContainerRef.current.getBoundingClientRect();
@@ -424,6 +410,63 @@ export const Canvas = forwardRef<HTMLDivElement, CanvasProps>(function Canvas(
 				width: rect.width,
 				height: rect.height,
 			});
+		}
+	}, []);
+
+	// Helper function to determine if a point is within an element's shape
+	const isPointInShape = useCallback((elementType: string, x: number, y: number, elementX: number, elementY: number, size: number, rotation: number) => {
+		// Convert coordinates relative to element center
+		const centerX = elementX + size / 2;
+		const centerY = elementY + size / 2;
+
+		// Account for rotation by rotating the point in the opposite direction
+		const rotationRad = (rotation * Math.PI) / 180;
+		const rotatedX = Math.cos(-rotationRad) * (x - centerX) - Math.sin(-rotationRad) * (y - centerY) + centerX;
+		const rotatedY = Math.sin(-rotationRad) * (x - centerX) + Math.cos(-rotationRad) * (y - centerY) + centerY;
+
+		// Get normalized coordinates within the element (0 to 1)
+		const normalizedX = (rotatedX - elementX) / size;
+		const normalizedY = (rotatedY - elementY) / size;
+
+		// Check if we're outside the element's bounds
+		if (normalizedX < 0 || normalizedX > 1 || normalizedY < 0 || normalizedY > 1) {
+			return false;
+		}
+
+		// For more precise hit testing based on element type
+		switch (elementType) {
+			case "rock":
+			case "rock-flat":
+			case "rock-tall":
+			case "bonsai":
+			case "cherry":
+			case "pine":
+			case "moss":
+			case "water":
+			case "sand":
+				// For these elements, use an elliptical hit area
+				const distX = (normalizedX - 0.5) * 2; // -1 to 1
+				const distY = (normalizedY - 0.5) * 2; // -1 to 1
+				// Check if the point is within an ellipse
+				return distX * distX + distY * distY <= 1;
+
+			case "bamboo":
+			case "grass":
+				// Narrower hit area for thin vertical plants
+				const centerDist = Math.abs(normalizedX - 0.5);
+				return centerDist < 0.15 && normalizedY > 0.2;
+
+			case "lantern":
+			case "bridge":
+			case "pagoda":
+				// For structural elements, use a slightly reduced rectangular hit area
+				return normalizedX > 0.1 && normalizedX < 0.9 && normalizedY > 0.1 && normalizedY < 0.9;
+
+			default:
+				// Default to a circular hit area with 80% of the full radius
+				const dx = normalizedX - 0.5;
+				const dy = normalizedY - 0.5;
+				return dx * dx + dy * dy <= 0.16; // 0.16 = (0.4)²
 		}
 	}, []);
 
@@ -641,38 +684,14 @@ export const Canvas = forwardRef<HTMLDivElement, CanvasProps>(function Canvas(
 	// Handle mouse up
 	const handleMouseUp = useCallback(() => {
 		if (isResizing && draggedElement) {
-			const element = elements.find((el) => el.id === draggedElement);
-			const newScale = elementScales.get(draggedElement);
-			const newPosition = elementPositions.get(draggedElement);
-
-			if (element && newScale && newPosition) {
-				// Update the element position and scale through the parent callback
-				onElementUpdate({
-					...element,
-					scale: newScale,
-					position: newPosition,
-				});
-			}
-
 			setIsResizing(false);
 			setDraggedElement(null);
 			setResizeDirection(null);
 		} else if (isDragging && draggedElement) {
-			const element = elements.find((el) => el.id === draggedElement);
-			const newPosition = elementPositions.get(draggedElement);
-
-			if (element && newPosition) {
-				// Update the element position through the parent callback
-				onElementUpdate({
-					...element,
-					position: newPosition,
-				});
-			}
-
 			setIsDragging(false);
 			setDraggedElement(null);
 		}
-	}, [draggedElement, elements, elementPositions, elementScales, isDragging, isResizing, onElementUpdate]);
+	}, [isResizing, isDragging, draggedElement]);
 
 	// Touch events for mobile
 	const handleTouchStart = useCallback(
@@ -731,7 +750,7 @@ export const Canvas = forwardRef<HTMLDivElement, CanvasProps>(function Canvas(
 				}
 			}
 		},
-		[elements, elementPositions, elementScales]
+		[elements, elementPositions, elementScales, isPointInShape]
 	);
 
 	const handleTouchMove = useCallback(
@@ -830,93 +849,14 @@ export const Canvas = forwardRef<HTMLDivElement, CanvasProps>(function Canvas(
 
 	const handleTouchEnd = useCallback(() => {
 		if (isResizing && draggedElement) {
-			const element = elements.find((el) => el.id === draggedElement);
-			const newScale = elementScales.get(draggedElement);
-			const newPosition = elementPositions.get(draggedElement);
-
-			if (element && newScale && newPosition) {
-				onElementUpdate({
-					...element,
-					scale: newScale,
-					position: newPosition,
-				});
-			}
-
 			setIsResizing(false);
 			setDraggedElement(null);
 			setResizeDirection(null);
 		} else if (isDragging && draggedElement) {
-			const element = elements.find((el) => el.id === draggedElement);
-			const newPosition = elementPositions.get(draggedElement);
-
-			if (element && newPosition) {
-				onElementUpdate({
-					...element,
-					position: newPosition,
-				});
-			}
-
 			setIsDragging(false);
 			setDraggedElement(null);
 		}
-	}, [draggedElement, elements, elementPositions, elementScales, isDragging, isResizing, onElementUpdate]);
-
-	// Helper function to determine if a point is within an element's shape
-	const isPointInShape = useCallback((elementType: string, x: number, y: number, elementX: number, elementY: number, size: number, rotation: number) => {
-		// Convert coordinates relative to element center
-		const centerX = elementX + size / 2;
-		const centerY = elementY + size / 2;
-
-		// Account for rotation by rotating the point in the opposite direction
-		const rotationRad = (rotation * Math.PI) / 180;
-		const rotatedX = Math.cos(-rotationRad) * (x - centerX) - Math.sin(-rotationRad) * (y - centerY) + centerX;
-		const rotatedY = Math.sin(-rotationRad) * (x - centerX) + Math.cos(-rotationRad) * (y - centerY) + centerY;
-
-		// Get normalized coordinates within the element (0 to 1)
-		const normalizedX = (rotatedX - elementX) / size;
-		const normalizedY = (rotatedY - elementY) / size;
-
-		// Check if we're outside the element's bounds
-		if (normalizedX < 0 || normalizedX > 1 || normalizedY < 0 || normalizedY > 1) {
-			return false;
-		}
-
-		// For more precise hit testing based on element type
-		switch (elementType) {
-			case "rock":
-			case "rock-flat":
-			case "rock-tall":
-			case "bonsai":
-			case "cherry":
-			case "pine":
-			case "moss":
-			case "water":
-			case "sand":
-				// For these elements, use an elliptical hit area
-				const distX = (normalizedX - 0.5) * 2; // -1 to 1
-				const distY = (normalizedY - 0.5) * 2; // -1 to 1
-				// Check if the point is within an ellipse
-				return distX * distX + distY * distY <= 1;
-
-			case "bamboo":
-			case "grass":
-				// Narrower hit area for thin vertical plants
-				const centerDist = Math.abs(normalizedX - 0.5);
-				return centerDist < 0.15 && normalizedY > 0.2;
-
-			case "lantern":
-			case "bridge":
-			case "pagoda":
-				// For structural elements, use a slightly reduced rectangular hit area
-				return normalizedX > 0.1 && normalizedX < 0.9 && normalizedY > 0.1 && normalizedY < 0.9;
-
-			default:
-				// Default to a circular hit area with 80% of the full radius
-				const dx = normalizedX - 0.5;
-				const dy = normalizedY - 0.5;
-				return dx * dx + dy * dy <= 0.16; // 0.16 = (0.4)²
-		}
-	}, []);
+	}, [isResizing, isDragging, draggedElement]);
 
 	// Set up event listeners
 	useEffect(() => {
