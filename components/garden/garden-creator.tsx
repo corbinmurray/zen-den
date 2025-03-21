@@ -107,7 +107,7 @@ export function GardenCreator() {
 					name: gardenName,
 					items: gardenItems,
 					atmosphere: atmosphere,
-					createdAt: Date.now(),
+					lastModifiedAt: Date.now(),
 				};
 
 				// Check if garden with this ID already exists
@@ -152,12 +152,7 @@ export function GardenCreator() {
 
 				{/* Right side canvas */}
 				<div className="flex-1">
-					<Canvas
-						ref={canvasRef}
-						elements={gardenItems}
-						showOutlines={showOutlines}
-						atmosphere={atmosphere}
-					/>
+					<Canvas ref={canvasRef} elements={gardenItems} showOutlines={showOutlines} atmosphere={atmosphere} />
 				</div>
 			</div>
 

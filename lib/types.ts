@@ -25,7 +25,7 @@ export interface ElementOption {
 export interface Garden {
 	id?: string;
 	name?: string;
-	createdAt: number;
+	lastModifiedAt: number;
 	items: GardenItem[];
 	atmosphere?: Atmosphere;
 }

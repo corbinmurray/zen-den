@@ -48,7 +48,6 @@ const ZenPattern = () => (
 	</svg>
 );
 
-
 export default function GalleryPage() {
 	const { gardens, remove: removeGarden } = useZenGardenStore((state) => state);
 
@@ -67,9 +66,9 @@ export default function GalleryPage() {
 
 			<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
 				{gardens
-					.sort((a, b) => b.createdAt - a.createdAt)
+					.sort((a, b) => b.lastModifiedAt - a.lastModifiedAt)
 					.map((garden) => (
-						<div key={garden.createdAt} className="border border-border rounded-lg overflow-hidden bg-card shadow-sm hover:shadow-md transition-all">
+						<div key={garden.lastModifiedAt} className="border border-border rounded-lg overflow-hidden bg-card shadow-sm hover:shadow-md transition-all">
 							<div className={`h-40 flex items-center justify-center p-4 border-b border-border relative ${getCardStyle(garden.atmosphere)}`}>
 								<ZenPattern />
 								<div className="flex items-center justify-center w-full h-full">
@@ -79,7 +78,7 @@ export default function GalleryPage() {
 
 							<div className="p-4">
 								<div className="text-xs text-muted mb-4">
-									Created on {new Date(garden.createdAt).toLocaleDateString()} at {new Date(garden.createdAt).toLocaleTimeString()}
+									Last modified {new Date(garden.lastModifiedAt).toLocaleDateString()} at {new Date(garden.lastModifiedAt).toLocaleTimeString()}
 								</div>
 
 								<div className="flex flex-col space-y-2">
