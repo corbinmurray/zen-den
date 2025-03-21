@@ -16,7 +16,7 @@ alwaysApply: true
     - Use descriptive variable names with auxiliary verbs (e.g., `isLoading`, `hasError`).
     - Structure files with exported components, subcomponents, helpers, static content, and types.
     - Use lowercase with dashes for directory names (e.g., `components/auth-wizard`).
-
+    - Do not add comments unless it's for a function declaration. When adding code comments for functions always use JSDoc syntax.
     ### Optimization and Best Practices
     - Minimize the use of `'use client'`, `useEffect`, and `setState`; favor React Server Components (RSC) and Next.js SSR features.
     - Implement dynamic imports for code splitting and optimization.
