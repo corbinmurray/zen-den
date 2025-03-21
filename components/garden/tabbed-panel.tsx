@@ -76,19 +76,6 @@ export function TabbedPanel({
 						<ElementPanel onAddElement={onAddElement} />
 					</TabsContent>
 
-					<TabsContent value="settings" className="absolute inset-0 overflow-auto p-3 mt-0 border-0">
-						<GardenSettings
-							background={background}
-							onBackgroundChange={onBackgroundChange}
-							soundEnabled={soundEnabled}
-							onSoundToggle={onSoundToggle}
-							currentSound={currentSound}
-							onSoundChange={onSoundChange}
-							showOutlines={showOutlines}
-							onShowOutlinesChange={onShowOutlinesChange}
-						/>
-					</TabsContent>
-
 					<TabsContent value="atmosphere" className="absolute inset-0 overflow-auto p-3 mt-0 border-0">
 						<AtmosphereSettings settings={atmosphereSettings} onSettingsChange={onAtmosphereChange} />
 					</TabsContent>
