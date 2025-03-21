@@ -6,18 +6,21 @@ import { Atmosphere, Garden } from "@/lib/types";
 import { useZenGardenStore } from "@/providers/zen-garden-store-provider";
 import { ArrowLeft, Edit } from "lucide-react";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 
-export function GardenViewer() {
-	const searchParams = useSearchParams();
+interface GardenViewerProps {
+	initialGarden: Garden | null;
+	gardenId: string;
+}
+
+export function GardenViewer({ initialGarden, gardenId }: GardenViewerProps) {
 	const router = useRouter();
-	const gardenId = searchParams.get("id");
 	const { getGardenById, add: addGarden } = useZenGardenStore((state) => state);
 
-	const [isLoading, setIsLoading] = useState(true);
-	const [garden, setGarden] = useState<Garden | undefined>(undefined);
+	const [isLoading, setIsLoading] = useState(!initialGarden);
+	const [garden, setGarden] = useState<Garden | undefined>(initialGarden || undefined);
 
 	const defaultAtmosphere: Atmosphere = {
 		timeOfDay: "day",
@@ -59,6 +62,15 @@ export function GardenViewer() {
 
 	useEffect(() => {
 		async function loadGarden() {
+			// If initialGarden was provided, we don't need to load
+			if (initialGarden) {
+				// Make sure to add it to the store too
+				addGarden(initialGarden);
+				setGarden(initialGarden);
+				setIsLoading(false);
+				return;
+			}
+
 			if (!gardenId) {
 				setIsLoading(false);
 				toast.error("Garden not found", {
@@ -90,7 +102,7 @@ export function GardenViewer() {
 		}
 
 		loadGarden();
-	}, [gardenId, getGardenById, fetchGardenFromApi]);
+	}, [gardenId, getGardenById, fetchGardenFromApi, initialGarden, addGarden]);
 
 	const handleEdit = () => {
 		router.push(`/garden?id=${gardenId}`);
