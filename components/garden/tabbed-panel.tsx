@@ -57,12 +57,6 @@ export function TabbedPanel({
 							<span>Elements</span>
 						</TabsTrigger>
 						<TabsTrigger
-							value="settings"
-							className="flex items-center gap-1 px-3 py-2 text-xs data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:rounded-none data-[state=active]:bg-transparent min-w-[80px] hover:cursor-pointer hover:text-foreground">
-							<SettingsIcon className="h-4 w-4" />
-							<span>Settings</span>
-						</TabsTrigger>
-						<TabsTrigger
 							value="atmosphere"
 							className="flex items-center gap-1 px-3 py-2 text-xs data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:rounded-none data-[state=active]:bg-transparent min-w-[95px] hover:cursor-pointer hover:text-foreground">
 							<AtmosphereIcon className="h-4 w-4" />
@@ -194,7 +188,7 @@ interface SoundOptionProps {
 	onClick: () => void;
 }
 
-function SoundOption({ id, name, path, selected, onClick }: SoundOptionProps) {
+function SoundOption({ name, selected, onClick }: SoundOptionProps) {
 	return (
 		<div
 			className={`flex items-center p-2 rounded-md cursor-pointer ${
@@ -239,25 +233,6 @@ function ElementsIcon(props: React.SVGProps<SVGSVGElement>) {
 			<rect width="7" height="7" x="14" y="3" rx="1" />
 			<rect width="7" height="7" x="14" y="14" rx="1" />
 			<rect width="7" height="7" x="3" y="14" rx="1" />
-		</svg>
-	);
-}
-
-function SettingsIcon(props: React.SVGProps<SVGSVGElement>) {
-	return (
-		<svg
-			xmlns="http://www.w3.org/2000/svg"
-			width="24"
-			height="24"
-			viewBox="0 0 24 24"
-			fill="none"
-			stroke="currentColor"
-			strokeWidth="2"
-			strokeLinecap="round"
-			strokeLinejoin="round"
-			{...props}>
-			<path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" />
-			<circle cx="12" cy="12" r="3" />
 		</svg>
 	);
 }
