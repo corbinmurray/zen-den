@@ -1,8 +1,13 @@
 "use client";
 
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 import { ElementOption } from "@/lib/types";
+import { Search } from "lucide-react";
 import { motion } from "motion/react";
 import { useEffect, useState } from "react";
+import { CustomElementCreator } from "./custom-element-creator";
 
 // Sample elements with SVG-based images
 const ELEMENT_OPTIONS: ElementOption[] = [
@@ -122,6 +127,20 @@ export function ElementPanel({ onAddElement }: ElementPanelProps) {
 	const [debouncedSearchTerm, setDebouncedSearchTerm] = useState<string>("");
 	const [addedElement, setAddedElement] = useState<string | null>(null);
 	const [addInProgress, setAddInProgress] = useState(false);
+	const [customElements, setCustomElements] = useState<ElementOption[]>([]);
+	const [dialogOpen, setDialogOpen] = useState(false);
+
+	// Load custom elements from local storage on component mount
+	useEffect(() => {
+		try {
+			const storedElements = localStorage.getItem("zenCustomElements");
+			if (storedElements) {
+				setCustomElements(JSON.parse(storedElements));
+			}
+		} catch (error) {
+			console.error("Failed to load custom elements:", error);
+		}
+	}, []);
 
 	// Debounce search term to improve performance
 	useEffect(() => {
@@ -133,7 +152,9 @@ export function ElementPanel({ onAddElement }: ElementPanelProps) {
 	}, [searchTerm]);
 
 	// Filter elements based on debounced search term
-	const displayedElements = ELEMENT_OPTIONS.filter((el) => el.name.toLowerCase().includes(debouncedSearchTerm.toLowerCase()));
+	const filteredStandardElements = ELEMENT_OPTIONS.filter((el) => el.name.toLowerCase().includes(debouncedSearchTerm.toLowerCase()));
+
+	const filteredCustomElements = customElements.filter((el) => el.name.toLowerCase().includes(debouncedSearchTerm.toLowerCase()));
 
 	const handleElementClick = (element: ElementOption) => {
 		// Enhanced visual feedback during addition
@@ -148,6 +169,46 @@ export function ElementPanel({ onAddElement }: ElementPanelProps) {
 			setAddInProgress(false);
 			setTimeout(() => setAddedElement(null), 300);
 		}, 300);
+	};
+
+	// Handle saving a custom element
+	const handleSaveCustomElement = (element: ElementOption) => {
+		// Add the element to our custom elements array
+		const updatedElements = [...customElements, element];
+		setCustomElements(updatedElements);
+
+		// Save to local storage
+		try {
+			localStorage.setItem("zenCustomElements", JSON.stringify(updatedElements));
+		} catch (error) {
+			console.error("Failed to save custom element:", error);
+		}
+
+		// Add element to the garden
+		onAddElement(element);
+
+		// Close the creator
+		setDialogOpen(false);
+	};
+
+	// Handle deleting a custom element
+	const handleDeleteCustomElement = (elementType: string, event: React.MouseEvent) => {
+		// Stop event propagation to prevent adding the element when clicking delete
+		event.stopPropagation();
+
+		// Confirm deletion
+		if (confirm("Are you sure you want to delete this custom element?")) {
+			// Filter out the element to be deleted
+			const updatedElements = customElements.filter((el) => el.type !== elementType);
+			setCustomElements(updatedElements);
+
+			// Update local storage
+			try {
+				localStorage.setItem("zenCustomElements", JSON.stringify(updatedElements));
+			} catch (error) {
+				console.error("Failed to update custom elements:", error);
+			}
+		}
 	};
 
 	// Function to render the preview SVG for each element type
@@ -309,38 +370,11 @@ export function ElementPanel({ onAddElement }: ElementPanelProps) {
 	};
 
 	return (
-		<div className="space-y-4">
-			{/* Search input */}
-			<div className="relative">
-				<div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-					<svg
-						xmlns="http://www.w3.org/2000/svg"
-						width="16"
-						height="16"
-						viewBox="0 0 24 24"
-						fill="none"
-						stroke="currentColor"
-						strokeWidth="2"
-						strokeLinecap="round"
-						strokeLinejoin="round"
-						className="text-muted-foreground">
-						<circle cx="11" cy="11" r="8" />
-						<path d="m21 21-4.3-4.3" />
-					</svg>
-				</div>
-				<input
-					type="text"
-					className="w-full pl-10 py-2 px-3 text-sm border border-border rounded-md bg-muted/20 hover:bg-muted/30 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors"
-					placeholder="Search elements..."
-					value={searchTerm}
-					onChange={(e) => setSearchTerm(e.target.value)}
-					aria-label="Search garden elements"
-				/>
-				{searchTerm && (
-					<button
-						className="absolute inset-y-0 right-0 flex items-center pr-3 text-muted-foreground hover:text-foreground"
-						onClick={() => setSearchTerm("")}
-						aria-label="Clear search">
+		<>
+			<div className="space-y-4">
+				{/* Create custom element button */}
+				<div className="mb-4">
+					<Button className="w-full" onClick={() => setDialogOpen(true)}>
 						<svg
 							xmlns="http://www.w3.org/2000/svg"
 							width="16"
@@ -351,90 +385,217 @@ export function ElementPanel({ onAddElement }: ElementPanelProps) {
 							strokeWidth="2"
 							strokeLinecap="round"
 							strokeLinejoin="round">
-							<path d="M18 6 6 18" />
-							<path d="m6 6 12 12" />
+							<path d="M12 19l7-7 3 3-7 7-3-3z"></path>
+							<path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"></path>
+							<circle cx="11" cy="11" r="2"></circle>
 						</svg>
-					</button>
-				)}
-			</div>
-
-			{/* Show message if no elements found */}
-			{displayedElements.length === 0 && (
-				<div className="flex flex-col items-center justify-center py-8 text-muted-foreground">
-					<svg
-						xmlns="http://www.w3.org/2000/svg"
-						width="24"
-						height="24"
-						viewBox="0 0 24 24"
-						fill="none"
-						stroke="currentColor"
-						strokeWidth="2"
-						strokeLinecap="round"
-						strokeLinejoin="round"
-						className="mb-2">
-						<circle cx="12" cy="12" r="10" />
-						<line x1="12" y1="8" x2="12" y2="12" />
-						<line x1="12" y1="16" x2="12.01" y2="16" />
-					</svg>
-					<p className="text-sm">No elements found for "{debouncedSearchTerm}"</p>
+						<span className="text-sm font-medium">Create Custom Element</span>
+					</Button>
 				</div>
-			)}
 
-			{/* Elements grid */}
-			<div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-				{displayedElements.map((element) => (
-					<motion.div
-						key={element.type}
-						className={`flex flex-col items-center p-2 rounded-md bg-background hover:bg-secondary border 
-							${addedElement === element.type ? "border-primary shadow-lg" : "border-border"} 
-							cursor-pointer relative overflow-hidden`}
-						whileHover={{ scale: 1.05 }}
-						whileTap={{ scale: 0.95 }}
-						onClick={() => !addInProgress && handleElementClick(element)}
-						transition={{ duration: 0.2 }}>
-						<div className="relative w-16 h-16 mb-1">
-							{renderElementPreview(element.type)}
+				{/* Search input */}
+				<Input
+					type="text"
+					placeholder="Search elements..."
+					value={searchTerm}
+					onChange={(e) => setSearchTerm(e.target.value)}
+					aria-label="Search garden elements"
+					startIcon={Search}
+				/>
 
-							{/* Enhanced animation for element being added */}
-							{addedElement === element.type && (
-								<>
-									<motion.div
-										className="absolute inset-0 bg-primary/15 rounded-md"
-										initial={{ opacity: 0.8 }}
-										animate={{ opacity: 0 }}
-										transition={{ duration: 0.7 }}
-									/>
-									<motion.div
-										className="absolute inset-0 border-2 border-primary rounded-md"
-										initial={{ opacity: 0.8 }}
-										animate={{ opacity: 0 }}
-										transition={{ duration: 0.5 }}
-									/>
-								</>
-							)}
-						</div>
-						<span className="text-xs text-center">{element.name}</span>
+				{/* Show message if no elements found */}
+				{filteredStandardElements.length === 0 && filteredCustomElements.length === 0 && (
+					<div className="flex flex-col items-center justify-center py-8 text-muted-foreground">
+						<svg
+							xmlns="http://www.w3.org/2000/svg"
+							width="24"
+							height="24"
+							viewBox="0 0 24 24"
+							fill="none"
+							stroke="currentColor"
+							strokeWidth="2"
+							strokeLinecap="round"
+							strokeLinejoin="round"
+							className="mb-2">
+							<circle cx="12" cy="12" r="10" />
+							<line x1="12" y1="8" x2="12" y2="12" />
+							<line x1="12" y1="16" x2="12.01" y2="16" />
+						</svg>
+						<p className="text-sm">No elements found for "{debouncedSearchTerm}"</p>
+					</div>
+				)}
 
-						{/* Add indicator for adding functionality */}
-						<div className="absolute top-1 right-1 bg-background/90 rounded-full p-0.5 shadow-sm">
+				{/* Custom elements section */}
+				{filteredCustomElements.length > 0 && (
+					<div className="mb-6">
+						<h3 className="text-sm font-medium mb-2 flex items-center">
 							<svg
 								xmlns="http://www.w3.org/2000/svg"
-								width="10"
-								height="10"
+								width="14"
+								height="14"
 								viewBox="0 0 24 24"
 								fill="none"
 								stroke="currentColor"
 								strokeWidth="2"
 								strokeLinecap="round"
 								strokeLinejoin="round"
-								className="text-primary">
-								<path d="M5 12h14" />
-								<path d="M12 5v14" />
+								className="mr-1.5">
+								<path d="M12 19l7-7 3 3-7 7-3-3z"></path>
+								<path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"></path>
+								<circle cx="11" cy="11" r="2"></circle>
 							</svg>
+							Custom Elements
+						</h3>
+						<div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+							{filteredCustomElements.map((element) => (
+								<motion.div
+									key={element.type}
+									className={`flex flex-col items-center p-2 rounded-md bg-background hover:bg-secondary border 
+										${addedElement === element.type ? "border-primary shadow-lg" : "border-border"} 
+										cursor-pointer relative overflow-hidden`}
+									whileHover={{ scale: 1.05 }}
+									whileTap={{ scale: 0.95 }}
+									onClick={() => !addInProgress && handleElementClick(element)}
+									transition={{ duration: 0.2 }}>
+									<div className="relative w-16 h-16 mb-1">
+										<div dangerouslySetInnerHTML={{ __html: element.preview }} />
+
+										{/* Enhanced animation for element being added */}
+										{addedElement === element.type && (
+											<>
+												<motion.div
+													className="absolute inset-0 bg-primary/15 rounded-md"
+													initial={{ opacity: 0.8 }}
+													animate={{ opacity: 0 }}
+													transition={{ duration: 0.7 }}
+												/>
+												<motion.div
+													className="absolute inset-0 border-2 border-primary rounded-md"
+													initial={{ opacity: 0.8 }}
+													animate={{ opacity: 0 }}
+													transition={{ duration: 0.5 }}
+												/>
+											</>
+										)}
+									</div>
+									<span className="text-xs text-center">{element.name}</span>
+
+									{/* Add indicator for adding functionality */}
+									<div className="absolute top-1 right-1 bg-background/90 rounded-full p-0.5 shadow-sm">
+										<svg
+											xmlns="http://www.w3.org/2000/svg"
+											width="10"
+											height="10"
+											viewBox="0 0 24 24"
+											fill="none"
+											stroke="currentColor"
+											strokeWidth="2"
+											strokeLinecap="round"
+											strokeLinejoin="round"
+											className="text-primary">
+											<path d="M5 12h14" />
+											<path d="M12 5v14" />
+										</svg>
+									</div>
+
+									{/* Delete button */}
+									<div
+										className="absolute top-1 left-1 bg-background/90 rounded-full p-0.5 shadow-sm hover:bg-destructive/10"
+										onClick={(e) => handleDeleteCustomElement(element.type, e)}
+										aria-label="Delete custom element">
+										<svg
+											xmlns="http://www.w3.org/2000/svg"
+											width="10"
+											height="10"
+											viewBox="0 0 24 24"
+											fill="none"
+											stroke="currentColor"
+											strokeWidth="2"
+											strokeLinecap="round"
+											strokeLinejoin="round"
+											className="text-destructive">
+											<path d="M3 6h18" />
+											<path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
+											<path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
+										</svg>
+									</div>
+								</motion.div>
+							))}
 						</div>
-					</motion.div>
-				))}
+					</div>
+				)}
+
+				{/* Standard elements section */}
+				{filteredStandardElements.length > 0 && (
+					<div>
+						{filteredCustomElements.length > 0 && <h3 className="text-sm font-medium mb-2">Standard Elements</h3>}
+						<div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+							{filteredStandardElements.map((element) => (
+								<motion.div
+									key={element.type}
+									className={`flex flex-col items-center p-2 rounded-md bg-background hover:bg-secondary border 
+										${addedElement === element.type ? "border-primary shadow-lg" : "border-border"} 
+										cursor-pointer relative overflow-hidden`}
+									whileHover={{ scale: 1.05 }}
+									whileTap={{ scale: 0.95 }}
+									onClick={() => !addInProgress && handleElementClick(element)}
+									transition={{ duration: 0.2 }}>
+									<div className="relative w-16 h-16 mb-1">
+										{renderElementPreview(element.type)}
+
+										{/* Enhanced animation for element being added */}
+										{addedElement === element.type && (
+											<>
+												<motion.div
+													className="absolute inset-0 bg-primary/15 rounded-md"
+													initial={{ opacity: 0.8 }}
+													animate={{ opacity: 0 }}
+													transition={{ duration: 0.7 }}
+												/>
+												<motion.div
+													className="absolute inset-0 border-2 border-primary rounded-md"
+													initial={{ opacity: 0.8 }}
+													animate={{ opacity: 0 }}
+													transition={{ duration: 0.5 }}
+												/>
+											</>
+										)}
+									</div>
+									<span className="text-xs text-center">{element.name}</span>
+
+									{/* Add indicator for adding functionality */}
+									<div className="absolute top-1 right-1 bg-background/90 rounded-full p-0.5 shadow-sm">
+										<svg
+											xmlns="http://www.w3.org/2000/svg"
+											width="10"
+											height="10"
+											viewBox="0 0 24 24"
+											fill="none"
+											stroke="currentColor"
+											strokeWidth="2"
+											strokeLinecap="round"
+											strokeLinejoin="round"
+											className="text-primary">
+											<path d="M5 12h14" />
+											<path d="M12 5v14" />
+										</svg>
+									</div>
+								</motion.div>
+							))}
+						</div>
+					</div>
+				)}
 			</div>
-		</div>
+
+			{/* Custom Element Creator Dialog */}
+			<Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+				<DialogContent className="overflow-y-auto">
+					<DialogHeader>
+						<DialogTitle>Draw Something New</DialogTitle>
+					</DialogHeader>
+					<CustomElementCreator onSaveElement={handleSaveCustomElement} onCancel={() => setDialogOpen(false)} />
+				</DialogContent>
+			</Dialog>
+		</>
 	);
 }
