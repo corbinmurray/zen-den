@@ -1,42 +1,96 @@
-import { AtmosphereSettings, type AtmosphereSettings as AtmosphereSettingsType } from "@/components/garden/atmosphere-settings";
+"use client";
+
+import { AtmosphereSettings } from "@/components/garden/atmosphere-settings";
 import { ElementPanel } from "@/components/garden/element-panel";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ElementOption } from "@/lib/types";
+import { useGardenEditorStore } from "@/stores/garden-editor-store";
 import { SaveIcon, Share, TrashIcon } from "lucide-react";
+import { useCallback } from "react";
+import { toast } from "sonner";
 
-interface TabbedPanelProps {
-	onAddElement: (element: ElementOption) => void;
-	background: string;
-	onBackgroundChange: (path: string) => void;
-	soundEnabled: boolean;
-	onSoundToggle: () => void;
-	currentSound: string | null;
-	onSoundChange: (soundPath: string) => void;
-	showOutlines: boolean;
-	onShowOutlinesChange: (show: boolean) => void;
-	atmosphereSettings?: AtmosphereSettingsType;
-	onAtmosphereChange?: (settings: AtmosphereSettingsType) => void;
-	onSave: () => void;
-	onShare: () => void;
-	onClear: () => void;
-}
+export function TabbedPanel() {
+	// Get values and actions from garden editor store
+	const { atmosphere, selectedGardenId, addGardenItem, clearGardenItems, setAtmosphere, setSaveDialogOpen, setShareAfterSave } = useGardenEditorStore();
 
-export function TabbedPanel({
-	onAddElement,
-	soundEnabled,
-	onSoundToggle,
-	currentSound,
-	onSoundChange,
-	atmosphereSettings = {
-		timeOfDay: "day",
-		weather: "clear",
-	},
-	onAtmosphereChange = () => {},
-	onSave,
-	onShare,
-	onClear,
-}: TabbedPanelProps) {
+	// Handle adding an element to the garden
+	const handleAddElement = useCallback(
+		(element: ElementOption) => {
+			addGardenItem(element);
+		},
+		[addGardenItem]
+	);
+
+	// Handle save button click
+	const handleSave = useCallback(() => {
+		// If garden already has an ID, just update it without prompting for a name
+		if (selectedGardenId) {
+			// We'll handle the actual save in the GardenCreator component
+			// This just triggers the callback
+			useGardenEditorStore.getState().setSaveDialogOpen(true);
+		} else {
+			// Open dialog for new gardens to get a name
+			setSaveDialogOpen(true);
+		}
+	}, [selectedGardenId, setSaveDialogOpen]);
+
+	// Handle share button click
+	const handleShare = useCallback(() => {
+		// If garden is not saved yet, open the save dialog first
+		if (!selectedGardenId) {
+			setShareAfterSave(true);
+			setSaveDialogOpen(true);
+			toast.info("Name your garden", {
+				description: "Please name your garden before sharing it.",
+			});
+			return;
+		}
+
+		// We'll handle the actual share in the GardenCreator component
+		// This just triggers the store updates that will lead to sharing
+		useGardenEditorStore.getState().setShareAfterSave(true);
+		setTimeout(() => {
+			const state = useGardenEditorStore.getState();
+			const shareableLink = `${window.location.origin}/view?id=${state.selectedGardenId}`;
+
+			// Copy to clipboard
+			navigator.clipboard
+				.writeText(shareableLink)
+				.then(() => {
+					toast.success("Link copied!", {
+						description: `Share this link with others to view "${state.gardenName}".`,
+					});
+				})
+				.catch((err) => {
+					console.error("Failed to copy link:", err);
+					toast.info("Share link", {
+						description: shareableLink,
+					});
+				});
+		}, 100);
+	}, [selectedGardenId, setShareAfterSave, setSaveDialogOpen]);
+
+	// Handle clear button click
+	const handleClear = useCallback(() => {
+		toast.warning("Clear garden?", {
+			description: "Are you sure you want to clear your garden? This cannot be undone.",
+			action: {
+				label: "Yes, clear it",
+				onClick: () => {
+					clearGardenItems();
+					toast.success("Garden cleared", {
+						description: "Your zen garden has been reset.",
+					});
+				},
+			},
+			cancel: {
+				label: "Cancel",
+				onClick: () => {},
+			},
+		});
+	}, [clearGardenItems]);
+
 	return (
 		<div className="flex flex-col h-full overflow-hidden bg-card rounded-lg border border-border">
 			<Tabs defaultValue="elements" className="flex flex-col h-full p-1">
@@ -59,11 +113,11 @@ export function TabbedPanel({
 
 				<div className="flex-1 overflow-hidden relative">
 					<TabsContent value="elements" className="absolute inset-0 overflow-auto p-2 mt-0 border-0">
-						<ElementPanel onAddElement={onAddElement} />
+						<ElementPanel onAddElement={handleAddElement} />
 					</TabsContent>
 
 					<TabsContent value="atmosphere" className="absolute inset-0 overflow-auto p-3 mt-0 border-0">
-						<AtmosphereSettings settings={atmosphereSettings} onSettingsChange={onAtmosphereChange} />
+						<AtmosphereSettings settings={atmosphere} onSettingsChange={setAtmosphere} />
 					</TabsContent>
 				</div>
 
@@ -71,18 +125,20 @@ export function TabbedPanel({
 				<div className="mt-auto border-t border-border px-3 py-2">
 					<div className="space-y-3">
 						<div className="grid grid-cols-2 gap-3">
-							<Button onClick={onSave} className="w-full">
+							<Button onClick={handleSave} className="w-full">
 								<SaveIcon className="mr-1 h-4 w-4" />
 								Save
 							</Button>
 
-							<Button onClick={onShare} variant="outline" className="w-full">
+							<Button onClick={handleShare} variant="outline" className="w-full">
 								<Share className="mr-1 h-4 w-4" />
 								Share
 							</Button>
 						</div>
 
-						<Button onClick={onClear} className="w-full border border-destructive bg-transparent text-destructive hover:bg-destructive hover:text-foreground">
+						<Button
+							onClick={handleClear}
+							className="w-full border border-destructive bg-transparent text-destructive hover:bg-destructive hover:text-foreground">
 							<TrashIcon className="mr-1 h-4 w-4" />
 							Clear Garden
 						</Button>

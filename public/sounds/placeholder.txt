@@ -1,8 +1,0 @@
-The following audio files are needed in this directory:
-
-1. water-trickling.mp3 - A soothing water trickling sound (30-60 seconds, loopable)
-2. wind-chimes.mp3 - A gentle wind chimes sound (30-60 seconds, loopable)
-3. ambient-zen.mp3 - A calm ambient music track (2-3 minutes, loopable)
-4. birds.mp3 - Peaceful birds chirping (30-60 seconds, loopable)
-
-These files are required for the sound toggle feature to function properly. 
