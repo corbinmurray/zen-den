@@ -4,121 +4,12 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { ElementOption, GardenItem } from "@/lib/types";
-import { Search } from "lucide-react";
+import { Pencil, Search, Trash } from "lucide-react";
 import { motion } from "motion/react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { v4 as uuidv4 } from "uuid";
 import { CustomElementCreator } from "./custom-element-creator";
-
-// Sample elements with SVG-based images
-const ELEMENT_OPTIONS: ElementOption[] = [
-	// Rocks
-	{
-		type: "rock",
-		name: "Smooth Rock",
-		imagePath: "#rock",
-		preview: "#rock-preview",
-		category: "rocks",
-	},
-	{
-		type: "rock-flat",
-		name: "Flat Stone",
-		imagePath: "#rock-flat",
-		preview: "#rock-flat-preview",
-		category: "rocks",
-	},
-	{
-		type: "rock-tall",
-		name: "Standing Stone",
-		imagePath: "#rock-tall",
-		preview: "#rock-tall-preview",
-		category: "rocks",
-	},
-
-	// Plants
-	{
-		type: "bamboo",
-		name: "Bamboo",
-		imagePath: "#bamboo",
-		preview: "#bamboo-preview",
-		category: "plants",
-	},
-	{
-		type: "bonsai",
-		name: "Bonsai Tree",
-		imagePath: "#bonsai",
-		preview: "#bonsai-preview",
-		category: "plants",
-	},
-	{
-		type: "cherry",
-		name: "Cherry Tree",
-		imagePath: "#cherry",
-		preview: "#cherry-preview",
-		category: "plants",
-	},
-	{
-		type: "pine",
-		name: "Pine Tree",
-		imagePath: "#pine",
-		preview: "#pine-preview",
-		category: "plants",
-	},
-	{
-		type: "grass",
-		name: "Grass Tuft",
-		imagePath: "#grass",
-		preview: "#grass-preview",
-		category: "plants",
-	},
-
-	// Decorations
-	{
-		type: "lantern",
-		name: "Stone Lantern",
-		imagePath: "#lantern",
-		preview: "#lantern-preview",
-		category: "decorations",
-	},
-	{
-		type: "bridge",
-		name: "Wood Bridge",
-		imagePath: "#bridge",
-		preview: "#bridge-preview",
-		category: "decorations",
-	},
-	{
-		type: "pagoda",
-		name: "Mini Pagoda",
-		imagePath: "#pagoda",
-		preview: "#pagoda-preview",
-		category: "decorations",
-	},
-
-	// Features
-	{
-		type: "sand",
-		name: "Raked Sand",
-		imagePath: "#sand",
-		preview: "#sand-preview",
-		category: "features",
-	},
-	{
-		type: "water",
-		name: "Water Pool",
-		imagePath: "#water",
-		preview: "#water-preview",
-		category: "features",
-	},
-	{
-		type: "moss",
-		name: "Moss Patch",
-		imagePath: "#moss",
-		preview: "#moss-preview",
-		category: "features",
-	},
-];
 
 interface ElementPanelProps {
 	onAddElement: (element: GardenItem) => void;
@@ -420,20 +311,7 @@ export function ElementPanel({ onAddElement }: ElementPanelProps) {
 				{/* Create custom element button */}
 				<div className="mb-4">
 					<Button className="w-full" onClick={() => setDialogOpen(true)}>
-						<svg
-							xmlns="http://www.w3.org/2000/svg"
-							width="16"
-							height="16"
-							viewBox="0 0 24 24"
-							fill="none"
-							stroke="currentColor"
-							strokeWidth="2"
-							strokeLinecap="round"
-							strokeLinejoin="round">
-							<path d="M12 19l7-7 3 3-7 7-3-3z"></path>
-							<path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"></path>
-							<circle cx="11" cy="11" r="2"></circle>
-						</svg>
+						<Pencil />
 						<span className="text-sm font-medium">Create Custom Element</span>
 					</Button>
 				</div>
@@ -450,7 +328,7 @@ export function ElementPanel({ onAddElement }: ElementPanelProps) {
 
 				{/* Show message if no elements found */}
 				{allElements.length === 0 && (
-					<div className="flex flex-col items-center justify-center py-8 text-muted-foreground">
+					<div className="flex flex-col items-center justify-center py-8 text-muted">
 						<svg
 							xmlns="http://www.w3.org/2000/svg"
 							width="24"
@@ -511,45 +389,14 @@ export function ElementPanel({ onAddElement }: ElementPanelProps) {
 									</div>
 									<span className="text-xs text-center">{element.name}</span>
 
-									{/* Add indicator for adding functionality */}
-									<div className="absolute top-1 right-1 bg-background/90 rounded-full p-0.5 shadow-sm">
-										<svg
-											xmlns="http://www.w3.org/2000/svg"
-											width="10"
-											height="10"
-											viewBox="0 0 24 24"
-											fill="none"
-											stroke="currentColor"
-											strokeWidth="2"
-											strokeLinecap="round"
-											strokeLinejoin="round"
-											className="text-primary">
-											<path d="M5 12h14" />
-											<path d="M12 5v14" />
-										</svg>
-									</div>
-
 									{/* Delete button - only for custom elements */}
 									{element.category === "custom" && (
 										<div
-											className="absolute top-1 left-1 bg-background/90 rounded-full p-0.5 shadow-sm hover:bg-destructive/10"
+											className="absolute top-1 right-1 p-1.5 rounded-full bg-background border border-border/30 shadow-sm z-10 group/delete"
 											onClick={(e) => handleDeleteCustomElement(element.type, e)}
 											aria-label="Delete custom element">
-											<svg
-												xmlns="http://www.w3.org/2000/svg"
-												width="10"
-												height="10"
-												viewBox="0 0 24 24"
-												fill="none"
-												stroke="currentColor"
-												strokeWidth="2"
-												strokeLinecap="round"
-												strokeLinejoin="round"
-												className="text-destructive">
-												<path d="M3 6h18" />
-												<path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
-												<path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
-											</svg>
+											<Trash className="size-3.5 text-destructive group-hover/delete:text-white" />
+											<span className="absolute inset-0 rounded-full bg-destructive opacity-0 group-hover/delete:opacity-100 transition-opacity -z-10"></span>
 										</div>
 									)}
 								</motion.div>
@@ -571,3 +418,112 @@ export function ElementPanel({ onAddElement }: ElementPanelProps) {
 		</>
 	);
 }
+
+// Sample elements with SVG-based images
+const ELEMENT_OPTIONS: ElementOption[] = [
+	// Rocks
+	{
+		type: "rock",
+		name: "Smooth Rock",
+		imagePath: "#rock",
+		preview: "#rock-preview",
+		category: "rocks",
+	},
+	{
+		type: "rock-flat",
+		name: "Flat Stone",
+		imagePath: "#rock-flat",
+		preview: "#rock-flat-preview",
+		category: "rocks",
+	},
+	{
+		type: "rock-tall",
+		name: "Standing Stone",
+		imagePath: "#rock-tall",
+		preview: "#rock-tall-preview",
+		category: "rocks",
+	},
+
+	// Plants
+	{
+		type: "bamboo",
+		name: "Bamboo",
+		imagePath: "#bamboo",
+		preview: "#bamboo-preview",
+		category: "plants",
+	},
+	{
+		type: "bonsai",
+		name: "Bonsai Tree",
+		imagePath: "#bonsai",
+		preview: "#bonsai-preview",
+		category: "plants",
+	},
+	{
+		type: "cherry",
+		name: "Cherry Tree",
+		imagePath: "#cherry",
+		preview: "#cherry-preview",
+		category: "plants",
+	},
+	{
+		type: "pine",
+		name: "Pine Tree",
+		imagePath: "#pine",
+		preview: "#pine-preview",
+		category: "plants",
+	},
+	{
+		type: "grass",
+		name: "Grass Tuft",
+		imagePath: "#grass",
+		preview: "#grass-preview",
+		category: "plants",
+	},
+
+	// Decorations
+	{
+		type: "lantern",
+		name: "Stone Lantern",
+		imagePath: "#lantern",
+		preview: "#lantern-preview",
+		category: "decorations",
+	},
+	{
+		type: "bridge",
+		name: "Wood Bridge",
+		imagePath: "#bridge",
+		preview: "#bridge-preview",
+		category: "decorations",
+	},
+	{
+		type: "pagoda",
+		name: "Mini Pagoda",
+		imagePath: "#pagoda",
+		preview: "#pagoda-preview",
+		category: "decorations",
+	},
+
+	// Features
+	{
+		type: "sand",
+		name: "Raked Sand",
+		imagePath: "#sand",
+		preview: "#sand-preview",
+		category: "features",
+	},
+	{
+		type: "water",
+		name: "Water Pool",
+		imagePath: "#water",
+		preview: "#water-preview",
+		category: "features",
+	},
+	{
+		type: "moss",
+		name: "Moss Patch",
+		imagePath: "#moss",
+		preview: "#moss-preview",
+		category: "features",
+	},
+];
