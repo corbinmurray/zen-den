@@ -30,6 +30,7 @@ export function GardenCreator() {
 	const [selectedGardenId, setSelectedGardenId] = useState<string | null>(null);
 	const [saveDialogOpen, setSaveDialogOpen] = useState(false);
 	const [gardenName, setGardenName] = useState("My Zen Garden");
+	const [shareAfterSave, setShareAfterSave] = useState(false);
 
 	const canvasRef = useRef<HTMLDivElement>(null);
 
@@ -78,7 +79,7 @@ export function GardenCreator() {
 
 				if (savedGardensJSON) {
 					const savedGardens = JSON.parse(savedGardensJSON);
-					const garden = savedGardens.find((g: any) => g.id === gardenId);
+					const garden: GardenData = savedGardens.find((g: any) => g.id === gardenId);
 
 					if (garden) {
 						// Load garden data
@@ -86,7 +87,7 @@ export function GardenCreator() {
 						setBackground(garden.background || "/backgrounds/zen-garden-bg.svg");
 						setAtmosphereSettings(garden.atmosphereSettings || defaultAtmosphereSettings);
 						setSelectedGardenId(gardenId);
-						setGardenName(garden.name || "My Zen Garden");
+						setGardenName(garden.gardenName || "My Zen Garden");
 					} else {
 						toast.error("Garden not found", {
 							description: "The garden you're trying to edit could not be found.",
@@ -147,13 +148,20 @@ export function GardenCreator() {
 		setElements((prev) => prev.filter((el) => el.id !== id));
 	}, []);
 
-	// Open the save dialog
+	// Open the save dialog (or directly save if already saved)
 	const handleOpenSaveDialog = () => {
-		setSaveDialogOpen(true);
+		// If garden already has an ID, just update it without prompting for a name
+		if (selectedGardenId) {
+			// Direct save/update without opening dialog
+			saveGardenWithName(false);
+		} else {
+			// Open dialog for new gardens to get a name
+			setSaveDialogOpen(true);
+		}
 	};
 
 	// Save garden with the provided name
-	const saveGardenWithName = () => {
+	const saveGardenWithName = (closeDialog = true) => {
 		try {
 			// Create a unique ID for the garden if it doesn't have one
 			const gardenId = selectedGardenId || uuidV6();
@@ -195,8 +203,17 @@ export function GardenCreator() {
 			// Update selected garden ID
 			setSelectedGardenId(gardenId);
 
-			// Close the dialog
-			setSaveDialogOpen(false);
+			// Close the dialog if needed
+			if (closeDialog) {
+				setSaveDialogOpen(false);
+			}
+
+			// Check if we should share after saving
+			if (shareAfterSave) {
+				setShareAfterSave(false);
+				// Use setTimeout to ensure the state is updated before sharing
+				setTimeout(() => shareGardenLink(), 100);
+			}
 		} catch (error) {
 			console.error("Error saving garden:", error);
 			toast.error("Save failed", {
@@ -209,7 +226,7 @@ export function GardenCreator() {
 	const handleShare = () => {
 		// If garden is not saved yet, open the save dialog first
 		if (!selectedGardenId) {
-			// Set a flag or use a different state to indicate we're saving for sharing
+			setShareAfterSave(true);
 			setSaveDialogOpen(true);
 			toast.info("Name your garden", {
 				description: "Please name your garden before sharing it.",
@@ -217,6 +234,12 @@ export function GardenCreator() {
 			return;
 		}
 
+		// Generate and share the link for an already saved garden
+		shareGardenLink();
+	};
+
+	// Helper function to generate and share garden link
+	const shareGardenLink = () => {
 		try {
 			// Create shareable link
 			const shareableLink = `${window.location.origin}/view?id=${selectedGardenId}`;
@@ -332,7 +355,7 @@ export function GardenCreator() {
 					<form
 						onSubmit={(e) => {
 							e.preventDefault();
-							saveGardenWithName();
+							saveGardenWithName(true);
 						}}
 						className="space-y-6">
 						<div className="flex flex-col justify-start items-start gap-2">
