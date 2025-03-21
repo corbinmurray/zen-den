@@ -191,21 +191,147 @@ const SnowEffect = React.memo(function SnowEffect() {
 
 const CloudEffect = React.memo(function CloudEffect() {
 	return (
-		<div className="absolute inset-0 bg-gray-400/10 backdrop-blur-[1px] pointer-events-none">
-			{Array.from({ length: 5 }).map((_, i) => {
-				const yPos = 30 + i * 40;
-				const opacity = 0.2 + i * 0.08;
-				const scale = 0.8 + (i % 5) * 0.1;
-				const duration = 120 - i * 15;
-				const delay = i * 20;
+		<div className="absolute inset-0 bg-gray-400/10 pointer-events-none">
+			{/* Larger slower clouds at the top */}
+			{Array.from({ length: 10 }).map((_, i) => {
+				const yPos = Math.floor(Math.random() * i);
+				const xPos = i * 10;
+				const opacity = 0.5 + (i % 3) * 0.1;
+				const scale = 1.2 + (i % 3) * 0.15;
+				const width = 150 + (i % 3) * 20;
+				const height = 80 + (i % 3) * 10;
+				const duration = 60 + i * 10;
 
 				return (
 					<motion.div
-						key={`cloud-${i}`}
+						key={`cloud-top-${i}`}
+						className="absolute bg-white/60 rounded-full blur-sm"
+						style={{
+							width: `${width}px`,
+							height: `${height}px`,
+							top: `${yPos}%`,
+							left: `${xPos}%`,
+						}}
+						initial={{
+							opacity: opacity,
+							scale: scale,
+						}}
+						animate={{
+							x: "100%",
+						}}
+						transition={{
+							duration: duration,
+							repeat: Infinity,
+							repeatType: "loop",
+							ease: "linear",
+						}}
+					/>
+				);
+			})}
+
+			{/* Cloud clusters with compound shapes for more natural look */}
+			{Array.from({ length: 5 }).map((_, i) => {
+				// Position in the 10-25% range of the screen
+				const yPos = 10 + i * 5;
+				const xPos = 10 + i * 30;
+				const baseDelay = i * 25;
+				const baseDuration = 220 + i * 30;
+
+				return (
+					<div key={`cloud-cluster-${i}`} className="absolute" style={{ top: `${yPos}%`, left: `${xPos}%` }}>
+						<motion.div
+							className="absolute bg-white/60 rounded-full w-[70px] h-[45px] blur-md"
+							initial={{ x: -350 }}
+							animate={{ x: "120vw" }}
+							transition={{
+								duration: baseDuration,
+								repeat: Infinity,
+								repeatType: "loop",
+								delay: baseDelay,
+								ease: "linear",
+							}}
+						/>
+						<motion.div
+							className="absolute bg-white/30 rounded-full w-[55px] h-[40px] blur-md left-[40px] top-[-10px]"
+							initial={{ x: -350 }}
+							animate={{ x: "120vw" }}
+							transition={{
+								duration: baseDuration,
+								repeat: Infinity,
+								repeatType: "loop",
+								delay: baseDelay,
+								ease: "linear",
+							}}
+						/>
+						<motion.div
+							className="absolute bg-white/35 rounded-full w-[60px] h-[35px] blur-md left-[25px] top-[5px]"
+							initial={{ x: -350 }}
+							animate={{ x: "120vw" }}
+							transition={{
+								duration: baseDuration,
+								repeat: Infinity,
+								repeatType: "loop",
+								delay: baseDelay,
+								ease: "linear",
+							}}
+						/>
+					</div>
+				);
+			})}
+
+			{/* Medium clouds in middle-top area */}
+			{Array.from({ length: 3 }).map((_, i) => {
+				// Position in 5-20% range of the screen
+				const yPos = 5 + i * 5;
+				const opacity = 0.2 + i * 0.1;
+				const scale = 0.9 + (i % 3) * 0.1;
+				const duration = 180 - i * 15;
+				const delay = i * 40;
+
+				return (
+					<motion.div
+						key={`cloud-mid-${i}`}
 						className="absolute bg-white/20 rounded-full w-[100px] h-[60px] blur-md"
+						style={{
+							top: `${yPos}%`, // Position at calculated top percentage
+						}}
 						initial={{
 							x: -150,
-							y: yPos,
+							opacity: opacity,
+							scale: scale,
+						}}
+						animate={{
+							x: `${120}%`,
+						}}
+						transition={{
+							duration: duration,
+							repeat: Infinity,
+							repeatType: "loop",
+							delay: delay,
+							ease: "linear",
+						}}
+					/>
+				);
+			})}
+
+			{/* Small distant clouds */}
+			{Array.from({ length: 4 }).map((_, i) => {
+				// Position in 0-15% range of the screen
+				const yPos = i * 4;
+				const opacity = 0.15 + (i % 4) * 0.05;
+				const scale = 0.6 + (i % 4) * 0.08;
+				const duration = 160 + i * 30;
+				const delay = i * 15;
+
+				return (
+					<motion.div
+						key={`cloud-small-${i}`}
+						className="absolute bg-white/15 rounded-full w-[70px] h-[40px] blur-md"
+						style={{
+							top: `${yPos}%`, // Position at calculated top percentage
+						}}
+						initial={{
+							x: -100,
 							opacity: opacity,
 							scale: scale,
 						}}
@@ -310,69 +436,6 @@ const BlossomsEffect = React.memo(function BlossomsEffect({ intensity }: { inten
 						<svg width="10" height="10" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
 							<circle cx="12" cy="12" r="4" fill="#FDF2F8" />
 							<circle cx="12" cy="12" r="2" fill="#FBCFE8" />
-						</svg>
-					</motion.div>
-				);
-			})}
-		</div>
-	);
-});
-
-const ButterfliesEffect = React.memo(function ButterfliesEffect({ intensity }: { intensity: number }) {
-	const particleCount = Math.floor(20 * intensity);
-
-	return (
-		<div className="absolute inset-0 pointer-events-none">
-			{Array.from({ length: Math.ceil(particleCount / 2) }).map((_, i) => {
-				const scale = 0.6 + (i % 10) * 0.04;
-				const x1 = (i * 9) % 90;
-				const x2 = (i * 9 + 30) % 90;
-				const x3 = (i * 9 + 60) % 90;
-				const y1 = (i * 9) % 90;
-				const y2 = (i * 9 + 30) % 90;
-				const y3 = (i * 9 + 60) % 90;
-				const rotate1 = (i % 5) * 4 - 10;
-				const rotate2 = ((i + 2) % 5) * 4 - 10;
-				const rotate3 = ((i + 4) % 5) * 4 - 10;
-
-				return (
-					<motion.div
-						key={`butterfly-${i}`}
-						className="absolute"
-						initial={{
-							x: `${((i * 6) % 120) - 10}%`,
-							y: `${((i * 6) % 120) - 10}%`,
-							scale: scale,
-						}}
-						animate={{
-							x: [`${x1}%`, `${x2}%`, `${x3}%`],
-							y: [`${y1}%`, `${y2}%`, `${y3}%`],
-							rotate: [rotate1, rotate2, rotate3],
-						}}
-						transition={{
-							duration: 25,
-							times: [0, 0.5, 1],
-							repeat: Infinity,
-							repeatType: "mirror",
-							delay: i % 5,
-						}}>
-						<svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-							<motion.path
-								d="M12 5C8 5 6 8 6 12C6 16 8 19 12 19C16 19 18 16 18 12C18 8 16 5 12 5Z"
-								fill="#FBBF24"
-								animate={{
-									d: [
-										"M12 5C8 5 6 8 6 12C6 16 8 19 12 19C16 19 18 16 18 12C18 8 16 5 12 5Z",
-										"M12 5C8 7 6 8 6 12C6 16 8 17 12 19C16 17 18 16 18 12C18 8 16 7 12 5Z",
-										"M12 5C8 5 6 8 6 12C6 16 8 19 12 19C16 19 18 16 18 12C18 8 16 5 12 5Z",
-									],
-								}}
-								transition={{
-									duration: 0.8,
-									repeat: Infinity,
-									repeatType: "mirror",
-								}}
-							/>
 						</svg>
 					</motion.div>
 				);
@@ -1262,7 +1325,7 @@ export const Canvas = forwardRef<HTMLDivElement, CanvasProps>(function Canvas(
 					return (
 						<div
 							key={element.id}
-							className="absolute"
+							className="absolute z-10"
 							style={{
 								transform: `translate(${position.x}px, ${position.y}px)`,
 								zIndex: element.id === selectedElementId ? 100 : element.zIndex || 1,
