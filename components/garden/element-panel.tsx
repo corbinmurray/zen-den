@@ -7,6 +7,7 @@ import { ElementOption } from "@/lib/types";
 import { Search } from "lucide-react";
 import { motion } from "motion/react";
 import { useEffect, useState } from "react";
+import { toast } from "sonner";
 import { CustomElementCreator } from "./custom-element-creator";
 
 // Sample elements with SVG-based images
@@ -199,19 +200,35 @@ export function ElementPanel({ onAddElement }: ElementPanelProps) {
 		// Stop event propagation to prevent adding the element when clicking delete
 		event.stopPropagation();
 
-		// Confirm deletion
-		if (confirm("Are you sure you want to delete this custom element?")) {
-			// Filter out the element to be deleted
-			const updatedElements = customElements.filter((el) => el.type !== elementType);
-			setCustomElements(updatedElements);
+		// Use toast for confirmation
+		toast.warning("Delete element?", {
+			description: "Are you sure you want to delete this custom element?",
+			action: {
+				label: "Delete",
+				onClick: () => {
+					// Filter out the element to be deleted
+					const updatedElements = customElements.filter((el) => el.type !== elementType);
+					setCustomElements(updatedElements);
 
-			// Update local storage
-			try {
-				localStorage.setItem("zenCustomElements", JSON.stringify(updatedElements));
-			} catch (error) {
-				console.error("Failed to update custom elements:", error);
-			}
-		}
+					// Update local storage
+					try {
+						localStorage.setItem("zenCustomElements", JSON.stringify(updatedElements));
+						toast.success("Element deleted", {
+							description: "Custom element has been removed.",
+						});
+					} catch (error) {
+						console.error("Failed to update custom elements:", error);
+						toast.error("Delete failed", {
+							description: "Failed to remove the element. Please try again.",
+						});
+					}
+				},
+			},
+			cancel: {
+				label: "Cancel",
+				onClick: () => {},
+			},
+		});
 	};
 
 	// Function to render the preview SVG for each element type

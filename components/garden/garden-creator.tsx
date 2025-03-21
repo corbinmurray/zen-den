@@ -2,6 +2,7 @@
 
 import { AtmosphereSettings, ElementOption, GardenElement } from "@/lib/types";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { toast } from "sonner";
 import { Canvas } from "./canvas";
 import { TabbedPanel } from "./tabbed-panel";
 
@@ -112,10 +113,14 @@ export function GardenCreator() {
 			const savedGardens = JSON.parse(localStorage.getItem("zenGardens") || "[]");
 			localStorage.setItem("zenGardens", JSON.stringify([...savedGardens, garden]));
 
-			alert("Your zen garden has been saved!");
+			toast.success("Garden saved", {
+				description: "Your zen garden has been saved successfully.",
+			});
 		} catch (error) {
 			console.error("Failed to save garden:", error);
-			alert("Failed to save your garden. Please try again.");
+			toast.error("Save failed", {
+				description: "Failed to save your garden. Please try again.",
+			});
 		}
 	};
 
@@ -132,24 +137,44 @@ export function GardenCreator() {
 		navigator.clipboard
 			.writeText(gardenData)
 			.then(() => {
-				alert("Garden data copied to clipboard! In a full implementation, this would generate a shareable link.");
+				toast.success("Copied to clipboard", {
+					description: "In a full implementation, this would generate a shareable link.",
+				});
 			})
 			.catch((err) => {
 				console.error("Failed to copy garden data:", err);
-				alert("Failed to copy garden data. Please try again.");
+				toast.error("Share failed", {
+					description: "Failed to copy garden data. Please try again.",
+				});
 			});
 	};
 
 	// Handle clearing the canvas
 	const handleClear = () => {
-		if (confirm("Are you sure you want to clear your garden? This cannot be undone.")) {
-			setElements([]);
-		}
+		toast.warning("Clear garden?", {
+			description: "Are you sure you want to clear your garden? This cannot be undone.",
+			action: {
+				label: "Yes, clear it",
+				onClick: () => {
+					setElements([]);
+					toast.success("Garden cleared", {
+						description: "Your zen garden has been reset.",
+					});
+				},
+			},
+			cancel: {
+				label: "Cancel",
+				onClick: () => {},
+			},
+		});
 	};
 
 	// Toggle ambient sound
 	const handleToggleSound = () => {
 		setSoundEnabled(!soundEnabled);
+		toast.info(soundEnabled ? "Sound disabled" : "Sound enabled", {
+			description: soundEnabled ? "Ambient sound has been turned off." : "Ambient sound has been enabled. Enjoy your zen experience.",
+		});
 	};
 
 	// Change ambient sound
