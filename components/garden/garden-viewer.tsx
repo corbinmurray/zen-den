@@ -2,11 +2,10 @@
 
 import { Canvas } from "@/components/garden/canvas";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Atmosphere, Garden } from "@/lib/types";
 import { generateGardenId } from "@/lib/utils";
 import { useZenGardenStore } from "@/providers/zen-garden-store-provider";
-import { ArrowLeft, Copy, Edit, PenLine } from "lucide-react";
+import { ArrowLeft, Edit } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
@@ -23,7 +22,6 @@ export function GardenViewer({ initialGarden, gardenId }: GardenViewerProps) {
 
 	const [isLoading, setIsLoading] = useState(!initialGarden);
 	const [garden, setGarden] = useState<Garden | undefined>(initialGarden || undefined);
-	const [editDialogOpen, setEditDialogOpen] = useState(false);
 
 	const defaultAtmosphere: Atmosphere = {
 		timeOfDay: "day",
@@ -125,26 +123,6 @@ export function GardenViewer({ initialGarden, gardenId }: GardenViewerProps) {
 			return;
 		}
 
-		// Open the edit dialog to let user choose
-		setEditDialogOpen(true);
-	};
-
-	const handleEditOriginal = () => {
-		if (!garden || !garden.id) return;
-
-		// Close the dialog
-		setEditDialogOpen(false);
-
-		// Navigate to edit the original garden
-		router.push(`/garden?id=${garden.id}`);
-	};
-
-	const handleEditCopy = () => {
-		if (!garden || !garden.id) return;
-
-		// Close the dialog
-		setEditDialogOpen(false);
-
 		// Create a fork of the garden with a new ID
 		const forkedGarden = {
 			...garden,
@@ -157,7 +135,7 @@ export function GardenViewer({ initialGarden, gardenId }: GardenViewerProps) {
 		addGarden(forkedGarden);
 
 		// Show a toast notification
-		toast.success("Garden copied", {
+		toast.success("Creating a copy", {
 			description: "You're now editing a copy of the shared garden.",
 		});
 
@@ -213,36 +191,6 @@ export function GardenViewer({ initialGarden, gardenId }: GardenViewerProps) {
 					<Canvas elements={garden.items} atmosphere={garden.atmosphere || defaultAtmosphere} readonly={true} />
 				)}
 			</div>
-
-			{/* Edit Garden Dialog */}
-			<Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
-				<DialogContent className="sm:max-w-md">
-					<DialogHeader>
-						<DialogTitle>Edit Garden</DialogTitle>
-						<DialogDescription>How would you like to edit this garden?</DialogDescription>
-					</DialogHeader>
-
-					<div className="grid grid-cols-2 gap-4 py-4">
-						<Button onClick={handleEditCopy} className="flex flex-col items-center justify-center h-24 p-3" variant="outline">
-							<Copy className="h-8 w-8 mb-2" />
-							<span className="text-sm">Create a Copy</span>
-							<span className="text-xs text-muted-foreground mt-1">Safe option that preserves the original</span>
-						</Button>
-
-						<Button onClick={handleEditOriginal} className="flex flex-col items-center justify-center h-24 p-3" variant="outline">
-							<PenLine className="h-8 w-8 mb-2" />
-							<span className="text-sm">Edit Original</span>
-							<span className="text-xs text-muted-foreground mt-1">Changes will affect the shared garden</span>
-						</Button>
-					</div>
-
-					<DialogFooter className="sm:justify-start">
-						<Button variant="ghost" onClick={() => setEditDialogOpen(false)}>
-							Cancel
-						</Button>
-					</DialogFooter>
-				</DialogContent>
-			</Dialog>
 		</div>
 	);
 }

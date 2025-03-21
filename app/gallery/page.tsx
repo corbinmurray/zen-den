@@ -82,7 +82,7 @@ export default function GalleryPage() {
 				{gardens
 					.sort((a, b) => b.lastModifiedAt - a.lastModifiedAt)
 					.map((garden, index) => (
-						<div key={index} className="border border-border rounded-lg overflow-hidden bg-card shadow-sm hover:shadow-md transition-all">
+						<div key={garden.id ?? index} className="border border-border rounded-lg overflow-hidden bg-card shadow-sm hover:shadow-md transition-all">
 							<div className={`h-40 flex items-center justify-center p-4 border-b border-border relative ${getCardStyle(garden.atmosphere)}`}>
 								<ZenPattern />
 								<div className="flex items-center justify-center w-full h-full">
