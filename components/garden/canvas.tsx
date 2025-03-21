@@ -1,16 +1,15 @@
 "use client";
 
-import { AtmosphereSettings, GardenElement } from "@/lib/types";
+import { Atmosphere, GardenItem } from "@/lib/types";
 import * as motion from "motion/react-client";
 import React, { forwardRef, useCallback, useEffect, useRef, useState } from "react";
 
 interface CanvasProps {
-	elements: GardenElement[];
-	background: string;
-	onElementUpdate: (element: GardenElement) => void;
+	elements: GardenItem[];
+	onElementUpdate: (element: GardenItem) => void;
 	onElementRemove: (id: string) => void;
 	showOutlines?: boolean;
-	atmosphereSettings?: AtmosphereSettings;
+	atmosphere?: Atmosphere;
 	readonly?: boolean;
 }
 
@@ -386,15 +385,12 @@ const CloudEffect = React.memo(function CloudEffect() {
 export const Canvas = forwardRef<HTMLDivElement, CanvasProps>(function Canvas(
 	{
 		elements,
-		background,
 		onElementUpdate,
 		onElementRemove,
 		showOutlines = false,
-		atmosphereSettings = {
+		atmosphere= {
 			timeOfDay: "day",
 			weather: "clear",
-			effects: [],
-			effectsIntensity: 50,
 		},
 		readonly = false,
 	},
@@ -467,11 +463,6 @@ export const Canvas = forwardRef<HTMLDivElement, CanvasProps>(function Canvas(
 			ref.current = canvasRef.current;
 		}
 	}, [ref]);
-
-	// Preload all element images
-	useEffect(() => {
-		// No need to preload SVG elements as they're rendered directly
-	}, [elements]);
 
 	// Handle mouse events
 	const handleMouseDown = useCallback(
@@ -1204,7 +1195,7 @@ export const Canvas = forwardRef<HTMLDivElement, CanvasProps>(function Canvas(
 
 	// Get the appropriate overlay style based on time of day
 	const getTimeOfDayOverlay = () => {
-		switch (atmosphereSettings.timeOfDay) {
+		switch (atmosphere.timeOfDay) {
 			case "day":
 				return "brightness(1)";
 			case "sunset":
@@ -1218,11 +1209,11 @@ export const Canvas = forwardRef<HTMLDivElement, CanvasProps>(function Canvas(
 
 	// Get the appropriate weather effect class
 	const weatherEffectComponent =
-		atmosphereSettings.weather === "clear" ? null : atmosphereSettings.weather === "rainy" ? (
+		atmosphere.weather === "clear" ? null : atmosphere.weather === "rainy" ? (
 			<RainEffect />
-		) : atmosphereSettings.weather === "snowy" ? (
+		) : atmosphere.weather === "snowy" ? (
 			<SnowEffect />
-		) : atmosphereSettings.weather === "cloudy" ? (
+		) : atmosphere.weather === "cloudy" ? (
 			<CloudEffect />
 		) : null;
 
@@ -1232,9 +1223,6 @@ export const Canvas = forwardRef<HTMLDivElement, CanvasProps>(function Canvas(
 				ref={canvasRef}
 				className="relative w-full h-[60vh] md:h-[70vh] overflow-hidden rounded-lg border border-border touch-none"
 				style={{
-					backgroundImage: `url(${background})`,
-					backgroundSize: "cover",
-					backgroundPosition: "center",
 					cursor: isDragging ? "grabbing" : isResizing ? "nwse-resize" : "default",
 					filter: getTimeOfDayOverlay(),
 				}}>
