@@ -6,9 +6,9 @@ import { Input } from "@/components/ui/input";
 import { ElementOption, GardenItem } from "@/lib/types";
 import { Pencil, Search, Trash } from "lucide-react";
 import { motion } from "motion/react";
+import { nanoid } from "nanoid";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { v4 as uuidv4 } from "uuid";
 import { CustomElementCreator } from "./custom-element-creator";
 
 interface ElementPanelProps {
@@ -44,35 +44,29 @@ export function ElementPanel({ onAddElement }: ElementPanelProps) {
 		return () => clearTimeout(timer);
 	}, [searchTerm]);
 
-	// Filter elements based on debounced search term
 	const filteredStandardElements = ELEMENT_OPTIONS.filter((el) => el.name.toLowerCase().includes(debouncedSearchTerm.toLowerCase()));
 
 	const filteredCustomElements = customElements.filter((el) => el.name.toLowerCase().includes(debouncedSearchTerm.toLowerCase()));
 
-	// Combine all elements into a single array for the flat list view
 	const allElements = [...filteredStandardElements, ...filteredCustomElements];
 
 	const handleElementClick = (element: ElementOption) => {
-		// Enhanced visual feedback during addition
 		setAddInProgress(true);
 		setAddedElement(element.type);
 
-		// Convert ElementOption to GardenItem with required properties
 		const gardenItem: GardenItem = {
-			id: uuidv4(),
+			id: nanoid(),
 			type: element.type,
 			name: element.name,
 			imagePath: element.imagePath,
-			position: { x: Math.random() * 300, y: Math.random() * 300 }, // Random initial position
+			position: { x: Math.random() * 300, y: Math.random() * 300 },
 			rotation: 0,
 			scale: 1,
-			zIndex: Date.now(), // Use timestamp for z-index to place newer items on top
+			zIndex: Date.now(),
 		};
 
-		// Add the element to the garden
 		onAddElement(gardenItem);
 
-		// Reset states after animation period
 		setTimeout(() => {
 			setAddInProgress(false);
 			setTimeout(() => setAddedElement(null), 300);
@@ -81,48 +75,39 @@ export function ElementPanel({ onAddElement }: ElementPanelProps) {
 
 	// Handle saving a custom element
 	const handleSaveCustomElement = (element: ElementOption) => {
-		// Add the element to our custom elements array
 		const updatedElements = [...customElements, element];
 		setCustomElements(updatedElements);
 
-		// Save to local storage
 		try {
 			localStorage.setItem("zenCustomElements", JSON.stringify(updatedElements));
 		} catch (error) {
 			console.error("Failed to save custom element:", error);
 		}
 
-		// Convert ElementOption to GardenItem with required properties
 		const gardenItem: GardenItem = {
-			id: uuidv4(),
+			id: nanoid(),
 			type: element.type,
 			name: element.name,
 			imagePath: element.imagePath,
-			position: { x: Math.random() * 300, y: Math.random() * 300 }, // Random initial position
+			position: { x: Math.random() * 300, y: Math.random() * 300 },
 			rotation: 0,
 			scale: 1,
-			zIndex: Date.now(), // Use timestamp for z-index to place newer items on top
+			zIndex: Date.now(),
 		};
 
-		// Add element to the garden
 		onAddElement(gardenItem);
-
-		// Close the creator
 		setDialogOpen(false);
 	};
 
 	// Handle deleting a custom element
 	const handleDeleteCustomElement = (elementType: string, event: React.MouseEvent) => {
-		// Stop event propagation to prevent adding the element when clicking delete
 		event.stopPropagation();
 
-		// Use toast for confirmation
 		toast.warning("Delete element?", {
 			description: "Are you sure you want to delete this custom element?",
 			action: {
 				label: "Delete",
 				onClick: () => {
-					// Filter out the element to be deleted
 					const updatedElements = customElements.filter((el) => el.type !== elementType);
 					setCustomElements(updatedElements);
 
@@ -205,7 +190,7 @@ export function ElementPanel({ onAddElement }: ElementPanelProps) {
 			case "cherry":
 				return (
 					<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
-						<rect x="45" y="60" width="10" height="25" fill="#8B4513" />
+						<rect x="45" y="50" width="10" height="35" fill="#8B4513" />
 						<path d="M50 20 C20 50, 40 20, 50 50" stroke="#8B4513" strokeWidth="4" fill="none" />
 						<path d="M50 20 C80 50, 60 20, 50 50" stroke="#8B4513" strokeWidth="4" fill="none" />
 						<circle cx="35" cy="25" r="12" fill="#FFB7C5" />
@@ -298,6 +283,72 @@ export function ElementPanel({ onAddElement }: ElementPanelProps) {
 						<ellipse cx="35" cy="55" rx="7" ry="4" fill="#76BC7F" opacity="0.7" />
 						<ellipse cx="60" cy="65" rx="8" ry="5" fill="#76BC7F" opacity="0.5" />
 						<ellipse cx="50" cy="50" rx="5" ry="3" fill="#76BC7F" opacity="0.6" />
+					</svg>
+				);
+				return (
+					<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
+						<line x1="30" y1="30" x2="70" y2="70" stroke="#A0522D" strokeWidth="3" />
+						<line x1="30" y1="70" x2="40" y2="60" stroke="#A0522D" strokeWidth="3" />
+						<line x1="40" y1="60" x2="50" y2="50" stroke="#A0522D" strokeWidth="3" />
+						<line x1="50" y1="50" x2="60" y2="40" stroke="#A0522D" strokeWidth="3" />
+						<line x1="60" y1="40" x2="70" y2="30" stroke="#A0522D" strokeWidth="3" />
+					</svg>
+				);
+			case "incense":
+				return (
+					<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
+						<rect x="40" y="70" width="20" height="10" rx="2" fill="#7F7F7F" />
+						<line x1="50" y1="70" x2="50" y2="30" stroke="#7F3F00" strokeWidth="2" />
+						<ellipse cx="50" cy="30" rx="2" ry="2" fill="#FF6D00" />
+						<path d="M50,30 C47,25 48,20 50,15 C52,20 53,25 50,30" fill="none" stroke="#AAAAAA" strokeWidth="1" strokeDasharray="2,2" />
+					</svg>
+				);
+			case "meditation-stone":
+				return (
+					<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
+						<ellipse cx="50" cy="75" rx="40" ry="5" fill="#5D5D5D" opacity="0.3" />
+						<ellipse cx="50" cy="45" rx="25" ry="10" fill="#9E9E9E" />
+						<ellipse cx="50" cy="35" rx="15" ry="8" fill="#7D7D7D" />
+						<ellipse cx="50" cy="28" rx="10" ry="5" fill="#ABABAB" />
+					</svg>
+				);
+				return (
+					<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
+						<rect x="45" y="60" width="10" height="25" fill="#8B4513" />
+						<path d="M50 20 C20 50, 40 20, 50 50" stroke="#8B4513" strokeWidth="4" fill="none" />
+						<path d="M50 20 C80 50, 60 20, 50 50" stroke="#8B4513" strokeWidth="4" fill="none" />
+						<path d="M30,30 L40,25 L50,30 L60,25 L70,30 L60,35 L70,40 L60,45 L50,40 L40,45 L30,40 L40,35 Z" fill="#E64C3C" />
+					</svg>
+				);
+			case "bell":
+				return (
+					<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
+						<path d="M45,30 C45,25 55,25 55,30 L55,35 L45,35 Z" fill="#CD9B1D" />
+						<path d="M40,35 L60,35 L58,60 C58,70 42,70 42,60 Z" fill="#F0C420" />
+						<circle cx="50" cy="65" r="3" fill="#CD9B1D" />
+						<rect x="48" y="65" width="4" height="15" fill="#CD9B1D" />
+						<ellipse cx="50" cy="80" rx="8" ry="3" fill="#CD9B1D" />
+					</svg>
+				);
+			case "tea-bowl":
+				return (
+					<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
+						<ellipse cx="50" cy="75" rx="25" ry="5" fill="#8D6E63" opacity="0.5" />
+						<path d="M30,60 C30,75 70,75 70,60 C70,50 65,45 50,45 C35,45 30,50 30,60" fill="#A1887F" />
+						<path d="M30,60 C30,67 70,67 70,60" fill="none" stroke="#8D6E63" strokeWidth="2" />
+						<ellipse cx="50" cy="51" rx="15" ry="7" fill="#D7CCC8" />
+					</svg>
+				);
+				return (
+					<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
+						<rect x="38" y="60" width="24" height="5" rx="2" fill="#8B4513" />
+						<rect x="45" y="40" width="10" height="20" fill="#4D7C0F" rx="5" />
+						<path d="M42,50 C35,45 35,40 45,40 C55,40 55,45 48,50" fill="none" stroke="#8B4513" strokeWidth="2" />
+						<path d="M45,40 L45,20 L55,20 L55,40" fill="#4D7C0F" />
+						<ellipse cx="50" cy="65" rx="20" ry="5" fill="#A5C7D3" opacity="0.8" />
+						<path d="M50,20 C48,10 52,10 50,20" stroke="#86BFDE" strokeWidth="1" strokeDasharray="1,1" />
+						<path d="M50,25 C48,15 52,15 50,25" stroke="#86BFDE" strokeWidth="1" strokeDasharray="1,1" />
+						<path d="M50,30 C48,20 52,20 50,30" stroke="#86BFDE" strokeWidth="1" strokeDasharray="1,1" />
 					</svg>
 				);
 			default:
@@ -443,6 +494,13 @@ const ELEMENT_OPTIONS: ElementOption[] = [
 		preview: "#rock-tall-preview",
 		category: "rocks",
 	},
+	{
+		type: "meditation-stone",
+		name: "Meditation Stones",
+		imagePath: "#meditation-stone",
+		preview: "#meditation-stone-preview",
+		category: "rocks",
+	},
 
 	// Plants
 	{
@@ -481,6 +539,15 @@ const ELEMENT_OPTIONS: ElementOption[] = [
 		category: "plants",
 	},
 
+	// Water Features
+	{
+		type: "water",
+		name: "Water Pool",
+		imagePath: "#water",
+		preview: "#water-preview",
+		category: "water",
+	},
+
 	// Decorations
 	{
 		type: "lantern",
@@ -503,6 +570,27 @@ const ELEMENT_OPTIONS: ElementOption[] = [
 		preview: "#pagoda-preview",
 		category: "decorations",
 	},
+	{
+		type: "bell",
+		name: "Zen Bell",
+		imagePath: "#bell",
+		preview: "#bell-preview",
+		category: "decorations",
+	},
+	{
+		type: "tea-bowl",
+		name: "Tea Bowl",
+		imagePath: "#tea-bowl",
+		preview: "#tea-bowl-preview",
+		category: "decorations",
+	},
+	{
+		type: "incense",
+		name: "Incense Holder",
+		imagePath: "#incense",
+		preview: "#incense-preview",
+		category: "decorations",
+	},
 
 	// Features
 	{
@@ -510,13 +598,6 @@ const ELEMENT_OPTIONS: ElementOption[] = [
 		name: "Raked Sand",
 		imagePath: "#sand",
 		preview: "#sand-preview",
-		category: "features",
-	},
-	{
-		type: "water",
-		name: "Water Pool",
-		imagePath: "#water",
-		preview: "#water-preview",
 		category: "features",
 	},
 	{
