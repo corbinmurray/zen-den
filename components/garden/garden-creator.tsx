@@ -160,8 +160,7 @@ export function GardenCreator() {
 						onElementUpdate={updateGardenItem}
 						onElementRemove={removeGardenItem}
 						showOutlines={showOutlines}
-						atmosphereSettings={atmosphere}
-						background=""
+						atmosphere={atmosphere}
 					/>
 				</div>
 			</div>

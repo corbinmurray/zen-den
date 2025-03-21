@@ -1,7 +1,8 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { AtmosphereSettings, GardenElement } from "@/lib/types";
+import { Atmosphere, GardenItem } from "@/lib/types";
+import { useZenGardenStore } from "@/providers/zen-garden-store-provider";
 import { ArrowLeft, Edit } from "lucide-react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
@@ -10,19 +11,19 @@ import { toast } from "sonner";
 import { Canvas } from "./canvas";
 
 export function GardenViewer() {
-	const [elements, setElements] = useState<GardenElement[]>([]);
+	const [elements, setElements] = useState<GardenItem[]>([]);
 	const [isLoading, setIsLoading] = useState(true);
-	const [background, setBackground] = useState("/backgrounds/zen-garden-bg.svg");
 	const [gardenName, setGardenName] = useState<string>("Zen Garden");
-	const [atmosphereSettings, setAtmosphereSettings] = useState<AtmosphereSettings>({
+	const [atmosphere, setAtmosphere] = useState<Atmosphere>({
 		timeOfDay: "day",
 		weather: "clear",
-		effects: [],
-		effectsIntensity: 50,
 	});
 
 	const searchParams = useSearchParams();
 	const gardenId = searchParams.get("id");
+
+	// Get the getGardenById function from our store
+	const getGardenById = useZenGardenStore((state) => state.getGardenById);
 
 	useEffect(() => {
 		if (!gardenId) {
@@ -34,34 +35,20 @@ export function GardenViewer() {
 		}
 
 		try {
-			// Load saved gardens from local storage
-			const savedGardensJSON = localStorage.getItem("zenGardens");
+			const garden = getGardenById(gardenId);
 
-			if (savedGardensJSON) {
-				const savedGardens = JSON.parse(savedGardensJSON);
-				const garden = savedGardens.find((g: any) => g.id === gardenId);
-
-				if (garden) {
-					// Load garden data
-					setElements(garden.elements || []);
-					setBackground(garden.background || "/backgrounds/zen-garden-bg.svg");
-					setGardenName(garden.gardenName || "Zen Garden");
-					setAtmosphereSettings(
-						garden.atmosphereSettings || {
-							timeOfDay: "day",
-							weather: "clear",
-							effects: [],
-							effectsIntensity: 50,
-						}
-					);
-				} else {
-					toast.error("Garden not found", {
-						description: "The garden you're looking for could not be found.",
-					});
-				}
+			if (garden) {
+				setElements(garden.items || []);
+				setGardenName(garden.name || "Zen Garden");
+				setAtmosphere(
+					garden.atmosphere || {
+						timeOfDay: "day",
+						weather: "clear",
+					}
+				);
 			} else {
-				toast.error("No saved gardens", {
-					description: "There are no saved gardens to view.",
+				toast.error("Garden not found", {
+					description: "The garden you're looking for could not be found.",
 				});
 			}
 		} catch (error) {
@@ -72,7 +59,7 @@ export function GardenViewer() {
 		} finally {
 			setIsLoading(false);
 		}
-	}, [gardenId]);
+	}, [gardenId, getGardenById]);
 
 	// Placeholder functions since this is read-only
 	const onElementUpdate = () => {};
@@ -121,7 +108,7 @@ export function GardenViewer() {
 					<div className="absolute inset-0 flex flex-col items-center justify-center p-8 text-center">
 						<div className="bg-muted/30 rounded-lg p-6 max-w-md">
 							<h2 className="text-xl font-semibold mb-2">Garden Not Found</h2>
-							<p className="text-muted mb-4">The garden you're looking for could not be found or has no elements.</p>
+							<p className="text-muted mb-4">The garden you&apos;re looking for could not be found or has no elements.</p>
 							<Link href="/gallery">
 								<Button>View Gallery</Button>
 							</Link>
@@ -130,10 +117,9 @@ export function GardenViewer() {
 				) : (
 					<Canvas
 						elements={elements}
-						background={background}
 						onElementUpdate={onElementUpdate}
 						onElementRemove={onElementRemove}
-						atmosphereSettings={atmosphereSettings}
+						atmosphere={atmosphere}
 						readonly={true}
 					/>
 				)}
