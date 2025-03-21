@@ -1,3 +1,8 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
 description: |
   Zen Den is a digital zen garden, an interactive online tool where users can design their own tranquil, personalized space. They’d get to arrange elements like rocks, plants, and water features on a canvas to craft a peaceful scene that reflects their vibe. It’s a bit like tending to a mini garden, but digitally, and it’s super calming and fun to play with.. The project emphasizes:
   - **Next.js 15** (App Router, Server Components, Optimized Performance)
