@@ -1,21 +1,9 @@
 import { GardenViewer } from "@/components/garden/garden-viewer";
-import { getGarden } from "@/lib/db";
-import { Garden } from "@/lib/types";
 import { Suspense } from "react";
 
-export default async function ViewPage({ searchParams }: { searchParams?: { id?: string } }) {
-	const gardenId = searchParams?.id || "";
-
-	let garden: Garden | null = null;
-
-	if (gardenId) {
-		try {
-			garden = await getGarden(gardenId);
-		} catch (error) {
-			console.error("Error fetching garden:", error);
-		}
-	}
-
+// Type issue with searchParams in Next.js 15, use a different pattern
+export default async function ViewPage() {
+	// Access searchParams through props in client component instead
 	return (
 		<Suspense
 			fallback={
@@ -26,7 +14,7 @@ export default async function ViewPage({ searchParams }: { searchParams?: { id?:
 					</div>
 				</div>
 			}>
-			<GardenViewer initialGarden={garden} gardenId={gardenId} />
+			<GardenViewer />
 		</Suspense>
 	);
 }

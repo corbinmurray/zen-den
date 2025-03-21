@@ -25,7 +25,7 @@ db.exec(`
 /**
  * Store garden data using the garden's ID
  */
-export function storeGarden(garden: Garden): string {
+export async function storeGarden(garden: Garden): Promise<string> {
 	if (!garden.id) {
 		throw new Error("Garden must have an ID before storing");
 	}
@@ -45,7 +45,7 @@ export function storeGarden(garden: Garden): string {
 /**
  * Retrieve garden data by ID
  */
-export function getGarden(id: string): Garden | null {
+export async function getGarden(id: string): Promise<Garden | null> {
 	const stmt = db.prepare(`
     SELECT garden_data FROM shared_gardens
     WHERE id = ?

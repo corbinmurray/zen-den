@@ -25,7 +25,6 @@ export function GardenCreator() {
 		weather: "clear",
 	});
 	const [saveDialogOpen, setSaveDialogOpen] = useState<boolean>(false);
-	const [shareAfterSave, setShareAfterSave] = useState<boolean>(false);
 	const [isLoading, setIsLoading] = useState<boolean>(false);
 
 	const canvasRef = useRef<HTMLDivElement>(null);
@@ -206,11 +205,6 @@ export function GardenCreator() {
 
 				// Close the dialog
 				setSaveDialogOpen(false);
-
-				// Handle share after save if needed
-				if (shareAfterSave) {
-					setShareAfterSave(false);
-				}
 			} catch (error) {
 				console.error("Error saving garden:", error);
 				toast.error("Save failed", {
@@ -218,7 +212,7 @@ export function GardenCreator() {
 				});
 			}
 		},
-		[selectedGardenId, gardenName, gardenItems, atmosphere, gardens, updateGarden, addGarden, shareAfterSave]
+		[selectedGardenId, gardenName, gardenItems, atmosphere, gardens, updateGarden, addGarden]
 	);
 
 	// Add the onElementRemove function
@@ -264,7 +258,6 @@ export function GardenCreator() {
 							addGardenItem={addGardenItem}
 							clearGardenItems={clearGardenItems}
 							setSaveDialogOpen={setSaveDialogOpen}
-							setShareAfterSave={setShareAfterSave}
 						/>
 					</div>
 

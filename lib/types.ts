@@ -34,3 +34,10 @@ export interface Atmosphere {
 	timeOfDay: "day" | "sunset" | "night";
 	weather: "clear" | "cloudy" | "rainy" | "snowy";
 }
+
+export interface BackgroundOption {
+	id: string;
+	name: string;
+	path: string;
+	thumbnail: string;
+}
