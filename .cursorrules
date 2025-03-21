@@ -86,3 +86,4 @@ ai_usage:
   - Limit **repetitive fix loops to 3 iterations max**
   - AI must flag missing **error handling & accessibility gaps explicitly**
   - AI should only ever add code comments on functions, large/complex blocks of code, or descriptive class names using JSDoc.
+  - Stop trying to run the development server. Assume it's already running.
