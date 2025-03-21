@@ -15,8 +15,10 @@ function Feature({ icon, title, description, delay }: FeatureProps) {
 			whileInView={{ opacity: 1, y: 0 }}
 			viewport={{ once: true }}
 			transition={{ duration: 0.6, delay: delay, easing: [0.22, 0.03, 0.26, 1] }}
-			className="flex flex-col items-start">
-			<div className="rounded-lg bg-primary/10 p-3 ring-1 ring-primary/20">{icon}</div>
+			className="group flex flex-col items-start">
+			<div className="rounded-xl bg-primary/5 p-3 ring-1 ring-primary/10 transition-all duration-300 group-hover:bg-primary/10 group-hover:ring-primary/20 group-hover:shadow-md group-hover:shadow-primary/5">
+				{icon}
+			</div>
 			<h3 className="mt-4 font-semibold text-foreground">{title}</h3>
 			<p className="mt-2 text-sm text-muted">{description}</p>
 		</motion.div>
@@ -65,12 +67,13 @@ export function Features() {
 						Zen Den provides a peaceful escape into a world of tranquility where you can create, cultivate, and find balance in your digital garden.
 					</p>
 				</motion.div>
+				
 				<div className="mx-auto mt-16 max-w-2xl sm:mt-20 lg:mt-24 lg:max-w-4xl">
-					<dl className="grid max-w-xl grid-cols-1 gap-x-8 gap-y-10 lg:max-w-none lg:grid-cols-2 lg:gap-y-16">
+					<div className="grid max-w-xl grid-cols-1 gap-x-8 gap-y-10 lg:max-w-none lg:grid-cols-2 lg:gap-y-16">
 						{features.map((feature) => (
 							<Feature key={feature.title} icon={feature.icon} title={feature.title} description={feature.description} delay={feature.delay} />
 						))}
-					</dl>
+					</div>
 				</div>
 			</div>
 		</div>

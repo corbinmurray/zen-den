@@ -2,7 +2,7 @@ import { Footer } from "@/components/footer";
 import { Navigation } from "@/components/navigation";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 
 import { ZenGardenStoreProvider } from "@/providers/zen-garden-store-provider";
@@ -19,8 +19,32 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-	title: "Zen Garden - Digital Sanctuary",
-	description: "A peaceful digital space showcasing design aesthetics and projects with a zen-like calm",
+	title: "Zen Den - Create Your Digital Zen Garden",
+	description: "Design your own tranquil digital space where you can arrange elements like stones, plants, and water features for mindfulness and relaxation.",
+	keywords: ["zen garden", "digital garden", "mindfulness", "relaxation", "meditation", "zen den"],
+	authors: [{ name: "Zen Den Team" }],
+	openGraph: {
+		type: "website",
+		locale: "en_US",
+		url: "https://zenden.app",
+		title: "Zen Den - Create Your Digital Zen Garden",
+		description: "Design your own tranquil digital space where you can arrange elements like stones, plants, and water features.",
+		siteName: "Zen Den",
+	},
+	twitter: {
+		card: "summary_large_image",
+		title: "Zen Den - Create Your Digital Zen Garden",
+		description: "Design your own tranquil digital space where you can arrange elements like stones, plants, and water features.",
+	},
+};
+
+export const viewport: Viewport = {
+	themeColor: [
+		{ media: "(prefers-color-scheme: light)", color: "#ffffff" },
+		{ media: "(prefers-color-scheme: dark)", color: "#09090b" },
+	],
+	width: "device-width",
+	initialScale: 1,
 };
 
 export default function RootLayout({
@@ -30,12 +54,14 @@ export default function RootLayout({
 }>) {
 	return (
 		<html lang="en" suppressHydrationWarning>
-			<body className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen`}>
+			<body className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen bg-background text-foreground`}>
 				<ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
 					<ZenGardenStoreProvider>
-						<Navigation />
-						<main className="container px-4 mx-auto py-16">{children}</main>
-						<Footer />
+						<div className="flex min-h-screen flex-col">
+							<Navigation />
+							<main className="container mx-auto px-4 py-16 flex-1">{children}</main>
+							<Footer />
+						</div>
 						<Toaster
 							position="top-center"
 							closeButton
