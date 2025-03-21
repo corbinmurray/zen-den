@@ -2,7 +2,7 @@
 
 import { ElementOption } from "@/lib/types";
 import { motion } from "motion/react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 // Sample elements with SVG-based images
 const ELEMENT_OPTIONS: ElementOption[] = [
@@ -60,7 +60,7 @@ const ELEMENT_OPTIONS: ElementOption[] = [
 	},
 	{
 		type: "grass",
-		name: "Tall Grass",
+		name: "Grass Tuft",
 		imagePath: "#grass",
 		preview: "#grass-preview",
 		category: "plants",
@@ -76,7 +76,7 @@ const ELEMENT_OPTIONS: ElementOption[] = [
 	},
 	{
 		type: "bridge",
-		name: "Small Bridge",
+		name: "Wood Bridge",
 		imagePath: "#bridge",
 		preview: "#bridge-preview",
 		category: "decorations",
@@ -92,14 +92,14 @@ const ELEMENT_OPTIONS: ElementOption[] = [
 	// Features
 	{
 		type: "sand",
-		name: "Sand Patch",
+		name: "Raked Sand",
 		imagePath: "#sand",
 		preview: "#sand-preview",
 		category: "features",
 	},
 	{
 		type: "water",
-		name: "Water Feature",
+		name: "Water Pool",
 		imagePath: "#water",
 		preview: "#water-preview",
 		category: "features",
@@ -113,26 +113,27 @@ const ELEMENT_OPTIONS: ElementOption[] = [
 	},
 ];
 
-// Category order and labels
-const CATEGORIES = [
-	{ id: "all", label: "All Elements" },
-	{ id: "rocks", label: "Rocks & Stones" },
-	{ id: "plants", label: "Plants & Trees" },
-	{ id: "decorations", label: "Decorations" },
-	{ id: "features", label: "Features" },
-];
-
 interface ElementPanelProps {
 	onAddElement: (element: ElementOption) => void;
 }
 
 export function ElementPanel({ onAddElement }: ElementPanelProps) {
-	const [selectedCategory, setSelectedCategory] = useState<string>("all");
+	const [searchTerm, setSearchTerm] = useState<string>("");
+	const [debouncedSearchTerm, setDebouncedSearchTerm] = useState<string>("");
 	const [addedElement, setAddedElement] = useState<string | null>(null);
 	const [addInProgress, setAddInProgress] = useState(false);
 
-	// Filter elements based on category if needed
-	const displayedElements = selectedCategory === "all" ? ELEMENT_OPTIONS : ELEMENT_OPTIONS.filter((el) => el.category === selectedCategory);
+	// Debounce search term to improve performance
+	useEffect(() => {
+		const timer = setTimeout(() => {
+			setDebouncedSearchTerm(searchTerm);
+		}, 300);
+
+		return () => clearTimeout(timer);
+	}, [searchTerm]);
+
+	// Filter elements based on debounced search term
+	const displayedElements = ELEMENT_OPTIONS.filter((el) => el.name.toLowerCase().includes(debouncedSearchTerm.toLowerCase()));
 
 	const handleElementClick = (element: ElementOption) => {
 		// Enhanced visual feedback during addition
@@ -309,22 +310,78 @@ export function ElementPanel({ onAddElement }: ElementPanelProps) {
 
 	return (
 		<div className="space-y-4">
-			{/* Category tabs */}
-			<div className="flex flex-wrap gap-1 mb-4">
-				{CATEGORIES.map((category) => (
+			{/* Search input */}
+			<div className="relative">
+				<div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+					<svg
+						xmlns="http://www.w3.org/2000/svg"
+						width="16"
+						height="16"
+						viewBox="0 0 24 24"
+						fill="none"
+						stroke="currentColor"
+						strokeWidth="2"
+						strokeLinecap="round"
+						strokeLinejoin="round"
+						className="text-muted-foreground">
+						<circle cx="11" cy="11" r="8" />
+						<path d="m21 21-4.3-4.3" />
+					</svg>
+				</div>
+				<input
+					type="text"
+					className="w-full pl-10 py-2 px-3 text-sm border border-border rounded-md bg-muted/20 hover:bg-muted/30 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors"
+					placeholder="Search elements..."
+					value={searchTerm}
+					onChange={(e) => setSearchTerm(e.target.value)}
+					aria-label="Search garden elements"
+				/>
+				{searchTerm && (
 					<button
-						key={category.id}
-						onClick={() => setSelectedCategory(category.id)}
-						className={`text-xs px-2 py-1 rounded-md transition-colors ${
-							selectedCategory === category.id ? "bg-primary/10 text-primary" : "bg-secondary hover:bg-secondary/80 text-muted"
-						}`}>
-						{category.label}
+						className="absolute inset-y-0 right-0 flex items-center pr-3 text-muted-foreground hover:text-foreground"
+						onClick={() => setSearchTerm("")}
+						aria-label="Clear search">
+						<svg
+							xmlns="http://www.w3.org/2000/svg"
+							width="16"
+							height="16"
+							viewBox="0 0 24 24"
+							fill="none"
+							stroke="currentColor"
+							strokeWidth="2"
+							strokeLinecap="round"
+							strokeLinejoin="round">
+							<path d="M18 6 6 18" />
+							<path d="m6 6 12 12" />
+						</svg>
 					</button>
-				))}
+				)}
 			</div>
 
+			{/* Show message if no elements found */}
+			{displayedElements.length === 0 && (
+				<div className="flex flex-col items-center justify-center py-8 text-muted-foreground">
+					<svg
+						xmlns="http://www.w3.org/2000/svg"
+						width="24"
+						height="24"
+						viewBox="0 0 24 24"
+						fill="none"
+						stroke="currentColor"
+						strokeWidth="2"
+						strokeLinecap="round"
+						strokeLinejoin="round"
+						className="mb-2">
+						<circle cx="12" cy="12" r="10" />
+						<line x1="12" y1="8" x2="12" y2="12" />
+						<line x1="12" y1="16" x2="12.01" y2="16" />
+					</svg>
+					<p className="text-sm">No elements found for "{debouncedSearchTerm}"</p>
+				</div>
+			)}
+
 			{/* Elements grid */}
-			<div className="grid grid-cols-2 gap-2">
+			<div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
 				{displayedElements.map((element) => (
 					<motion.div
 						key={element.type}
