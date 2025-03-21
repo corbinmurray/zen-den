@@ -34,7 +34,7 @@ export default function RootLayout({
 				<ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
 					<ZenGardenStoreProvider>
 						<Navigation />
-						<main className="container mx-auto py-16">{children}</main>
+						<main className="container px-4 mx-auto py-16">{children}</main>
 						<Footer />
 						<Toaster
 							position="top-center"

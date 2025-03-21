@@ -36,6 +36,8 @@ export const Canvas = forwardRef<HTMLDivElement, CanvasProps>(function Canvas(
 	const mousePositionRef = useRef({ x: 0, y: 0 });
 	const [elementPositions, setElementPositions] = useState<Map<string, { x: number; y: number }>>(new Map());
 	const [elementScales, setElementScales] = useState<Map<string, number>>(new Map());
+	const positionsRef = useRef<Map<string, { x: number; y: number }>>(new Map());
+	const scalesRef = useRef<Map<string, number>>(new Map());
 	const processedElementsRef = useRef(new Set<string>());
 	const [copiedElement, setCopiedElement] = useState<GardenItem | null>(null);
 	const [showCopyFeedback, setShowCopyFeedback] = useState(false);
@@ -175,6 +177,15 @@ export const Canvas = forwardRef<HTMLDivElement, CanvasProps>(function Canvas(
 		}
 	}, [ref]);
 
+	// Sync refs with state
+	useEffect(() => {
+		positionsRef.current = new Map(elementPositions);
+	}, [elementPositions]);
+
+	useEffect(() => {
+		scalesRef.current = new Map(elementScales);
+	}, [elementScales]);
+
 	// Handle mouse events
 	const handleMouseDown = useCallback(
 		(e: MouseEvent) => {
@@ -220,8 +231,8 @@ export const Canvas = forwardRef<HTMLDivElement, CanvasProps>(function Canvas(
 
 			// Find if we clicked on an element (in reverse order for proper z-index)
 			const clickedElementIndex = [...elements].reverse().findIndex((element) => {
-				const pos = elementPositions.get(element.id) || element.position;
-				const scale = elementScales.get(element.id) || element.scale;
+				const pos = positionsRef.current.get(element.id) || element.position;
+				const scale = scalesRef.current.get(element.id) || element.scale;
 				const size = 100 * scale;
 
 				// Use more precise hit testing
@@ -240,7 +251,7 @@ export const Canvas = forwardRef<HTMLDivElement, CanvasProps>(function Canvas(
 				setSelectedElementId(null);
 			}
 		},
-		[elements, elementPositions, elementScales, isPointInShape]
+		[elements, isPointInShape]
 	);
 
 	// Controls click handler
@@ -294,15 +305,12 @@ export const Canvas = forwardRef<HTMLDivElement, CanvasProps>(function Canvas(
 							break;
 					}
 
-					const oldScale = elementScales.get(element.id) || element.scale;
+					// Use ref instead of state
+					const oldScale = scalesRef.current.get(element.id) || element.scale;
 					const newScale = Math.max(0.5, Math.min(2, oldScale + scaleChange));
 
-					// Update the scale in our local state for immediate visual feedback
-					setElementScales((prevScales) => {
-						const newScales = new Map(prevScales);
-						newScales.set(element.id, newScale);
-						return newScales;
-					});
+					// Update in ref, not in state
+					scalesRef.current.set(element.id, newScale);
 
 					// Calculate position adjustment to keep element centered as it scales
 					const baseSize = 100;
@@ -311,8 +319,8 @@ export const Canvas = forwardRef<HTMLDivElement, CanvasProps>(function Canvas(
 					const size = newSize; // Define size variable for use in constraints
 					const sizeChange = (newSize - oldSize) / 2;
 
-					// Get current position
-					const currentPos = elementPositions.get(element.id) || element.position;
+					// Get current position from ref
+					const currentPos = positionsRef.current.get(element.id) || element.position;
 
 					// Adjust position to maintain center with proper boundary constraints
 					const newPosition = {
@@ -320,12 +328,16 @@ export const Canvas = forwardRef<HTMLDivElement, CanvasProps>(function Canvas(
 						y: Math.max(-size * 0.75, Math.min(currentPos.y - sizeChange, canvasBounds.height - size * 0.25)),
 					};
 
-					// Update positions in state to reflect the scaling
-					setElementPositions((prevPositions) => {
-						const newPositions = new Map(prevPositions);
-						newPositions.set(element.id, newPosition);
-						return newPositions;
-					});
+					// Update in ref, not in state
+					positionsRef.current.set(element.id, newPosition);
+
+					// Directly update the DOM for visual feedback
+					const elementNode = container.querySelector(`[data-element-id="${element.id}"]`);
+					if (elementNode) {
+						(
+							elementNode as HTMLElement
+						).style.transform = `translate(${newPosition.x}px, ${newPosition.y}px) scale(${newScale}) rotate(${element.rotation}deg)`;
+					}
 				}
 			}
 			// Handle dragging
@@ -333,9 +345,9 @@ export const Canvas = forwardRef<HTMLDivElement, CanvasProps>(function Canvas(
 				// Find the element being dragged
 				const element = elements.find((el) => el.id === draggedElement);
 				if (element) {
-					// Get current position
-					const currentPos = elementPositions.get(element.id) || element.position;
-					const currentScale = elementScales.get(element.id) || element.scale;
+					// Get current position from ref
+					const currentPos = positionsRef.current.get(element.id) || element.position;
+					const currentScale = scalesRef.current.get(element.id) || element.scale;
 					const size = 100 * currentScale;
 
 					// Calculate new position with constraints that allow elements to extend outside,
@@ -343,24 +355,26 @@ export const Canvas = forwardRef<HTMLDivElement, CanvasProps>(function Canvas(
 					const newX = Math.max(-size * 0.75, Math.min(currentPos.x + deltaX, canvasBounds.width - size * 0.25));
 					const newY = Math.max(-size * 0.75, Math.min(currentPos.y + deltaY, canvasBounds.height - size * 0.25));
 
-					// Update position in our local state for immediate visual feedback
-					setElementPositions((prevPositions) => {
-						const newPositions = new Map(prevPositions);
-						newPositions.set(element.id, { x: newX, y: newY });
-						return newPositions;
-					});
+					// Update in ref, not in state
+					positionsRef.current.set(element.id, { x: newX, y: newY });
+
+					// Directly update the DOM for visual feedback
+					const elementNode = container.querySelector(`[data-element-id="${element.id}"]`);
+					if (elementNode) {
+						(elementNode as HTMLElement).style.transform = `translate(${newX}px, ${newY}px) scale(${currentScale}) rotate(${element.rotation}deg)`;
+					}
 				}
 			}
 		},
-		[canvasBounds.height, canvasBounds.width, draggedElement, elementPositions, elementScales, elements, isDragging, isResizing, resizeDirection]
+		[canvasBounds.height, canvasBounds.width, draggedElement, elements, isDragging, isResizing, resizeDirection]
 	);
 
 	// Handle mouse up
 	const handleMouseUp = useCallback(() => {
 		if ((isResizing || isDragging) && draggedElement) {
-			// Get the current position/scale from our local state
-			const position = elementPositions.get(draggedElement);
-			const scale = elementScales.get(draggedElement);
+			// Get the final position/scale from our refs
+			const position = positionsRef.current.get(draggedElement);
+			const scale = scalesRef.current.get(draggedElement);
 
 			// Find the element in the elements array
 			const elementIndex = elements.findIndex((el) => el.id === draggedElement);
@@ -376,6 +390,10 @@ export const Canvas = forwardRef<HTMLDivElement, CanvasProps>(function Canvas(
 					updatedElement.scale = scale;
 				}
 
+				// Update the React state once at the end of dragging/resizing
+				setElementPositions(new Map(positionsRef.current));
+				setElementScales(new Map(scalesRef.current));
+
 				// If we have an onElementUpdate callback, call it with the updated element
 				if (onElementUpdate) {
 					onElementUpdate(updatedElement);
@@ -390,7 +408,7 @@ export const Canvas = forwardRef<HTMLDivElement, CanvasProps>(function Canvas(
 			setIsDragging(false);
 			setDraggedElement(null);
 		}
-	}, [isResizing, isDragging, draggedElement, elementPositions, elementScales, elements, onElementUpdate]);
+	}, [isResizing, isDragging, draggedElement, elements, onElementUpdate]);
 
 	// Touch events for mobile
 	const handleTouchStart = useCallback(
@@ -493,14 +511,11 @@ export const Canvas = forwardRef<HTMLDivElement, CanvasProps>(function Canvas(
 								break;
 						}
 
-						const oldScale = elementScales.get(element.id) || element.scale;
+						const oldScale = scalesRef.current.get(element.id) || element.scale;
 						const newScale = Math.max(0.5, Math.min(2, oldScale + scaleChange));
 
-						setElementScales((prevScales) => {
-							const newScales = new Map(prevScales);
-							newScales.set(element.id, newScale);
-							return newScales;
-						});
+						// Update in ref, not in state
+						scalesRef.current.set(element.id, newScale);
 
 						// Calculate position adjustment to keep element centered as it scales
 						const baseSize = 100;
@@ -509,18 +524,23 @@ export const Canvas = forwardRef<HTMLDivElement, CanvasProps>(function Canvas(
 						const size = newSize; // Define size variable for use in constraints
 						const sizeChange = (newSize - oldSize) / 2;
 
-						const currentPos = elementPositions.get(element.id) || element.position;
+						const currentPos = positionsRef.current.get(element.id) || element.position;
 
 						const newPosition = {
 							x: Math.max(-size * 0.75, Math.min(currentPos.x - sizeChange, canvasBounds.width - size * 0.25)),
 							y: Math.max(-size * 0.75, Math.min(currentPos.y - sizeChange, canvasBounds.height - size * 0.25)),
 						};
 
-						setElementPositions((prevPositions) => {
-							const newPositions = new Map(prevPositions);
-							newPositions.set(element.id, newPosition);
-							return newPositions;
-						});
+						// Update in ref, not in state
+						positionsRef.current.set(element.id, newPosition);
+
+						// Directly update the DOM for visual feedback
+						const elementNode = container.querySelector(`[data-element-id="${element.id}"]`);
+						if (elementNode) {
+							(
+								elementNode as HTMLElement
+							).style.transform = `translate(${newPosition.x}px, ${newPosition.y}px) scale(${newScale}) rotate(${element.rotation}deg)`;
+						}
 
 						e.preventDefault();
 					}
@@ -529,33 +549,36 @@ export const Canvas = forwardRef<HTMLDivElement, CanvasProps>(function Canvas(
 				else if (isDragging && draggedElement) {
 					const element = elements.find((el) => el.id === draggedElement);
 					if (element) {
-						const currentPos = elementPositions.get(element.id) || element.position;
-						const currentScale = elementScales.get(element.id) || element.scale;
+						const currentPos = positionsRef.current.get(element.id) || element.position;
+						const currentScale = scalesRef.current.get(element.id) || element.scale;
 						const size = 100 * currentScale;
 
 						// Apply same constraints for touch events
 						const newX = Math.max(-size * 0.75, Math.min(currentPos.x + deltaX, canvasBounds.width - size * 0.25));
 						const newY = Math.max(-size * 0.75, Math.min(currentPos.y + deltaY, canvasBounds.height - size * 0.25));
 
-						setElementPositions((prevPositions) => {
-							const newPositions = new Map(prevPositions);
-							newPositions.set(element.id, { x: newX, y: newY });
-							return newPositions;
-						});
+						// Update in ref, not in state
+						positionsRef.current.set(element.id, { x: newX, y: newY });
+
+						// Directly update the DOM for visual feedback
+						const elementNode = container.querySelector(`[data-element-id="${element.id}"]`);
+						if (elementNode) {
+							(elementNode as HTMLElement).style.transform = `translate(${newX}px, ${newY}px) scale(${currentScale}) rotate(${element.rotation}deg)`;
+						}
 					}
 
 					e.preventDefault(); // Prevent scrolling when dragging
 				}
 			}
 		},
-		[canvasBounds.height, canvasBounds.width, draggedElement, elementPositions, elementScales, elements, isDragging, isResizing, resizeDirection]
+		[canvasBounds.height, canvasBounds.width, draggedElement, elements, isDragging, isResizing, resizeDirection]
 	);
 
 	const handleTouchEnd = useCallback(() => {
 		if ((isResizing || isDragging) && draggedElement) {
-			// Get the current position/scale from our local state
-			const position = elementPositions.get(draggedElement);
-			const scale = elementScales.get(draggedElement);
+			// Get the final position/scale from our refs
+			const position = positionsRef.current.get(draggedElement);
+			const scale = scalesRef.current.get(draggedElement);
 
 			// Find the element in the elements array
 			const elementIndex = elements.findIndex((el) => el.id === draggedElement);
@@ -571,6 +594,10 @@ export const Canvas = forwardRef<HTMLDivElement, CanvasProps>(function Canvas(
 					updatedElement.scale = scale;
 				}
 
+				// Update the React state once at the end of touch operations
+				setElementPositions(new Map(positionsRef.current));
+				setElementScales(new Map(scalesRef.current));
+
 				// If we have an onElementUpdate callback, call it with the updated element
 				if (onElementUpdate) {
 					onElementUpdate(updatedElement);
@@ -585,18 +612,21 @@ export const Canvas = forwardRef<HTMLDivElement, CanvasProps>(function Canvas(
 			setIsDragging(false);
 			setDraggedElement(null);
 		}
-	}, [isResizing, isDragging, draggedElement, elementPositions, elementScales, elements, onElementUpdate]);
+	}, [isResizing, isDragging, draggedElement, elements, onElementUpdate]);
 
 	// Set up event listeners
 	useEffect(() => {
-		if (!canvasRef.current) return;
+		// Set canvas container ref if not already set
+		if (!canvasContainerRef.current) {
+			if (ref && typeof ref === "object" && ref.current) {
+				canvasContainerRef.current = ref.current;
+			} else if (canvasRef.current) {
+				canvasContainerRef.current = canvasRef.current;
+			}
+		}
 
-		canvasContainerRef.current = canvasRef.current;
-
-		updateBounds();
-
-		// Only add interactive event listeners if not in readonly mode
-		if (!readonly) {
+		// Add event listeners if not in readonly mode and container exists
+		if (canvasContainerRef.current && !readonly) {
 			// Mouse events
 			canvasContainerRef.current.addEventListener("mousedown", handleMouseDown);
 			canvasContainerRef.current.addEventListener("click", handleControlsClick);
@@ -643,6 +673,19 @@ export const Canvas = forwardRef<HTMLDivElement, CanvasProps>(function Canvas(
 
 			// Create an updated element with the new rotation
 			const updatedElement = { ...element, rotation: newRotation };
+
+			// Update DOM directly for immediate visual feedback
+			if (canvasContainerRef.current) {
+				const elementNode = canvasContainerRef.current.querySelector(`[data-element-id="${id}"]`);
+				if (elementNode) {
+					// Get current position and scale from refs
+					const position = positionsRef.current.get(id) || element.position;
+					const scale = scalesRef.current.get(id) || element.scale;
+
+					// Update transform directly
+					(elementNode as HTMLElement).style.transform = `translate(${position.x}px, ${position.y}px) scale(${scale}) rotate(${newRotation}deg)`;
+				}
+			}
 
 			// If we have an onElementUpdate callback, call it with the updated element
 			if (onElementUpdate) {
@@ -943,9 +986,9 @@ export const Canvas = forwardRef<HTMLDivElement, CanvasProps>(function Canvas(
 
 				{/* Render all garden elements */}
 				{elements.map((element) => {
-					// Get position either from our local state (for immediate updates) or from the element
-					const position = elementPositions.get(element.id) || element.position;
-					const scale = elementScales.get(element.id) || element.scale;
+					// Get position from our position and scale refs for consistency
+					const position = positionsRef.current.get(element.id) || element.position;
+					const scale = scalesRef.current.get(element.id) || element.scale;
 					const baseSize = 100;
 					const size = baseSize * scale;
 
@@ -955,20 +998,23 @@ export const Canvas = forwardRef<HTMLDivElement, CanvasProps>(function Canvas(
 					return (
 						<div
 							key={element.id}
+							data-element-id={element.id}
 							className="absolute"
 							style={{
-								transform: `translate(${position.x}px, ${position.y}px)`,
+								transform: `translate(${position.x}px, ${position.y}px) scale(${scale}) rotate(${element.rotation}deg)`,
+								transformOrigin: "top left",
 								zIndex: elementZIndex,
 								cursor: isDragging && draggedElement === element.id ? "grabbing" : "grab",
 								transition: (isDragging && draggedElement === element.id) || (isResizing && draggedElement === element.id) ? "none" : "transform 0.1s ease-out",
 								touchAction: "none", // Disable browser touch actions for better touch support
+								width: baseSize,
+								height: baseSize,
 							}}>
 							{/* Element Image with outline */}
 							<div
 								style={{
-									width: size,
-									height: size,
-									transform: `rotate(${element.rotation}deg)`,
+									width: "100%",
+									height: "100%",
 									position: "relative",
 									boxSizing: "border-box",
 									border: element.id === selectedElementId ? "2px dashed var(--primary)" : "none",
