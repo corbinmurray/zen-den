@@ -3,7 +3,7 @@
 import { Button } from "@/components/ui/button";
 import { Atmosphere } from "@/lib/types";
 import { useZenGardenStore } from "@/providers/zen-garden-store-provider";
-import { Edit, Eye, Trash } from "lucide-react";
+import { Edit, Eye, Share, Trash } from "lucide-react";
 import Link from "next/link";
 import { useCallback } from "react";
 import { toast } from "sonner";
@@ -68,6 +68,11 @@ export default function GalleryPage() {
 												Edit
 											</Button>
 										</Link>
+
+										<Button size="sm" variant="outline" className="flex-1">
+											<Share />
+											Share
+										</Button>
 
 										<Link href={`/view?id=${garden.id}`} className="flex-1">
 											<Button size="sm" variant="secondary" className="w-full">
