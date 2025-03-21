@@ -651,49 +651,6 @@ export const Canvas = forwardRef<HTMLDivElement, CanvasProps>(function Canvas(
 		}
 	};
 
-	const handleScale = (id: string, change: number, e?: React.MouseEvent) => {
-		if (e) {
-			e.stopPropagation();
-			e.preventDefault();
-		}
-
-		const element = elements.find((el) => el.id === id);
-		if (element) {
-			const oldScale = element.scale;
-			const newScale = Math.max(0.5, Math.min(2, element.scale + change));
-
-			// Calculate position adjustment to keep element centered as it scales
-			const baseSize = 100;
-			const oldSize = baseSize * oldScale;
-			const newSize = baseSize * newScale;
-			const size = newSize; // Define size variable for use in constraints
-			const sizeChange = (newSize - oldSize) / 2;
-
-			// Get current position (from our state or element)
-			const currentPos = elementPositions.get(element.id) || element.position;
-
-			// Adjust position to maintain center with proper boundary constraints
-			const newPosition = {
-				x: Math.max(-size * 0.75, Math.min(currentPos.x - sizeChange, canvasBounds.width - size * 0.25)),
-				y: Math.max(-size * 0.75, Math.min(currentPos.y - sizeChange, canvasBounds.height - size * 0.25)),
-			};
-
-			// Update scales in state
-			setElementScales((prevScales) => {
-				const newScales = new Map(prevScales);
-				newScales.set(element.id, newScale);
-				return newScales;
-			});
-
-			// Update positions in state to reflect the scaling
-			setElementPositions((prevPositions) => {
-				const newPositions = new Map(prevPositions);
-				newPositions.set(element.id, newPosition);
-				return newPositions;
-			});
-		}
-	};
-
 	// Function to render the SVG content for each element type
 	const renderElementSVG = (type: string) => {
 		// Check if this is a custom element (type starts with "custom-")
@@ -976,7 +933,12 @@ export const Canvas = forwardRef<HTMLDivElement, CanvasProps>(function Canvas(
 				style={{
 					cursor: isDragging ? "grabbing" : isResizing ? "nwse-resize" : "default",
 					filter: getTimeOfDayOverlay(),
+					position: "relative" /* Ensure stacking context is established */,
+					isolation: "isolate" /* Create stacking context */,
+					transformStyle: "preserve-3d" /* Support proper 3D stacking */,
+					contain: "paint" /* Optimize rendering of stacked elements */,
 				}}>
+
 				{/* Weather effects */}
 				<div className="absolute inset-0 z-10 pointer-events-none">{weatherEffectComponent}</div>
 
@@ -988,17 +950,24 @@ export const Canvas = forwardRef<HTMLDivElement, CanvasProps>(function Canvas(
 					const baseSize = 100;
 					const size = baseSize * scale;
 
+					// Determine the z-index for this element
+					const elementZIndex =
+						element.id === selectedElementId
+							? Math.max(element.zIndex ?? 0, 99999)
+							: element.zIndex || 1;
+
 					return (
 						<div
 							key={element.id}
-							className="absolute z-10"
+							className="absolute"
 							style={{
 								transform: `translate(${position.x}px, ${position.y}px)`,
-								zIndex: element.id === selectedElementId ? 100 : element.zIndex || 1,
+								zIndex: elementZIndex,
 								cursor: isDragging && draggedElement === element.id ? "grabbing" : "grab",
 								transition: (isDragging && draggedElement === element.id) || (isResizing && draggedElement === element.id) ? "none" : "transform 0.1s ease-out",
 								touchAction: "none", // Disable browser touch actions for better touch support
 							}}>
+
 							{/* Element Image with outline */}
 							<div
 								style={{
@@ -1010,6 +979,7 @@ export const Canvas = forwardRef<HTMLDivElement, CanvasProps>(function Canvas(
 									border: element.id === selectedElementId ? "2px dashed var(--primary)" : "none",
 									borderRadius: "4px",
 									boxShadow: element.id === selectedElementId ? "0 0 0 1px rgba(0,0,0,0.05), 0 0 0 4px rgba(var(--primary), 0.15)" : "none",
+									transformStyle: "preserve-3d", // Propagate the stacking context
 								}}>
 								<div className="relative w-full h-full">{renderElementSVG(element.type)}</div>
 
@@ -1054,12 +1024,18 @@ export const Canvas = forwardRef<HTMLDivElement, CanvasProps>(function Canvas(
 								)}
 							</div>
 
-							{/* Controls - only show when selected */}
+							{/* Controls toolbar - with fixed z-index to always appear on top */}
 							{element.id === selectedElementId && !readonly && (
 								<div
-									className="absolute -top-10 left-1/2 transform -translate-x-1/2 flex items-center bg-card border border-border rounded-md shadow-md z-50 controls"
-									style={{ pointerEvents: "auto" }}
-									onClick={(e) => e.stopPropagation()}>
+									className="absolute -top-12 left-1/2 transform -translate-x-1/2 flex items-center gap-1 bg-background border border-border rounded-md shadow-md isolation-auto"
+									style={{
+										pointerEvents: "auto",
+										zIndex: 100000,
+										width: "fit-content",
+										minWidth: size < 100 ? 120 : "auto",
+									}}
+									onClick={(e) => e.stopPropagation()}
+									onMouseDown={(e) => e.stopPropagation()}>
 									<button
 										type="button"
 										className="p-1 hover:bg-muted"
@@ -1082,30 +1058,6 @@ export const Canvas = forwardRef<HTMLDivElement, CanvasProps>(function Canvas(
 										}}
 										aria-label="Rotate right">
 										<RotateRightIcon className="h-4 w-4" />
-									</button>
-
-									<button
-										type="button"
-										className="p-1 hover:bg-muted"
-										onMouseDown={(e) => {
-											e.stopPropagation();
-											e.preventDefault();
-											handleScale(element.id, -0.1);
-										}}
-										aria-label="Scale down">
-										<MinusIcon className="h-4 w-4" />
-									</button>
-
-									<button
-										type="button"
-										className="p-1 hover:bg-muted"
-										onMouseDown={(e) => {
-											e.stopPropagation();
-											e.preventDefault();
-											handleScale(element.id, 0.1);
-										}}
-										aria-label="Scale up">
-										<PlusIcon className="h-4 w-4" />
 									</button>
 
 									<button
