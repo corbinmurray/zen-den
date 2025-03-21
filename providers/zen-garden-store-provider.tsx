@@ -1,6 +1,7 @@
 "use client";
 
-import { type ZenGardenStore, createZenGardenStore } from "@/stores/zen-garden-store";
+import { ZenGardenStore } from "@/stores/types";
+import { createZenGardenStore } from "@/stores/zen-garden-store";
 import { type ReactNode, createContext, useContext, useRef } from "react";
 import { useStore } from "zustand";
 

@@ -14,6 +14,14 @@ export interface GardenItem {
 	zIndex?: number;
 }
 
+export interface ElementOption {
+	type: string;
+	name: string;
+	imagePath: string;
+	preview?: string;
+	category?: string;
+}
+
 export interface Garden {
 	id?: string;
 	name?: string;
