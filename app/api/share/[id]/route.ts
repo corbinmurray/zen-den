@@ -1,16 +1,17 @@
 import { getGarden } from "@/lib/db";
 import { NextRequest, NextResponse } from "next/server";
 
-export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(request: NextRequest) {
 	try {
-		const id = params.id;
+		// Get the id from the query parameter instead of path param
+		const id = request.nextUrl.searchParams.get("id");
 
 		if (!id) {
 			return NextResponse.json({ error: "Garden ID is required" }, { status: 400 });
 		}
 
 		// Get the garden data
-		const garden = getGarden(id);
+		const garden = await getGarden(id);
 
 		if (!garden) {
 			return NextResponse.json({ error: "Garden not found" }, { status: 404 });

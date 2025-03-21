@@ -7,17 +7,18 @@ import { generateGardenId } from "@/lib/utils";
 import { useZenGardenStore } from "@/providers/zen-garden-store-provider";
 import { ArrowLeft, Edit } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 
 interface GardenViewerProps {
-	initialGarden: Garden | null;
-	gardenId: string;
+	initialGarden?: Garden | null;
 }
 
-export function GardenViewer({ initialGarden, gardenId }: GardenViewerProps) {
+export function GardenViewer({ initialGarden }: GardenViewerProps) {
 	const router = useRouter();
+	const searchParams = useSearchParams();
+	const gardenId = searchParams?.get("id") || "";
 	const { getGardenById, add: addGarden } = useZenGardenStore((state) => state);
 
 	const [isLoading, setIsLoading] = useState(!initialGarden);
