@@ -938,7 +938,6 @@ export const Canvas = forwardRef<HTMLDivElement, CanvasProps>(function Canvas(
 					transformStyle: "preserve-3d" /* Support proper 3D stacking */,
 					contain: "paint" /* Optimize rendering of stacked elements */,
 				}}>
-
 				{/* Weather effects */}
 				<div className="absolute inset-0 z-10 pointer-events-none">{weatherEffectComponent}</div>
 
@@ -951,10 +950,7 @@ export const Canvas = forwardRef<HTMLDivElement, CanvasProps>(function Canvas(
 					const size = baseSize * scale;
 
 					// Determine the z-index for this element
-					const elementZIndex =
-						element.id === selectedElementId
-							? Math.max(element.zIndex ?? 0, 99999)
-							: element.zIndex || 1;
+					const elementZIndex = element.id === selectedElementId ? Math.max(element.zIndex ?? 0, 99999) : element.zIndex || 1;
 
 					return (
 						<div
@@ -967,7 +963,6 @@ export const Canvas = forwardRef<HTMLDivElement, CanvasProps>(function Canvas(
 								transition: (isDragging && draggedElement === element.id) || (isResizing && draggedElement === element.id) ? "none" : "transform 0.1s ease-out",
 								touchAction: "none", // Disable browser touch actions for better touch support
 							}}>
-
 							{/* Element Image with outline */}
 							<div
 								style={{
