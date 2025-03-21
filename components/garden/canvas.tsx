@@ -191,12 +191,12 @@ const SnowEffect = React.memo(function SnowEffect() {
 
 const CloudEffect = React.memo(function CloudEffect() {
 	return (
-		<div className="absolute inset-0 bg-gray-400/10 pointer-events-none">
+		<div className="absolute inset-0 bg-gray-400/5 pointer-events-none">
 			{/* Larger slower clouds at the top */}
 			{Array.from({ length: 10 }).map((_, i) => {
 				const yPos = Math.floor(Math.random() * i);
 				const xPos = i * 10;
-				const opacity = 0.5 + (i % 3) * 0.1;
+				const opacity = 0.3 + (i % 3) * 0.05;
 				const scale = 1.2 + (i % 3) * 0.15;
 				const width = 150 + (i % 3) * 20;
 				const height = 80 + (i % 3) * 10;
@@ -205,12 +205,13 @@ const CloudEffect = React.memo(function CloudEffect() {
 				return (
 					<motion.div
 						key={`cloud-top-${i}`}
-						className="absolute bg-white/60 rounded-full blur-sm"
+						className="absolute bg-white/40 rounded-[50%]"
 						style={{
 							width: `${width}px`,
 							height: `${height}px`,
 							top: `${yPos}%`,
 							left: `${xPos}%`,
+							filter: "blur(3px)",
 						}}
 						initial={{
 							opacity: opacity,
@@ -231,16 +232,18 @@ const CloudEffect = React.memo(function CloudEffect() {
 
 			{/* Cloud clusters with compound shapes for more natural look */}
 			{Array.from({ length: 5 }).map((_, i) => {
-				// Position in the 10-25% range of the screen
-				const yPos = 10 + i * 5;
+				// Position in the top 25% of the screen
+				const yPos = 5 + i * 4;
 				const xPos = 10 + i * 30;
 				const baseDelay = i * 25;
 				const baseDuration = 220 + i * 30;
 
 				return (
 					<div key={`cloud-cluster-${i}`} className="absolute" style={{ top: `${yPos}%`, left: `${xPos}%` }}>
+						{/* Main cloud body */}
 						<motion.div
-							className="absolute bg-white/60 rounded-full w-[70px] h-[45px] blur-md"
+							className="absolute bg-white/40 rounded-full w-[70px] h-[45px]"
+							style={{ filter: "blur(2px)" }}
 							initial={{ x: -350 }}
 							animate={{ x: "120vw" }}
 							transition={{
@@ -251,8 +254,10 @@ const CloudEffect = React.memo(function CloudEffect() {
 								ease: "linear",
 							}}
 						/>
+						{/* Cloud puff 1 */}
 						<motion.div
-							className="absolute bg-white/30 rounded-full w-[55px] h-[40px] blur-md left-[40px] top-[-10px]"
+							className="absolute bg-white/30 rounded-full w-[55px] h-[40px] left-[40px] top-[-10px]"
+							style={{ filter: "blur(2px)" }}
 							initial={{ x: -350 }}
 							animate={{ x: "120vw" }}
 							transition={{
@@ -263,8 +268,24 @@ const CloudEffect = React.memo(function CloudEffect() {
 								ease: "linear",
 							}}
 						/>
+						{/* Cloud puff 2 */}
 						<motion.div
-							className="absolute bg-white/35 rounded-full w-[60px] h-[35px] blur-md left-[25px] top-[5px]"
+							className="absolute bg-white/35 rounded-full w-[60px] h-[35px] left-[25px] top-[5px]"
+							style={{ filter: "blur(2px)" }}
+							initial={{ x: -350 }}
+							animate={{ x: "120vw" }}
+							transition={{
+								duration: baseDuration,
+								repeat: Infinity,
+								repeatType: "loop",
+								delay: baseDelay,
+								ease: "linear",
+							}}
+						/>
+						{/* Cloud puff 3 - adds more complexity */}
+						<motion.div
+							className="absolute bg-white/25 rounded-full w-[40px] h-[30px] left-[15px] top-[-5px]"
+							style={{ filter: "blur(2px)" }}
 							initial={{ x: -350 }}
 							animate={{ x: "120vw" }}
 							transition={{
@@ -283,7 +304,7 @@ const CloudEffect = React.memo(function CloudEffect() {
 			{Array.from({ length: 3 }).map((_, i) => {
 				// Position in 5-20% range of the screen
 				const yPos = 5 + i * 5;
-				const opacity = 0.2 + i * 0.1;
+				const opacity = 0.15 + i * 0.07;
 				const scale = 0.9 + (i % 3) * 0.1;
 				const duration = 180 - i * 15;
 				const delay = i * 40;
@@ -291,9 +312,13 @@ const CloudEffect = React.memo(function CloudEffect() {
 				return (
 					<motion.div
 						key={`cloud-mid-${i}`}
-						className="absolute bg-white/20 rounded-full w-[100px] h-[60px] blur-md"
+						className="absolute rounded-full"
 						style={{
-							top: `${yPos}%`, // Position at calculated top percentage
+							top: `${yPos}%`,
+							width: "100px",
+							height: "60px",
+							background: "linear-gradient(to bottom, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0.1) 100%)",
+							filter: "blur(1.5px)",
 						}}
 						initial={{
 							x: -150,
@@ -318,7 +343,7 @@ const CloudEffect = React.memo(function CloudEffect() {
 			{Array.from({ length: 4 }).map((_, i) => {
 				// Position in 0-15% range of the screen
 				const yPos = i * 4;
-				const opacity = 0.15 + (i % 4) * 0.05;
+				const opacity = 0.1 + (i % 4) * 0.03;
 				const scale = 0.6 + (i % 4) * 0.08;
 				const duration = 160 + i * 30;
 				const delay = i * 15;
@@ -326,9 +351,14 @@ const CloudEffect = React.memo(function CloudEffect() {
 				return (
 					<motion.div
 						key={`cloud-small-${i}`}
-						className="absolute bg-white/15 rounded-full w-[70px] h-[40px] blur-md"
+						className="absolute"
 						style={{
-							top: `${yPos}%`, // Position at calculated top percentage
+							top: `${yPos}%`,
+							width: "70px",
+							height: "40px",
+							borderRadius: "50px 50px 30px 30px",
+							background: "linear-gradient(to bottom, rgba(255,255,255,0.25) 0%, rgba(255,255,255,0.1) 100%)",
+							filter: "blur(1px)",
 						}}
 						initial={{
 							x: -100,
