@@ -30,8 +30,6 @@ export function TabbedPanel({
 	atmosphereSettings = {
 		timeOfDay: "day",
 		weather: "clear",
-		effects: [],
-		effectsIntensity: 50,
 	},
 	onAtmosphereChange = () => {},
 	onSave,

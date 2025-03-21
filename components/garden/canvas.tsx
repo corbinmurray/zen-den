@@ -200,7 +200,7 @@ const CloudEffect = React.memo(function CloudEffect() {
 				const scale = 1.2 + (i % 3) * 0.15;
 				const width = 150 + (i % 3) * 20;
 				const height = 80 + (i % 3) * 10;
-				const duration = 60 + i * 10;
+				const duration = 240 + i * 20;
 
 				return (
 					<motion.div
@@ -236,7 +236,7 @@ const CloudEffect = React.memo(function CloudEffect() {
 				const yPos = 5 + i * 4;
 				const xPos = 10 + i * 30;
 				const baseDelay = i * 25;
-				const baseDuration = 220 + i * 30;
+				const baseDuration = 240 + i * 30;
 
 				return (
 					<div key={`cloud-cluster-${i}`} className="absolute" style={{ top: `${yPos}%`, left: `${xPos}%` }}>
@@ -307,7 +307,7 @@ const CloudEffect = React.memo(function CloudEffect() {
 				const opacity = 0.15 + i * 0.07;
 				const scale = 0.9 + (i % 3) * 0.1;
 				const duration = 180 - i * 15;
-				const delay = i * 40;
+				const delay = 240 + i * 40;
 
 				return (
 					<motion.div
@@ -346,7 +346,7 @@ const CloudEffect = React.memo(function CloudEffect() {
 				const opacity = 0.1 + (i % 4) * 0.03;
 				const scale = 0.6 + (i % 4) * 0.08;
 				const duration = 160 + i * 30;
-				const delay = i * 15;
+				const delay = 240 + i * 40;
 
 				return (
 					<motion.div
@@ -382,97 +382,6 @@ const CloudEffect = React.memo(function CloudEffect() {
 	);
 });
 
-const LeavesEffect = React.memo(function LeavesEffect({ intensity }: { intensity: number }) {
-	const particleCount = Math.floor(20 * intensity);
-
-	return (
-		<div className="absolute inset-0 pointer-events-none">
-			{Array.from({ length: particleCount }).map((_, i) => {
-				const scale = 0.6 + (i % 10) * 0.05;
-				const startX = ((i * 3.87) % 120) - 10;
-				const endY = 100 + (i % 10);
-				const rotateDir = i % 2 === 0 ? 360 : -360;
-				const duration = 15 + (i % 10);
-				const delay = (i * 0.8) % 15;
-				const sinOffset = Math.sin((i + 1) * Math.PI * 2) * 150;
-
-				return (
-					<motion.div
-						key={`leaf-${i}`}
-						className="absolute"
-						initial={{
-							x: `${startX}%`,
-							y: -30,
-							rotate: (i * 36) % 360,
-							scale: scale,
-						}}
-						animate={{
-							y: `${endY}%`,
-							x: `calc(${(i * 5) % 100}% + ${sinOffset}px)`,
-							rotate: rotateDir,
-						}}
-						transition={{
-							duration: duration,
-							repeat: Infinity,
-							delay: delay,
-							ease: [0.1, 0.4, 0.2, 0.8],
-						}}>
-						<svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-							<path d="M12 2C6.5 2 2 6.5 2 12C2 17.5 6.5 22 12 22C17.5 22 22 17.5 22 12C22 6.5 17.5 2 12 2Z" fill="#DC2626" fillOpacity="0.5" />
-							<path d="M12 5C12 5 9 9 9 12C9 15 12 19 12 19C12 19 15 15 15 12C15 9 12 5 12 5Z" fill="#991B1B" fillOpacity="0.8" />
-						</svg>
-					</motion.div>
-				);
-			})}
-		</div>
-	);
-});
-
-const BlossomsEffect = React.memo(function BlossomsEffect({ intensity }: { intensity: number }) {
-	const particleCount = Math.floor(20 * intensity);
-
-	return (
-		<div className="absolute inset-0 pointer-events-none">
-			{Array.from({ length: particleCount }).map((_, i) => {
-				const scale = 0.5 + (i % 12) * 0.05;
-				const startX = ((i * 3.87) % 120) - 10;
-				const endY = 100 + (i % 10);
-				const rotateAmount = 360 * (i % 2 === 0 ? 2 : -2);
-				const duration = 12 + (i % 8);
-				const delay = (i * 0.7) % 10;
-				const sinOffset = Math.sin((i + 1) * 0.5 * Math.PI) * 120;
-
-				return (
-					<motion.div
-						key={`blossom-${i}`}
-						className="absolute"
-						initial={{
-							x: `${startX}%`,
-							y: -20,
-							rotate: (i * 20) % 180,
-							scale: scale,
-						}}
-						animate={{
-							y: `${endY}%`,
-							x: `calc(${(i * 5) % 100}% + ${sinOffset}px)`,
-							rotate: rotateAmount,
-						}}
-						transition={{
-							duration: duration,
-							repeat: Infinity,
-							delay: delay,
-							ease: [0.1, 0.3, 0.6, 0.9],
-						}}>
-						<svg width="10" height="10" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-							<circle cx="12" cy="12" r="4" fill="#FDF2F8" />
-							<circle cx="12" cy="12" r="2" fill="#FBCFE8" />
-						</svg>
-					</motion.div>
-				);
-			})}
-		</div>
-	);
-});
 
 export const Canvas = forwardRef<HTMLDivElement, CanvasProps>(function Canvas(
 	{
@@ -1317,15 +1226,6 @@ export const Canvas = forwardRef<HTMLDivElement, CanvasProps>(function Canvas(
 			<CloudEffect />
 		) : null;
 
-	// Get seasonal effects component
-	const seasonalEffectsComponent = !atmosphereSettings.effects.length ? null : (
-		<div className="absolute inset-0 z-20">
-			{atmosphereSettings.effects.includes("leaves") && <LeavesEffect intensity={atmosphereSettings.effectsIntensity / 100} />}
-			{atmosphereSettings.effects.includes("blossoms") && <BlossomsEffect intensity={atmosphereSettings.effectsIntensity / 100} />}
-			{atmosphereSettings.effects.includes("butterflies") && <ButterfliesEffect intensity={atmosphereSettings.effectsIntensity / 100} />}
-		</div>
-	);
-
 	return (
 		<div>
 			<div
@@ -1340,9 +1240,6 @@ export const Canvas = forwardRef<HTMLDivElement, CanvasProps>(function Canvas(
 				}}>
 				{/* Weather effects */}
 				<div className="absolute inset-0 z-10 pointer-events-none">{weatherEffectComponent}</div>
-
-				{/* Seasonal effects */}
-				<div className="absolute inset-0 z-20 pointer-events-none">{seasonalEffectsComponent}</div>
 
 				{/* Render all garden elements */}
 				{elements.map((element) => {
