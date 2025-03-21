@@ -3,7 +3,7 @@ export interface Position {
 	y: number;
 }
 
-export interface GardenElement {
+export interface GardenItem {
 	id: string;
 	type: string;
 	name: string;
@@ -14,39 +14,15 @@ export interface GardenElement {
 	zIndex?: number;
 }
 
-export interface GardenData {
+export interface Garden {
 	id?: string;
-	elements: GardenElement[];
-	background: string;
-	timestamp: number;
-	atmosphereSettings?: AtmosphereSettings;
-	gardenName?: string;
+	name?: string;
+	createdAt: number;
+	items: GardenItem[];
+	atmosphere?: Atmosphere;
 }
 
-export interface ElementOption {
-	type: string;
-	name: string;
-	imagePath: string;
-	preview: string;
-	category?: string;
-}
-
-export interface BackgroundOption {
-	id: string;
-	name: string;
-	path: string;
-	thumbnail: string;
-}
-
-export interface SoundOption {
-	id: string;
-	name: string;
-	path: string;
-}
-
-export interface AtmosphereSettings {
+export interface Atmosphere {
 	timeOfDay: "day" | "sunset" | "night";
 	weather: "clear" | "cloudy" | "rainy" | "snowy";
-	effects: ("leaves" | "blossoms" | "butterflies")[];
-	effectsIntensity: number;
 }
