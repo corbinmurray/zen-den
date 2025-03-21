@@ -13,6 +13,7 @@ export function GardenViewer() {
 	const [elements, setElements] = useState<GardenElement[]>([]);
 	const [isLoading, setIsLoading] = useState(true);
 	const [background, setBackground] = useState("/backgrounds/zen-garden-bg.svg");
+	const [gardenName, setGardenName] = useState<string>("Zen Garden");
 	const [atmosphereSettings, setAtmosphereSettings] = useState<AtmosphereSettings>({
 		timeOfDay: "day",
 		weather: "clear",
@@ -44,6 +45,7 @@ export function GardenViewer() {
 					// Load garden data
 					setElements(garden.elements || []);
 					setBackground(garden.background || "/backgrounds/zen-garden-bg.svg");
+					setGardenName(garden.name || "Zen Garden");
 					setAtmosphereSettings(
 						garden.atmosphereSettings || {
 							timeOfDay: "day",
@@ -89,15 +91,29 @@ export function GardenViewer() {
 		<div className="flex flex-col h-full w-full">
 			{/* Header with back and edit buttons */}
 			<div className="flex justify-between items-center p-4 border-b border-border bg-card">
-				<Link href="/gallery" className="flex items-center gap-2 text-sm font-medium">
-					<ArrowLeft className="h-4 w-4" />
-					<span>Back to Gallery</span>
-				</Link>
+				<div className="flex items-center gap-4">
+					<Link href="/gallery" className="flex items-center gap-2 text-sm font-medium">
+						<ArrowLeft className="h-4 w-4" />
+						<span>Back to Gallery</span>
+					</Link>
+					{!isLoading && (
+						<div className="hidden sm:block border-l border-border pl-4">
+							<h1 className="text-lg font-semibold">{gardenName}</h1>
+						</div>
+					)}
+				</div>
 				<Button onClick={handleEdit} size="sm" className="flex items-center gap-2">
 					<Edit className="h-4 w-4" />
 					<span>Edit Garden</span>
 				</Button>
 			</div>
+
+			{/* Garden name for mobile view */}
+			{!isLoading && elements.length > 0 && (
+				<div className="sm:hidden px-4 py-2 border-b border-border bg-background">
+					<h1 className="text-lg font-semibold">{gardenName}</h1>
+				</div>
+			)}
 
 			{/* Main content */}
 			<div className="flex-1 relative overflow-hidden">
