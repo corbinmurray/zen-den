@@ -13,17 +13,26 @@ export function Navigation() {
 	const [isOpen, setIsOpen] = React.useState(false);
 	const pathname = usePathname();
 
-	const routes = [
-		{ href: "/gallery", label: "Gallery" },
-	];
+	const routes = [{ href: "/gallery", label: "Gallery" }];
 
 	return (
-		<header className="sticky top-0 z-50 w-full border-b bg-background/80 backdrop-blur-sm">
+		<motion.header
+			initial={{ y: -20, opacity: 0 }}
+			animate={{ y: 0, opacity: 1 }}
+			transition={{ duration: 0.5, ease: [0.22, 0.03, 0.26, 1] }}
+			className="sticky top-0 z-50 w-full border-b bg-background/80 backdrop-blur-sm">
+			{/* Animated gradient line */}
+			<div className="h-0.5 w-full bg-gradient-to-r from-transparent via-primary/20 to-transparent"></div>
+
 			<div className="container mx-auto flex h-16 items-center justify-between px-4">
 				<div className="flex items-center gap-2">
-					<Link href="/" className="flex items-center gap-2">
-						<motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-2xl font-semibold">
-							Zen<span className="text-primary">Den</span>
+					<Link href="/" className="flex items-center gap-2 group">
+						<motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-2xl font-semibold relative">
+							<span className="group-hover:text-foreground transition-colors duration-300">Zen</span>
+							<span className="text-primary">Den</span>
+
+							{/* Underline animation on hover */}
+							<span className="absolute -bottom-1 left-0 w-0 h-px bg-primary group-hover:w-full transition-all duration-300 ease-out"></span>
 						</motion.span>
 					</Link>
 				</div>
@@ -34,14 +43,20 @@ export function Navigation() {
 						<Link
 							key={route.href}
 							href={route.href}
-							className={`transition-colors hover:text-primary ${
+							className={`transition-colors hover:text-primary relative ${
 								pathname === route.href ? "text-foreground font-medium after:block after:w-full after:h-0.5 after:bg-primary after:mt-0.5" : "text-muted"
 							}`}>
 							{route.label}
+							{pathname !== route.href && (
+								<span className="absolute -bottom-0.5 left-0 w-0 h-px bg-primary hover:w-full transition-all duration-300 ease-out"></span>
+							)}
 						</Link>
 					))}
-					<Button asChild variant="default" size="sm" className="ml-2">
-						<Link href="/garden">Create Your Garden</Link>
+					<Button asChild variant="default" size="sm" className="ml-2 relative overflow-hidden group">
+						<Link href="/garden">
+							<span className="relative z-10">Create Your Garden</span>
+							<span className="absolute inset-0 bg-gradient-to-r from-primary to-primary opacity-0 group-hover:opacity-10 transition-opacity duration-300"></span>
+						</Link>
 					</Button>
 					<ThemeToggle />
 				</nav>
@@ -83,6 +98,6 @@ export function Navigation() {
 					<ThemeToggle />
 				</div>
 			</div>
-		</header>
+		</motion.header>
 	);
 }
