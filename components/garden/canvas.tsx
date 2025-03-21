@@ -8,6 +8,8 @@ interface CanvasProps {
 	elements: GardenItem[];
 	atmosphere?: Atmosphere;
 	readonly?: boolean;
+	onElementRemove?: (id: string) => void;
+	onElementUpdate?: (element: GardenItem) => void;
 }
 
 export const Canvas = forwardRef<HTMLDivElement, CanvasProps>(function Canvas(
@@ -18,6 +20,8 @@ export const Canvas = forwardRef<HTMLDivElement, CanvasProps>(function Canvas(
 			weather: "clear",
 		},
 		readonly = false,
+		onElementRemove,
+		onElementUpdate,
 	},
 	ref
 ) {
@@ -32,6 +36,7 @@ export const Canvas = forwardRef<HTMLDivElement, CanvasProps>(function Canvas(
 	const mousePositionRef = useRef({ x: 0, y: 0 });
 	const [elementPositions, setElementPositions] = useState<Map<string, { x: number; y: number }>>(new Map());
 	const [elementScales, setElementScales] = useState<Map<string, number>>(new Map());
+	const processedElementsRef = useRef(new Set<string>());
 
 	const updateBounds = useCallback(() => {
 		if (canvasContainerRef.current) {
@@ -114,17 +119,50 @@ export const Canvas = forwardRef<HTMLDivElement, CanvasProps>(function Canvas(
 		};
 	}, [updateBounds]);
 
-	// Initialize element positions and scales
+	// Modify the useEffect for initializing element positions and scales to preserve existing positions
 	useEffect(() => {
-		const newPositions = new Map();
-		const newScales = new Map();
-		elements.forEach((element) => {
-			newPositions.set(element.id, element.position);
-			newScales.set(element.id, element.scale);
+		const newPositions = new Map(elementPositions);
+		const newScales = new Map(elementScales);
+		let hasChanges = false;
+
+		// Remove entries for elements that no longer exist
+		const elementIds = new Set(elements.map((element) => element.id));
+		newPositions.forEach((_, id) => {
+			if (!elementIds.has(id)) {
+				newPositions.delete(id);
+				hasChanges = true;
+			}
 		});
-		setElementPositions(newPositions);
-		setElementScales(newScales);
-	}, [elements]);
+		newScales.forEach((_, id) => {
+			if (!elementIds.has(id)) {
+				newScales.delete(id);
+				hasChanges = true;
+			}
+		});
+
+		// Add entries for new elements only
+		elements.forEach((element) => {
+			if (!processedElementsRef.current.has(element.id)) {
+				// Only set position/scale for new elements
+				if (!newPositions.has(element.id)) {
+					newPositions.set(element.id, element.position);
+					hasChanges = true;
+				}
+				if (!newScales.has(element.id)) {
+					newScales.set(element.id, element.scale);
+					hasChanges = true;
+				}
+				// Mark this element as processed
+				processedElementsRef.current.add(element.id);
+			}
+		});
+
+		// Only update state if there were actually changes
+		if (hasChanges) {
+			setElementPositions(newPositions);
+			setElementScales(newScales);
+		}
+	}, [elements]); // Only depend on elements changing
 
 	// Pass canvasRef through to parent component if needed
 	useEffect(() => {
@@ -311,15 +349,40 @@ export const Canvas = forwardRef<HTMLDivElement, CanvasProps>(function Canvas(
 
 	// Handle mouse up
 	const handleMouseUp = useCallback(() => {
-		if (isResizing && draggedElement) {
-			setIsResizing(false);
-			setDraggedElement(null);
-			setResizeDirection(null);
-		} else if (isDragging && draggedElement) {
+		if ((isResizing || isDragging) && draggedElement) {
+			// Get the current position/scale from our local state
+			const position = elementPositions.get(draggedElement);
+			const scale = elementScales.get(draggedElement);
+
+			// Find the element in the elements array
+			const elementIndex = elements.findIndex((el) => el.id === draggedElement);
+			if (elementIndex !== -1 && position) {
+				// Create a new reference to the element (to avoid mutating props)
+				const updatedElement = { ...elements[elementIndex] };
+
+				// Set the updated position
+				updatedElement.position = position;
+
+				// Set the updated scale if it exists
+				if (scale !== undefined) {
+					updatedElement.scale = scale;
+				}
+
+				// If we have an onElementUpdate callback, call it with the updated element
+				if (onElementUpdate) {
+					onElementUpdate(updatedElement);
+				}
+			}
+
+			// Reset dragging/resizing state
+			if (isResizing) {
+				setIsResizing(false);
+				setResizeDirection(null);
+			}
 			setIsDragging(false);
 			setDraggedElement(null);
 		}
-	}, [isResizing, isDragging, draggedElement]);
+	}, [isResizing, isDragging, draggedElement, elementPositions, elementScales, elements, onElementUpdate]);
 
 	// Touch events for mobile
 	const handleTouchStart = useCallback(
@@ -476,15 +539,40 @@ export const Canvas = forwardRef<HTMLDivElement, CanvasProps>(function Canvas(
 	);
 
 	const handleTouchEnd = useCallback(() => {
-		if (isResizing && draggedElement) {
-			setIsResizing(false);
-			setDraggedElement(null);
-			setResizeDirection(null);
-		} else if (isDragging && draggedElement) {
+		if ((isResizing || isDragging) && draggedElement) {
+			// Get the current position/scale from our local state
+			const position = elementPositions.get(draggedElement);
+			const scale = elementScales.get(draggedElement);
+
+			// Find the element in the elements array
+			const elementIndex = elements.findIndex((el) => el.id === draggedElement);
+			if (elementIndex !== -1 && position) {
+				// Create a new reference to the element (to avoid mutating props)
+				const updatedElement = { ...elements[elementIndex] };
+
+				// Set the updated position
+				updatedElement.position = position;
+
+				// Set the updated scale if it exists
+				if (scale !== undefined) {
+					updatedElement.scale = scale;
+				}
+
+				// If we have an onElementUpdate callback, call it with the updated element
+				if (onElementUpdate) {
+					onElementUpdate(updatedElement);
+				}
+			}
+
+			// Reset states
+			if (isResizing) {
+				setIsResizing(false);
+				setResizeDirection(null);
+			}
 			setIsDragging(false);
 			setDraggedElement(null);
 		}
-	}, [isResizing, isDragging, draggedElement]);
+	}, [isResizing, isDragging, draggedElement, elementPositions, elementScales, elements, onElementUpdate]);
 
 	// Set up event listeners
 	useEffect(() => {
@@ -866,6 +954,18 @@ export const Canvas = forwardRef<HTMLDivElement, CanvasProps>(function Canvas(
 										onMouseDown={(e) => {
 											e.stopPropagation();
 											e.preventDefault();
+											handleRotate(element.id, 45);
+										}}
+										aria-label="Rotate right">
+										<RotateRightIcon className="h-4 w-4" />
+									</button>
+
+									<button
+										type="button"
+										className="p-1 hover:bg-muted"
+										onMouseDown={(e) => {
+											e.stopPropagation();
+											e.preventDefault();
 											handleScale(element.id, -0.1);
 										}}
 										aria-label="Scale down">
@@ -886,23 +986,13 @@ export const Canvas = forwardRef<HTMLDivElement, CanvasProps>(function Canvas(
 
 									<button
 										type="button"
-										className="p-1 hover:bg-muted"
-										onMouseDown={(e) => {
-											e.stopPropagation();
-											e.preventDefault();
-											handleRotate(element.id, 45);
-										}}
-										aria-label="Rotate right">
-										<RotateRightIcon className="h-4 w-4" />
-									</button>
-
-									<button
-										type="button"
 										className="p-1 hover:bg-muted text-destructive"
 										onMouseDown={(e) => {
 											e.stopPropagation();
 											e.preventDefault();
-											onElementRemove(element.id);
+											if (onElementRemove) {
+												onElementRemove(element.id);
+											}
 										}}
 										aria-label="Remove">
 										<XIcon className="h-4 w-4" />

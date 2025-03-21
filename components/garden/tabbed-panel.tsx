@@ -4,21 +4,55 @@ import { AtmosphereSettings } from "@/components/garden/atmosphere-settings";
 import { ElementPanel } from "@/components/garden/element-panel";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ElementOption, Garden } from "@/lib/types";
+import { Atmosphere, ElementOption, Garden, GardenItem } from "@/lib/types";
 import { useZenGardenStore } from "@/providers/zen-garden-store-provider";
-import { useGardenEditorStore } from "@/stores/garden-editor-store";
 import { SaveIcon, Share, TrashIcon } from "lucide-react";
-import { useCallback } from "react";
+import { Dispatch, SetStateAction, useCallback } from "react";
 import { toast } from "sonner";
 
-export function TabbedPanel() {
-	const { atmosphere, selectedGardenId, addGardenItem, clearGardenItems, setAtmosphere, setSaveDialogOpen, setShareAfterSave } = useGardenEditorStore();
+interface TabbedPanelProps {
+	atmosphere: Atmosphere;
+	selectedGardenId: string | null;
+	gardenName: string;
+	gardenItems: GardenItem[];
+	setAtmosphere: Dispatch<SetStateAction<Atmosphere>>;
+	addGardenItem: (item: GardenItem) => void;
+	clearGardenItems: () => void;
+	setSaveDialogOpen: Dispatch<SetStateAction<boolean>>;
+	setShareAfterSave: Dispatch<SetStateAction<boolean>>;
+	handleShare: () => void;
+}
+
+export function TabbedPanel({
+	atmosphere,
+	selectedGardenId,
+	gardenName,
+	gardenItems,
+	setAtmosphere,
+	addGardenItem,
+	clearGardenItems,
+	setSaveDialogOpen,
+	setShareAfterSave,
+	handleShare,
+}: TabbedPanelProps) {
 	const { update: updateGarden } = useZenGardenStore((state) => state);
 
 	// Handle adding an element to the garden
 	const handleAddElement = useCallback(
 		(element: ElementOption) => {
-			addGardenItem(element);
+			// Generate a new garden item from the element option
+			const gardenItem: GardenItem = {
+				id: crypto.randomUUID(),
+				type: element.type,
+				name: element.name,
+				imagePath: element.imagePath,
+				position: { x: Math.random() * 300, y: Math.random() * 300 },
+				rotation: 0,
+				scale: 1,
+				zIndex: Date.now(),
+			};
+
+			addGardenItem(gardenItem);
 		},
 		[addGardenItem]
 	);
@@ -26,10 +60,6 @@ export function TabbedPanel() {
 	// Handle save button click
 	const handleSave = useCallback(() => {
 		if (selectedGardenId) {
-			// Get the current state
-			const state = useGardenEditorStore.getState();
-			const { gardenItems, atmosphere, gardenName } = state;
-
 			// Create the garden object
 			const garden: Garden = {
 				id: selectedGardenId,
@@ -50,40 +80,7 @@ export function TabbedPanel() {
 			// If it's a new garden, show the dialog to name it
 			setSaveDialogOpen(true);
 		}
-	}, [selectedGardenId, updateGarden, setSaveDialogOpen]);
-
-	// Handle share button click
-	const handleShare = useCallback(() => {
-		if (!selectedGardenId) {
-			setShareAfterSave(true);
-			setSaveDialogOpen(true);
-			toast.info("Name your garden", {
-				description: "Please name your garden before sharing it.",
-			});
-			return;
-		}
-
-		useGardenEditorStore.getState().setShareAfterSave(true);
-		setTimeout(() => {
-			const state = useGardenEditorStore.getState();
-			const shareableLink = `${window.location.origin}/view?id=${state.selectedGardenId}`;
-
-			// Copy to clipboard
-			navigator.clipboard
-				.writeText(shareableLink)
-				.then(() => {
-					toast.success("Link copied!", {
-						description: `Share this link with others to view "${state.gardenName}".`,
-					});
-				})
-				.catch((err) => {
-					console.error("Failed to copy link:", err);
-					toast.info("Share link", {
-						description: shareableLink,
-					});
-				});
-		}, 100);
-	}, [selectedGardenId, setShareAfterSave, setSaveDialogOpen]);
+	}, [selectedGardenId, updateGarden, gardenName, gardenItems, atmosphere, setSaveDialogOpen]);
 
 	// Handle clear button click
 	const handleClear = useCallback(() => {
