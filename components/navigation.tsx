@@ -2,7 +2,7 @@
 
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Button } from "@/components/ui/button";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Menu } from "lucide-react";
 import { motion } from "motion/react";
 import Link from "next/link";
@@ -70,6 +70,19 @@ export function Navigation() {
 						</Button>
 					</SheetTrigger>
 					<SheetContent side="right" className="w-[240px] sm:w-[300px] p-4">
+						<SheetHeader className="p-0">
+							<SheetTitle>
+								<Link href="/" className="flex items-center gap-2 group" onClick={() => setIsOpen(false)}>
+									<motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-2xl font-semibold relative">
+										<span className="group-hover:text-foreground transition-colors duration-300">Zen</span>
+										<span className="text-primary">Den</span>
+
+										{/* Underline animation on hover */}
+										<span className="absolute -bottom-1 left-0 w-0 h-px bg-primary group-hover:w-full transition-all duration-300 ease-out"></span>
+									</motion.span>
+								</Link>
+							</SheetTitle>
+						</SheetHeader>
 						<nav className="flex flex-col gap-4 mt-8">
 							{routes.map((route) => (
 								<Link
