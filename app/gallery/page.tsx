@@ -5,51 +5,30 @@ import { Atmosphere } from "@/lib/types";
 import { useZenGardenStore } from "@/providers/zen-garden-store-provider";
 import { Edit, Eye, Trash } from "lucide-react";
 import Link from "next/link";
-
-const getCardStyle = (atmosphere?: Atmosphere) => {
-	if (!atmosphere) return "bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-950/20 dark:to-teal-950/30";
-
-	const { timeOfDay, weather } = atmosphere;
-
-	// Softer, more elegant gradients
-	if (timeOfDay === "day") {
-		if (weather === "clear") return "bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950/20 dark:to-indigo-950/30";
-		if (weather === "cloudy") return "bg-gradient-to-br from-slate-50 to-zinc-100 dark:from-slate-950/30 dark:to-zinc-950/40";
-		if (weather === "rainy") return "bg-gradient-to-br from-slate-100 to-blue-50 dark:from-slate-950/30 dark:to-blue-950/20";
-		if (weather === "snowy") return "bg-gradient-to-br from-slate-50 to-sky-50 dark:from-slate-950/20 dark:to-sky-950/20";
-	}
-
-	if (timeOfDay === "sunset") {
-		if (weather === "clear") return "bg-gradient-to-br from-amber-50 to-pink-50 dark:from-amber-950/20 dark:to-pink-950/30";
-		if (weather === "cloudy") return "bg-gradient-to-br from-amber-50 to-zinc-100 dark:from-amber-950/20 dark:to-zinc-950/30";
-		if (weather === "rainy") return "bg-gradient-to-br from-amber-50 to-slate-100 dark:from-amber-950/20 dark:to-slate-950/30";
-		if (weather === "snowy") return "bg-gradient-to-br from-amber-50 to-sky-50 dark:from-amber-950/20 dark:to-sky-950/20";
-	}
-
-	if (timeOfDay === "night") {
-		if (weather === "clear") return "bg-gradient-to-br from-indigo-100 to-blue-50 dark:from-indigo-950/40 dark:to-blue-950/30";
-		if (weather === "cloudy") return "bg-gradient-to-br from-slate-100 to-zinc-50 dark:from-slate-950/40 dark:to-zinc-950/30";
-		if (weather === "rainy") return "bg-gradient-to-br from-slate-100 to-indigo-50 dark:from-slate-950/40 dark:to-indigo-950/30";
-		if (weather === "snowy") return "bg-gradient-to-br from-slate-50 to-indigo-50 dark:from-slate-950/30 dark:to-indigo-950/30";
-	}
-
-	return "bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-950/20 dark:to-teal-950/30";
-};
-
-// Decorative patterns for the cards
-const ZenPattern = () => (
-	<svg className="absolute inset-0 w-full h-full opacity-[0.07] pointer-events-none" xmlns="http://www.w3.org/2000/svg">
-		<defs>
-			<pattern id="zen-pattern" x="0" y="0" width="32" height="32" patternUnits="userSpaceOnUse">
-				<circle cx="16" cy="16" r="1.5" fill="currentColor" />
-			</pattern>
-		</defs>
-		<rect width="100%" height="100%" fill="url(#zen-pattern)" />
-	</svg>
-);
+import { useCallback } from "react";
+import { toast } from "sonner";
 
 export default function GalleryPage() {
 	const { gardens, remove: removeGarden } = useZenGardenStore((state) => state);
+
+	const handleRemove = useCallback(
+		(id: string) => {
+			toast.error("Remove garden?", {
+				description: "Are you sure you want to remove your garden?",
+				action: {
+					label: "Yes",
+					onClick: () => {
+						removeGarden(id);
+					},
+				},
+				cancel: {
+					label: "Cancel",
+					onClick: () => {},
+				},
+			});
+		},
+		[removeGarden]
+	);
 
 	if (gardens.length === 0) {
 		return (
@@ -99,7 +78,7 @@ export default function GalleryPage() {
 									</div>
 
 									<Button
-										onClick={() => (garden.id ? removeGarden(garden.id) : null)}
+										onClick={() => (garden.id ? handleRemove(garden.id) : null)}
 										size="sm"
 										className="border border-destructive text-destructive bg-inherit hover:text-foreground hover:bg-destructive">
 										<Trash className="h-3.5 w-3.5 mr-2" />
@@ -113,3 +92,45 @@ export default function GalleryPage() {
 		</div>
 	);
 }
+
+const getCardStyle = (atmosphere?: Atmosphere) => {
+	if (!atmosphere) return "bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-950/20 dark:to-teal-950/30";
+
+	const { timeOfDay, weather } = atmosphere;
+
+	// Softer, more elegant gradients
+	if (timeOfDay === "day") {
+		if (weather === "clear") return "bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950/20 dark:to-indigo-950/30";
+		if (weather === "cloudy") return "bg-gradient-to-br from-slate-50 to-zinc-100 dark:from-slate-950/30 dark:to-zinc-950/40";
+		if (weather === "rainy") return "bg-gradient-to-br from-slate-100 to-blue-50 dark:from-slate-950/30 dark:to-blue-950/20";
+		if (weather === "snowy") return "bg-gradient-to-br from-slate-50 to-sky-50 dark:from-slate-950/20 dark:to-sky-950/20";
+	}
+
+	if (timeOfDay === "sunset") {
+		if (weather === "clear") return "bg-gradient-to-br from-amber-50 to-pink-50 dark:from-amber-950/20 dark:to-pink-950/30";
+		if (weather === "cloudy") return "bg-gradient-to-br from-amber-50 to-zinc-100 dark:from-amber-950/20 dark:to-zinc-950/30";
+		if (weather === "rainy") return "bg-gradient-to-br from-amber-50 to-slate-100 dark:from-amber-950/20 dark:to-slate-950/30";
+		if (weather === "snowy") return "bg-gradient-to-br from-amber-50 to-sky-50 dark:from-amber-950/20 dark:to-sky-950/20";
+	}
+
+	if (timeOfDay === "night") {
+		if (weather === "clear") return "bg-gradient-to-br from-indigo-100 to-blue-50 dark:from-indigo-950/40 dark:to-blue-950/30";
+		if (weather === "cloudy") return "bg-gradient-to-br from-slate-100 to-zinc-50 dark:from-slate-950/40 dark:to-zinc-950/30";
+		if (weather === "rainy") return "bg-gradient-to-br from-slate-100 to-indigo-50 dark:from-slate-950/40 dark:to-indigo-950/30";
+		if (weather === "snowy") return "bg-gradient-to-br from-slate-50 to-indigo-50 dark:from-slate-950/30 dark:to-indigo-950/30";
+	}
+
+	return "bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-950/20 dark:to-teal-950/30";
+};
+
+// Decorative patterns for the cards
+const ZenPattern = () => (
+	<svg className="absolute inset-0 w-full h-full opacity-[0.07] pointer-events-none" xmlns="http://www.w3.org/2000/svg">
+		<defs>
+			<pattern id="zen-pattern" x="0" y="0" width="32" height="32" patternUnits="userSpaceOnUse">
+				<circle cx="16" cy="16" r="1.5" fill="currentColor" />
+			</pattern>
+		</defs>
+		<rect width="100%" height="100%" fill="url(#zen-pattern)" />
+	</svg>
+);
