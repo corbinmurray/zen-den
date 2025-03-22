@@ -170,7 +170,6 @@ export const Canvas = forwardRef<HTMLDivElement, CanvasProps>(function Canvas(
 	}, [elements, elementPositions, elementScales]); // Fixed dependency array
 
 	// Pass canvasRef through to parent component if needed
-	// eslint-disable-next-line react-hooks/exhaustive-deps
 	useEffect(() => {
 		if (ref && typeof ref === "function") {
 			ref(canvasRef.current);
@@ -657,7 +656,7 @@ export const Canvas = forwardRef<HTMLDivElement, CanvasProps>(function Canvas(
 			document.removeEventListener("touchend", handleTouchEnd as EventListener);
 			window.removeEventListener("resize", updateBounds);
 		};
-	}, [handleMouseDown, handleMouseMove, handleMouseUp, handleTouchStart, handleTouchMove, handleTouchEnd, handleControlsClick, updateBounds, readonly]);
+	}, [handleMouseDown, handleMouseMove, handleMouseUp, handleTouchStart, handleTouchMove, handleTouchEnd, handleControlsClick, updateBounds, readonly, ref]);
 
 	// Handle rotate and scale functions
 	const handleRotate = (id: string, change: number, e?: React.MouseEvent) => {
