@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ElementOption } from "@/lib/types";
 import { Eraser, Paintbrush, Trash } from "lucide-react";
-import { JSX, useState } from "react";
+import { JSX, useRef, useState } from "react";
 import { v4 as uuidv4 } from "uuid";
 
 // Define grid size
@@ -44,16 +44,33 @@ export function CustomElementCreator({ onSaveElement, onCancel }: CustomElementC
 	const [elementName, setElementName] = useState("Custom Element");
 	const [selectedTool, setSelectedTool] = useState<"paint" | "erase">("paint");
 	const [isDrawing, setIsDrawing] = useState(false);
+	const gridRef = useRef<HTMLDivElement>(null);
+	const [lastCell, setLastCell] = useState<{ row: number; col: number } | null>(null);
+
+	// Update cursor based on selected tool
+	const getCursorStyle = () => {
+		return selectedTool === "paint" ? "pointer" : "crosshair";
+	};
 
 	// Handle cell click or drag
 	const handleCellInteraction = (rowIndex: number, colIndex: number, isDrag = false) => {
+		// Start drawing on mouse down
 		if (!isDrag && !isDrawing) {
 			setIsDrawing(true);
+			setLastCell({ row: rowIndex, col: colIndex });
 		}
 
+		// Only continue if we're in drawing mode and either it's initial click or it's a drag
 		if (!isDrawing && isDrag) {
 			return;
 		}
+
+		// Skip if we're interacting with the same cell (prevents state updates)
+		if (lastCell && lastCell.row === rowIndex && lastCell.col === colIndex) {
+			return;
+		}
+
+		setLastCell({ row: rowIndex, col: colIndex });
 
 		setGrid((prevGrid) => {
 			const newGrid = [...prevGrid.map((row) => [...row])];
@@ -64,6 +81,33 @@ export function CustomElementCreator({ onSaveElement, onCancel }: CustomElementC
 			}
 			return newGrid;
 		});
+	};
+
+	// Handle canvas mouse move for smoother drawing
+	const handleMouseMove = (e: React.MouseEvent) => {
+		if (!isDrawing || !gridRef.current) return;
+
+		const rect = gridRef.current.getBoundingClientRect();
+		const x = e.clientX - rect.left;
+		const y = e.clientY - rect.top;
+
+		// Calculate cell coordinates
+		const cellWidth = rect.width / GRID_SIZE;
+		const cellHeight = rect.height / GRID_SIZE;
+
+		const colIndex = Math.floor(x / cellWidth);
+		const rowIndex = Math.floor(y / cellHeight);
+
+		// Check if within bounds and different from last cell
+		if (colIndex >= 0 && colIndex < GRID_SIZE && rowIndex >= 0 && rowIndex < GRID_SIZE) {
+			handleCellInteraction(rowIndex, colIndex, true);
+		}
+	};
+
+	// Clean up drawing state on mouse up/leave
+	const handleDrawEnd = () => {
+		setIsDrawing(false);
+		setLastCell(null);
 	};
 
 	// Convert grid to SVG path elements for preview and saving
@@ -141,18 +185,18 @@ export function CustomElementCreator({ onSaveElement, onCancel }: CustomElementC
 				<div className="flex justify-around mb-2 w-full">
 					<div className="flex gap-6">
 						<Button size="sm" variant={selectedTool === "paint" ? "default" : "outline"} onClick={() => setSelectedTool("paint")}>
-							<Paintbrush />
+							<Paintbrush className="mr-1 size-4" />
 							Paint
 						</Button>
 						<Button size="sm" variant={selectedTool === "erase" ? "default" : "outline"} onClick={() => setSelectedTool("erase")}>
-							<Eraser />
+							<Eraser className="mr-1 size-4" />
 							Erase
 						</Button>
 						<Button
 							size="sm"
 							className="border border-destructive text-destructive bg-transparent hover:bg-destructive hover:text-foreground"
 							onClick={() => setGrid(createEmptyGrid())}>
-							<Trash />
+							<Trash className="mr-1 size-4" />
 							Clear
 						</Button>
 					</div>
@@ -160,35 +204,50 @@ export function CustomElementCreator({ onSaveElement, onCancel }: CustomElementC
 
 				{/* Grid editor */}
 				<div
-					className="border border-border rounded-md overflow-hidden bg-white"
+					ref={gridRef}
+					className="border border-border rounded-md overflow-hidden bg-white touch-none select-none"
 					style={{
 						width: "100%",
 						aspectRatio: "1/1",
 						display: "grid",
 						gridTemplateColumns: `repeat(${GRID_SIZE}, 1fr)`,
 						gridTemplateRows: `repeat(${GRID_SIZE}, 1fr)`,
+						cursor: getCursorStyle(),
 					}}
-					onMouseUp={() => setIsDrawing(false)}
-					onMouseLeave={() => setIsDrawing(false)}
-					onTouchEnd={() => setIsDrawing(false)}>
+					onMouseDown={(e) => {
+						// Prevent default to avoid text selection
+						e.preventDefault();
+					}}
+					onMouseMove={handleMouseMove}
+					onMouseUp={handleDrawEnd}
+					onMouseLeave={handleDrawEnd}
+					onTouchEnd={handleDrawEnd}>
 					{grid.map((row, rowIndex) =>
 						row.map((cell, colIndex) => (
 							<div
 								key={`${rowIndex}-${colIndex}`}
-								className="border border-border/20 cursor-cell"
+								className="border border-border/20"
 								style={{
 									backgroundColor: cell || "transparent",
 									position: "relative",
 								}}
-								onMouseDown={() => handleCellInteraction(rowIndex, colIndex)}
-								onMouseOver={() => handleCellInteraction(rowIndex, colIndex, true)}
-								onTouchStart={() => handleCellInteraction(rowIndex, colIndex)}
+								onMouseDown={(e) => {
+									e.preventDefault(); // Prevent default behavior
+									handleCellInteraction(rowIndex, colIndex);
+								}}
+								onTouchStart={(e) => {
+									e.preventDefault(); // Prevent default behavior
+									handleCellInteraction(rowIndex, colIndex);
+								}}
 								onTouchMove={(e) => {
 									e.preventDefault(); // Prevent scrolling during drawing
 
+									if (!isDrawing) return;
+
 									// Get touch position and find corresponding cell
 									const touch = e.touches[0];
-									const rect = e.currentTarget.getBoundingClientRect();
+									const rect = gridRef.current?.getBoundingClientRect();
+									if (!rect) return;
 
 									// Calculate position relative to the grid
 									const relativeX = touch.clientX - rect.left;
