@@ -12,7 +12,7 @@ export function cn(...inputs: ClassValue[]) {
  * @returns A unique ID suitable for gardens and share URLs
  */
 export function generateGardenId(): string {
-	return nanoid(7); // 7 characters is sufficient for uniqueness in this app
+	return nanoid(7);
 }
 
 /**
@@ -20,7 +20,7 @@ export function generateGardenId(): string {
  * @param garden Garden data to share
  * @returns Promise with the share URL or throws an error
  */
-export async function shareGarden(garden: Garden): Promise<string> {
+export async function getGardenShareUrl(garden: Garden): Promise<string> {
 	// Call the share API
 	const response = await fetch("/api/share", {
 		method: "POST",

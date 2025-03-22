@@ -2,7 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Atmosphere, Garden } from "@/lib/types";
-import { copyToClipboard, shareGarden } from "@/lib/utils";
+import { copyToClipboard, getGardenShareUrl } from "@/lib/utils";
 import { useZenGardenStore } from "@/providers/zen-garden-store-provider";
 import { Edit, Eye, Share, Trash } from "lucide-react";
 import * as motion from "motion/react-client";
@@ -45,7 +45,7 @@ export default function GalleryPage() {
 		try {
 			setSharingGardenIds((prev) => ({ ...prev, [garden.id as string]: true }));
 
-			const shareUrl = await shareGarden(garden);
+			const shareUrl = await getGardenShareUrl(garden);
 			await copyToClipboard(shareUrl);
 
 			toast.success("Share link created!", {
