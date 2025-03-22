@@ -1,6 +1,7 @@
 "use client";
 
 import { Atmosphere, GardenItem } from "@/lib/types";
+import { Grab, Home, Pointer, Save } from "lucide-react";
 import * as motion from "motion/react-client";
 import React, { forwardRef, useCallback, useEffect, useRef, useState } from "react";
 
@@ -1240,84 +1241,51 @@ export const Canvas = forwardRef<HTMLDivElement, CanvasProps>(function Canvas(
 				{/* Empty state */}
 				{elements.length === 0 && (
 					<div className="absolute inset-0 flex items-center justify-center">
-						<div className="bg-card/80 backdrop-blur-sm p-6 rounded-lg text-center max-w-sm flex flex-col items-center">
-							<svg
-								xmlns="http://www.w3.org/2000/svg"
-								width="40"
-								height="40"
-								viewBox="0 0 24 24"
-								fill="none"
-								stroke="currentColor"
-								strokeWidth="1.5"
-								strokeLinecap="round"
-								strokeLinejoin="round"
-								className="text-primary mb-3">
-								<path d="M2 22h20" />
-								<path d="M20 22V6l-4-4H8.5L4 6v16" />
-								<path d="M18 2H2v20" />
-								<path d="M14 5v5.5a2.5 2.5 0 0 1-5 0V7" />
-								<circle cx="9" cy="7" r="1" />
-							</svg>
-							<h3 className="text-lg font-medium mb-2">Your Zen Garden Awaits</h3>
-							<p className="text-muted mb-4">
-								Start by clicking on elements in the panel on the left to add them to your garden. Once added, drag them to position, then use the controls to
-								rotate and resize.
-							</p>
-							<div className="grid grid-cols-3 gap-3 text-xs text-center w-full">
-								<div className="flex flex-col items-center p-2 bg-background rounded-md">
-									<svg
-										xmlns="http://www.w3.org/2000/svg"
-										width="20"
-										height="20"
-										viewBox="0 0 24 24"
-										fill="none"
-										stroke="currentColor"
-										strokeWidth="2"
-										strokeLinecap="round"
-										strokeLinejoin="round"
-										className="mb-1">
-										<path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" />
-									</svg>
-									<span>1. Select an element</span>
+						<div className="bg-card/90 backdrop-blur-md shadow-lg p-8 rounded-xl text-center max-w-md flex flex-col items-center border border-border/30">
+							<div className="bg-primary/10 p-3 rounded-full mb-4">
+								<Home className="size-8 text-primary" />
+							</div>
+							<h3 className="text-xl font-medium mb-3">Your Zen Garden Awaits</h3>
+							<p className="text-muted-foreground mb-6 max-w-sm">Create your peaceful space by following these simple steps:</p>
+
+							<div className="flex flex-col gap-4 w-full">
+								<div className="flex items-center gap-4 p-4 bg-background rounded-lg border border-border/50 hover:border-primary/30 transition-colors">
+									<div className="flex-shrink-0 bg-primary/10 h-10 w-10 rounded-full flex items-center justify-center">
+										<span className="font-semibold text-primary">1</span>
+									</div>
+									<div className="text-left">
+										<div className="font-medium mb-1 flex items-center gap-2">
+											<Pointer className="size-4" />
+											Select Elements
+										</div>
+										<p className="text-xs text-muted-foreground">Choose items from the left panel to add to your garden</p>
+									</div>
 								</div>
-								<div className="flex flex-col items-center p-2 bg-background rounded-md">
-									<svg
-										xmlns="http://www.w3.org/2000/svg"
-										width="20"
-										height="20"
-										viewBox="0 0 24 24"
-										fill="none"
-										stroke="currentColor"
-										strokeWidth="2"
-										strokeLinecap="round"
-										strokeLinejoin="round"
-										className="mb-1">
-										<path d="M11 19a1 1 0 1 1-2 0 1 1 0 0 1 2 0Z" />
-										<path d="M2 6h11" />
-										<path d="M9 12H2" />
-										<path d="M14 6h8" />
-										<path d="M11 12h11" />
-										<path d="M6.236 12l-3 6.646A1 1 0 0 0 4 20h16a1 1 0 0 0 .764-1.646l-3-6.646" />
-									</svg>
-									<span>2. Drag to position</span>
+
+								<div className="flex items-center gap-4 p-4 bg-background rounded-lg border border-border/50 hover:border-primary/30 transition-colors">
+									<div className="flex-shrink-0 bg-primary/10 h-10 w-10 rounded-full flex items-center justify-center">
+										<span className="font-semibold text-primary">2</span>
+									</div>
+									<div className="text-left">
+										<div className="font-medium mb-1 flex items-center gap-2">
+											<Grab className="size-4" />
+											Arrange & Position
+										</div>
+										<p className="text-xs text-muted-foreground">Drag elements to position them in your garden</p>
+									</div>
 								</div>
-								<div className="flex flex-col items-center p-2 bg-background rounded-md">
-									<svg
-										xmlns="http://www.w3.org/2000/svg"
-										width="20"
-										height="20"
-										viewBox="0 0 24 24"
-										fill="none"
-										stroke="currentColor"
-										strokeWidth="2"
-										strokeLinecap="round"
-										strokeLinejoin="round"
-										className="mb-1">
-										<path d="M12 2v8" />
-										<path d="m16 12 4-4-4-4" />
-										<rect x="2" y="14" width="20" height="8" rx="2" />
-									</svg>
-									<span>3. Customize & save</span>
+
+								<div className="flex items-center gap-4 p-4 bg-background rounded-lg border border-border/50 hover:border-primary/30 transition-colors">
+									<div className="flex-shrink-0 bg-primary/10 h-10 w-10 rounded-full flex items-center justify-center">
+										<span className="font-semibold text-primary">3</span>
+									</div>
+									<div className="text-left">
+										<div className="font-medium mb-1 flex items-center gap-2">
+											<Save className="size-4" />
+											Customize & Save
+										</div>
+										<p className="text-xs text-muted-foreground">Adjust the atmosphere and save your creation</p>
+									</div>
 								</div>
 							</div>
 						</div>
