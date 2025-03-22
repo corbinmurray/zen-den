@@ -1,15 +1,18 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { Atmosphere } from "@/lib/types";
+import { Atmosphere, Garden } from "@/lib/types";
+import { copyToClipboard, shareGarden } from "@/lib/utils";
 import { useZenGardenStore } from "@/providers/zen-garden-store-provider";
 import { Edit, Eye, Share, Trash } from "lucide-react";
 import Link from "next/link";
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 import { toast } from "sonner";
 
 export default function GalleryPage() {
 	const { gardens, remove: removeGarden } = useZenGardenStore((state) => state);
+	// Track which gardens are currently being shared
+	const [sharingGardenIds, setSharingGardenIds] = useState<Record<string, boolean>>({});
 
 	const handleRemove = useCallback(
 		(id: string) => {
@@ -29,6 +32,38 @@ export default function GalleryPage() {
 		},
 		[removeGarden]
 	);
+
+	// Handle share button click
+	const handleShare = useCallback(async (garden: Garden) => {
+		if (!garden.id) {
+			toast.error("Cannot share garden", {
+				description: "This garden doesn't have a valid ID.",
+			});
+			return;
+		}
+
+		try {
+			// Mark this garden as currently sharing
+			setSharingGardenIds((prev) => ({ ...prev, [garden.id as string]: true }));
+
+			// Use shared utility function to generate and copy the share URL
+			const shareUrl = await shareGarden(garden);
+			await copyToClipboard(shareUrl);
+
+			// Show success toast
+			toast.success("Share link created!", {
+				description: "Share link has been copied to your clipboard.",
+			});
+		} catch (error) {
+			console.error("Error sharing garden:", error);
+			toast.error("Failed to create share link", {
+				description: "Please try again later.",
+			});
+		} finally {
+			// Mark this garden as no longer sharing
+			setSharingGardenIds((prev) => ({ ...prev, [garden.id as string]: false }));
+		}
+	}, []);
 
 	if (gardens.length === 0) {
 		return (
@@ -69,9 +104,14 @@ export default function GalleryPage() {
 											</Button>
 										</Link>
 
-										<Button size="sm" variant="outline" className="flex-1">
-											<Share />
-											Share
+										<Button
+											size="sm"
+											variant="outline"
+											className="flex-1"
+											onClick={() => handleShare(garden)}
+											disabled={garden.id ? sharingGardenIds[garden.id as string] : false}>
+											<Share className="h-3.5 w-3.5 mr-2" />
+											{garden.id && sharingGardenIds[garden.id as string] ? "Sharing..." : "Share"}
 										</Button>
 
 										<Link href={`/view?id=${garden.id}`} className="flex-1">

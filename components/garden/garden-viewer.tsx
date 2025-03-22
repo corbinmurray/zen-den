@@ -2,9 +2,11 @@
 
 import { Canvas } from "@/components/garden/canvas";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Atmosphere, Garden } from "@/lib/types";
+import { generateGardenId } from "@/lib/utils";
 import { useZenGardenStore } from "@/providers/zen-garden-store-provider";
-import { ArrowLeft, Edit } from "lucide-react";
+import { ArrowLeft, Copy, Edit, PenLine } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
@@ -21,6 +23,7 @@ export function GardenViewer({ initialGarden, gardenId }: GardenViewerProps) {
 
 	const [isLoading, setIsLoading] = useState(!initialGarden);
 	const [garden, setGarden] = useState<Garden | undefined>(initialGarden || undefined);
+	const [editDialogOpen, setEditDialogOpen] = useState(false);
 
 	const defaultAtmosphere: Atmosphere = {
 		timeOfDay: "day",
@@ -31,6 +34,14 @@ export function GardenViewer({ initialGarden, gardenId }: GardenViewerProps) {
 	const fetchGardenFromApi = useCallback(
 		async (id: string) => {
 			try {
+				// First check if a garden with this ID already exists in the store
+				const existingGarden = getGardenById(id);
+				if (existingGarden) {
+					// We already have this garden, just set it
+					setGarden(existingGarden);
+					return true;
+				}
+
 				const response = await fetch(`/api/share/${id}`);
 
 				if (!response.ok) {
@@ -45,7 +56,7 @@ export function GardenViewer({ initialGarden, gardenId }: GardenViewerProps) {
 
 				const fetchedGarden = data.garden;
 
-				// Add the garden to the store for future access
+				// Add the garden to the store only if it doesn't already exist
 				addGarden(fetchedGarden);
 
 				// Set the garden in component state
@@ -57,15 +68,17 @@ export function GardenViewer({ initialGarden, gardenId }: GardenViewerProps) {
 				return false;
 			}
 		},
-		[addGarden]
+		[addGarden, getGardenById]
 	);
 
 	useEffect(() => {
 		async function loadGarden() {
 			// If initialGarden was provided, we don't need to load
 			if (initialGarden) {
-				// Make sure to add it to the store too
-				addGarden(initialGarden);
+				// Make sure to add it to the store if it's not already there
+				if (initialGarden.id && !getGardenById(initialGarden.id)) {
+					addGarden(initialGarden);
+				}
 				setGarden(initialGarden);
 				setIsLoading(false);
 				return;
@@ -105,7 +118,51 @@ export function GardenViewer({ initialGarden, gardenId }: GardenViewerProps) {
 	}, [gardenId, getGardenById, fetchGardenFromApi, initialGarden, addGarden]);
 
 	const handleEdit = () => {
-		router.push(`/garden?id=${gardenId}`);
+		if (!garden || !garden.id) {
+			toast.error("Cannot edit garden", {
+				description: "This garden doesn't have a valid ID.",
+			});
+			return;
+		}
+
+		// Open the edit dialog to let user choose
+		setEditDialogOpen(true);
+	};
+
+	const handleEditOriginal = () => {
+		if (!garden || !garden.id) return;
+
+		// Close the dialog
+		setEditDialogOpen(false);
+
+		// Navigate to edit the original garden
+		router.push(`/garden?id=${garden.id}`);
+	};
+
+	const handleEditCopy = () => {
+		if (!garden || !garden.id) return;
+
+		// Close the dialog
+		setEditDialogOpen(false);
+
+		// Create a fork of the garden with a new ID
+		const forkedGarden = {
+			...garden,
+			id: generateGardenId(), // Generate a new ID for the fork
+			name: `${garden.name || "Garden"} (Copy)`,
+			lastModifiedAt: Date.now(),
+		};
+
+		// Add the forked garden to the store
+		addGarden(forkedGarden);
+
+		// Show a toast notification
+		toast.success("Garden copied", {
+			description: "You're now editing a copy of the shared garden.",
+		});
+
+		// Navigate to the garden editor with the new ID
+		router.push(`/garden?id=${forkedGarden.id}`);
 	};
 
 	return (
@@ -156,6 +213,36 @@ export function GardenViewer({ initialGarden, gardenId }: GardenViewerProps) {
 					<Canvas elements={garden.items} atmosphere={garden.atmosphere || defaultAtmosphere} readonly={true} />
 				)}
 			</div>
+
+			{/* Edit Garden Dialog */}
+			<Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+				<DialogContent className="sm:max-w-md">
+					<DialogHeader>
+						<DialogTitle>Edit Garden</DialogTitle>
+						<DialogDescription>How would you like to edit this garden?</DialogDescription>
+					</DialogHeader>
+
+					<div className="grid grid-cols-2 gap-4 py-4">
+						<Button onClick={handleEditCopy} className="flex flex-col items-center justify-center h-24 p-3" variant="outline">
+							<Copy className="h-8 w-8 mb-2" />
+							<span className="text-sm">Create a Copy</span>
+							<span className="text-xs text-muted-foreground mt-1">Safe option that preserves the original</span>
+						</Button>
+
+						<Button onClick={handleEditOriginal} className="flex flex-col items-center justify-center h-24 p-3" variant="outline">
+							<PenLine className="h-8 w-8 mb-2" />
+							<span className="text-sm">Edit Original</span>
+							<span className="text-xs text-muted-foreground mt-1">Changes will affect the shared garden</span>
+						</Button>
+					</div>
+
+					<DialogFooter className="sm:justify-start">
+						<Button variant="ghost" onClick={() => setEditDialogOpen(false)}>
+							Cancel
+						</Button>
+					</DialogFooter>
+				</DialogContent>
+			</Dialog>
 		</div>
 	);
 }

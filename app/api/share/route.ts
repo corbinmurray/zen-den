@@ -1,5 +1,6 @@
 import { storeGarden } from "@/lib/db";
 import { Garden } from "@/lib/types";
+import { generateGardenId } from "@/lib/utils";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(request: NextRequest) {
@@ -19,8 +20,14 @@ export async function POST(request: NextRequest) {
 			return NextResponse.json({ error: "Garden must include items array" }, { status: 400 });
 		}
 
-		// Store the garden and get a unique ID
-		const id = storeGarden(garden);
+		// Use the garden's existing ID or generate a new one
+		if (!garden.id) {
+			garden.id = generateGardenId();
+		}
+
+		// Store the garden with its ID
+		const id = garden.id;
+		storeGarden(garden);
 
 		// Construct the share URL
 		const shareUrl = `${request.nextUrl.origin}/view?id=${id}`;
