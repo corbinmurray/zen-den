@@ -67,8 +67,8 @@ export default function GalleryPage() {
 			<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
 				{gardens
 					.sort((a, b) => b.lastModifiedAt - a.lastModifiedAt)
-					.map((garden) => (
-						<div key={garden.lastModifiedAt} className="border border-border rounded-lg overflow-hidden bg-card shadow-sm hover:shadow-md transition-all">
+					.map((garden, index) => (
+						<div key={index} className="border border-border rounded-lg overflow-hidden bg-card shadow-sm hover:shadow-md transition-all">
 							<div className={`h-40 flex items-center justify-center p-4 border-b border-border relative ${getCardStyle(garden.atmosphere)}`}>
 								<ZenPattern />
 								<div className="flex items-center justify-center w-full h-full">
@@ -101,8 +101,7 @@ export default function GalleryPage() {
 									<Button
 										onClick={() => (garden.id ? removeGarden(garden.id) : null)}
 										size="sm"
-										variant="ghost"
-										className="text-destructive hover:bg-destructive/10 hover:text-destructive">
+										className="border border-destructive text-destructive bg-inherit hover:text-foreground hover:bg-destructive">
 										<Trash className="h-3.5 w-3.5 mr-2" />
 										Delete
 									</Button>

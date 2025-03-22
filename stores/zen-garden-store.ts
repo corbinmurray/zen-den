@@ -1,4 +1,4 @@
-import { ZenGardenState, ZenGardenStore } from "@/stores/types";
+import { Garden } from "@/lib/types";
 import { persist } from "zustand/middleware";
 import { createStore } from "zustand/vanilla";
 
@@ -7,6 +7,18 @@ export const defaultInitState: ZenGardenState = {
 };
 
 export type ZenGardenStoreApi = ReturnType<typeof createZenGardenStore>;
+export interface ZenGardenState {
+	gardens: Garden[];
+}
+
+export interface ZenGardenActions {
+	add: (garden: Garden) => void;
+	update: (garden: Garden) => void;
+	remove: (id: string) => void;
+	getGardenById: (id: string) => Garden | undefined;
+}
+
+export type ZenGardenStore = ZenGardenState & ZenGardenActions;
 
 export const createZenGardenStore = (initState: ZenGardenState = defaultInitState) => {
 	return createStore<ZenGardenStore>()(
