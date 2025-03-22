@@ -200,7 +200,18 @@ export function GardenCreator() {
 
 	// Add an element update handler
 	const handleElementUpdate = useCallback((updatedElement: GardenItem) => {
-		setGardenItems((prev) => prev.map((item) => (item.id === updatedElement.id ? updatedElement : item)));
+		setGardenItems((prev) => {
+			// Check if the element already exists in our array
+			const elementExists = prev.some((item) => item.id === updatedElement.id);
+
+			if (elementExists) {
+				// Update existing element
+				return prev.map((item) => (item.id === updatedElement.id ? updatedElement : item));
+			} else {
+				// Add as a new element (useful for paste operations)
+				return [...prev, updatedElement];
+			}
+		});
 	}, []);
 
 	return (
