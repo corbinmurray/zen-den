@@ -763,7 +763,7 @@ export const Canvas = forwardRef<HTMLDivElement, CanvasProps>(function Canvas(
 			case "cherry":
 				return (
 					<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
-						<rect x="45" y="60" width="10" height="25" fill="#8B4513" />
+						<rect x="45" y="50" width="10" height="35" fill="#8B4513" />
 						<path d="M50 20 C20 50, 40 20, 50 50" stroke="#8B4513" strokeWidth="4" fill="none" />
 						<path d="M50 20 C80 50, 60 20, 50 50" stroke="#8B4513" strokeWidth="4" fill="none" />
 						<circle cx="35" cy="25" r="12" fill="#FFB7C5" />
@@ -856,6 +856,110 @@ export const Canvas = forwardRef<HTMLDivElement, CanvasProps>(function Canvas(
 						<ellipse cx="35" cy="55" rx="7" ry="4" fill="#76BC7F" opacity="0.7" />
 						<ellipse cx="60" cy="65" rx="8" ry="5" fill="#76BC7F" opacity="0.5" />
 						<ellipse cx="50" cy="50" rx="5" ry="3" fill="#76BC7F" opacity="0.6" />
+					</svg>
+				);
+			case "lotus":
+				return (
+					<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
+						<ellipse cx="50" cy="70" rx="30" ry="10" fill="#A5C7D3" opacity="0.7" />
+						<path d="M50,70 C45,60 40,50 50,40 C60,50 55,60 50,70" fill="#E16A9D" />
+						<path d="M50,70 C40,60 35,50 50,40 C65,50 60,60 50,70" fill="#E16A9D" />
+						<path d="M50,70 C35,65 30,55 50,40 C70,55 65,65 50,70" fill="#E16A9D" />
+						<path d="M50,70 C65,65 70,55 50,40 C30,55 35,65 50,70" fill="#E16A9D" />
+						<circle cx="50" cy="50" r="8" fill="#FFEB3B" />
+					</svg>
+				);
+			case "koi":
+				return (
+					<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
+						<ellipse cx="50" cy="50" rx="25" ry="15" fill="#FF5252" />
+						<path d="M25,50 C35,40 45,40 50,50 C55,40 65,40 75,50 L70,60 C60,70 40,70 30,60 Z" fill="#FF8A80" />
+						<ellipse cx="40" cy="48" rx="2" ry="2" fill="#000000" />
+						<path d="M70,50 C80,45 85,50 82,53" stroke="#FF8A80" strokeWidth="2" fill="none" />
+					</svg>
+				);
+			case "buddha":
+				return (
+					<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
+						<ellipse cx="50" cy="85" rx="15" ry="5" fill="#8B4513" />
+						<rect x="45" y="75" width="10" height="10" fill="#D6B88B" />
+						<rect x="40" y="45" width="20" height="30" rx="10" fill="#D6B88B" />
+						<circle cx="50" cy="35" r="15" fill="#D6B88B" />
+						<path d="M40,38 C45,45 55,45 60,38" stroke="#000000" strokeWidth="1" fill="none" />
+						<ellipse cx="44" cy="32" rx="2" ry="1" fill="#000000" />
+						<ellipse cx="56" cy="32" rx="2" ry="1" fill="#000000" />
+						<path d="M46,50 L54,50" stroke="#000000" strokeWidth="1" fill="none" />
+						<path d="M35,40 C25,20 35,15 40,25" stroke="#D6B88B" strokeWidth="5" fill="none" />
+						<path d="M65,40 C75,20 65,15 60,25" stroke="#D6B88B" strokeWidth="5" fill="none" />
+					</svg>
+				);
+			case "rake":
+				return (
+					<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
+						<line x1="30" y1="30" x2="70" y2="70" stroke="#A0522D" strokeWidth="3" />
+						<line x1="30" y1="70" x2="40" y2="60" stroke="#A0522D" strokeWidth="3" />
+						<line x1="40" y1="60" x2="50" y2="50" stroke="#A0522D" strokeWidth="3" />
+						<line x1="50" y1="50" x2="60" y2="40" stroke="#A0522D" strokeWidth="3" />
+						<line x1="60" y1="40" x2="70" y2="30" stroke="#A0522D" strokeWidth="3" />
+					</svg>
+				);
+			case "incense":
+				return (
+					<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
+						<rect x="40" y="70" width="20" height="10" rx="2" fill="#7F7F7F" />
+						<line x1="50" y1="70" x2="50" y2="30" stroke="#7F3F00" strokeWidth="2" />
+						<ellipse cx="50" cy="30" rx="2" ry="2" fill="#FF6D00" />
+						<path d="M50,30 C47,25 48,20 50,15 C52,20 53,25 50,30" fill="none" stroke="#AAAAAA" strokeWidth="1" strokeDasharray="2,2" />
+					</svg>
+				);
+			case "meditation-stone":
+				return (
+					<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
+						<ellipse cx="50" cy="75" rx="40" ry="5" fill="#5D5D5D" opacity="0.3" />
+						<ellipse cx="50" cy="45" rx="25" ry="10" fill="#9E9E9E" />
+						<ellipse cx="50" cy="35" rx="15" ry="8" fill="#7D7D7D" />
+						<ellipse cx="50" cy="28" rx="10" ry="5" fill="#ABABAB" />
+					</svg>
+				);
+			case "maple-tree":
+				return (
+					<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
+						<rect x="45" y="60" width="10" height="25" fill="#8B4513" />
+						<path d="M50 20 C20 50, 40 20, 50 50" stroke="#8B4513" strokeWidth="4" fill="none" />
+						<path d="M50 20 C80 50, 60 20, 50 50" stroke="#8B4513" strokeWidth="4" fill="none" />
+						<path d="M30,30 L40,25 L50,30 L60,25 L70,30 L60,35 L70,40 L60,45 L50,40 L40,45 L30,40 L40,35 Z" fill="#E64C3C" />
+					</svg>
+				);
+			case "bell":
+				return (
+					<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
+						<path d="M45,30 C45,25 55,25 55,30 L55,35 L45,35 Z" fill="#CD9B1D" />
+						<path d="M40,35 L60,35 L58,60 C58,70 42,70 42,60 Z" fill="#F0C420" />
+						<circle cx="50" cy="65" r="3" fill="#CD9B1D" />
+						<rect x="48" y="65" width="4" height="15" fill="#CD9B1D" />
+						<ellipse cx="50" cy="80" rx="8" ry="3" fill="#CD9B1D" />
+					</svg>
+				);
+			case "tea-bowl":
+				return (
+					<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
+						<ellipse cx="50" cy="75" rx="25" ry="5" fill="#8D6E63" opacity="0.5" />
+						<path d="M30,60 C30,75 70,75 70,60 C70,50 65,45 50,45 C35,45 30,50 30,60" fill="#A1887F" />
+						<path d="M30,60 C30,67 70,67 70,60" fill="none" stroke="#8D6E63" strokeWidth="2" />
+						<ellipse cx="50" cy="51" rx="15" ry="7" fill="#D7CCC8" />
+					</svg>
+				);
+			case "bamboo-fountain":
+				return (
+					<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
+						<rect x="38" y="60" width="24" height="5" rx="2" fill="#8B4513" />
+						<rect x="45" y="40" width="10" height="20" fill="#4D7C0F" rx="5" />
+						<path d="M42,50 C35,45 35,40 45,40 C55,40 55,45 48,50" fill="none" stroke="#8B4513" strokeWidth="2" />
+						<path d="M45,40 L45,20 L55,20 L55,40" fill="#4D7C0F" />
+						<ellipse cx="50" cy="65" rx="20" ry="5" fill="#A5C7D3" opacity="0.8" />
+						<path d="M50,20 C48,10 52,10 50,20" stroke="#86BFDE" strokeWidth="1" strokeDasharray="1,1" />
+						<path d="M50,25 C48,15 52,15 50,25" stroke="#86BFDE" strokeWidth="1" strokeDasharray="1,1" />
+						<path d="M50,30 C48,20 52,20 50,30" stroke="#86BFDE" strokeWidth="1" strokeDasharray="1,1" />
 					</svg>
 				);
 			default:
