@@ -69,11 +69,7 @@ export function Navigation() {
 							<span className="sr-only">Toggle menu</span>
 						</Button>
 					</SheetTrigger>
-					<SheetContent side="right" className="w-[240px] sm:w-[300px]">
-						<div className="flex items-center justify-between pt-4">
-							<span className="text-lg font-semibold">Menu</span>
-							<ThemeToggle />
-						</div>
+					<SheetContent side="right" className="w-[240px] sm:w-[300px] p-4">
 						<nav className="flex flex-col gap-4 mt-8">
 							{routes.map((route) => (
 								<Link
@@ -84,7 +80,7 @@ export function Navigation() {
 									{route.label}
 								</Link>
 							))}
-							<Button asChild variant="default" size="sm" className="mt-4">
+							<Button asChild className="mt-4">
 								<Link href="/garden" onClick={() => setIsOpen(false)}>
 									Create Your Garden
 								</Link>
