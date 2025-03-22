@@ -23,7 +23,7 @@ export async function POST(request: NextRequest) {
 		const id = storeGarden(garden);
 
 		// Construct the share URL
-		const shareUrl = `${request.nextUrl.origin}/garden/${id}`;
+		const shareUrl = `${request.nextUrl.origin}/view?id=${id}`;
 
 		// Return the ID and share URL
 		return NextResponse.json({

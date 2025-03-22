@@ -26,6 +26,7 @@ export function GardenCreator() {
 	});
 	const [saveDialogOpen, setSaveDialogOpen] = useState<boolean>(false);
 	const [shareAfterSave, setShareAfterSave] = useState<boolean>(false);
+	const [isLoading, setIsLoading] = useState<boolean>(false);
 
 	const canvasRef = useRef<HTMLDivElement>(null);
 
@@ -48,6 +49,52 @@ export function GardenCreator() {
 			setAtmosphere(garden.atmosphere);
 		}
 	}, []);
+
+	// Fetch garden from API
+	const fetchGardenFromApi = useCallback(
+		async (gardenId: string) => {
+			setIsLoading(true);
+			try {
+				const response = await fetch(`/api/share/${gardenId}`);
+
+				if (!response.ok) {
+					throw new Error("Garden not found");
+				}
+
+				const data = await response.json();
+
+				if (!data.garden) {
+					throw new Error("Invalid garden data");
+				}
+
+				const garden = data.garden;
+
+				// Add the garden to the store
+				addGarden(garden);
+
+				// Load garden data into state
+				loadGarden({
+					id: gardenId,
+					name: garden.name || "My Zen Garden",
+					items: garden.items || [],
+					atmosphere: garden.atmosphere,
+					lastModifiedAt: garden.lastModifiedAt || Date.now(),
+				});
+
+				toast.success("Garden loaded", {
+					description: `"${garden.name || "Garden"}" has been loaded from shared link.`,
+				});
+			} catch (error) {
+				console.error("Error fetching garden from API:", error);
+				toast.error("Garden not found", {
+					description: "The garden you're trying to view could not be found.",
+				});
+			} finally {
+				setIsLoading(false);
+			}
+		},
+		[addGarden, loadGarden]
+	);
 
 	// Get canvas size when component mounts
 	useEffect(() => {
@@ -81,12 +128,13 @@ export function GardenCreator() {
 		const urlParams = new URLSearchParams(window.location.search);
 		const gardenId = urlParams.get("id");
 
-		if (gardenId && gardens) {
+		if (gardenId) {
 			try {
-				const garden = gardens.find((g: Garden) => g.id === gardenId);
+				// First check if garden exists in our store
+				const garden = gardens?.find((g: Garden) => g.id === gardenId);
 
 				if (garden) {
-					// Load garden data into state
+					// Load garden data from store
 					loadGarden({
 						id: gardenId,
 						name: garden.name || "My Zen Garden",
@@ -95,9 +143,8 @@ export function GardenCreator() {
 						lastModifiedAt: garden.lastModifiedAt || Date.now(),
 					});
 				} else {
-					toast.error("Garden not found", {
-						description: "The garden you're trying to edit could not be found.",
-					});
+					// If not in store, try to fetch from API
+					fetchGardenFromApi(gardenId);
 				}
 			} catch (error) {
 				console.error("Error loading garden from URL:", error);
@@ -106,36 +153,7 @@ export function GardenCreator() {
 				});
 			}
 		}
-	}, [gardens, loadGarden]);
-
-	// Handle sharing
-	const handleShare = useCallback(() => {
-		if (!selectedGardenId) {
-			setShareAfterSave(true);
-			setSaveDialogOpen(true);
-			toast.info("Name your garden", {
-				description: "Please name your garden before sharing it.",
-			});
-			return;
-		}
-
-		const shareableLink = `${window.location.origin}/view?id=${selectedGardenId}`;
-
-		// Copy to clipboard
-		navigator.clipboard
-			.writeText(shareableLink)
-			.then(() => {
-				toast.success("Link copied!", {
-					description: `Share this link with others to view "${gardenName}".`,
-				});
-			})
-			.catch((err) => {
-				console.error("Failed to copy link:", err);
-				toast.info("Share link", {
-					description: shareableLink,
-				});
-			});
-	}, [selectedGardenId, gardenName, setShareAfterSave]);
+	}, [gardens, loadGarden, fetchGardenFromApi]);
 
 	// Handle saving the garden
 	const handleSaveGarden = useCallback(
@@ -181,7 +199,6 @@ export function GardenCreator() {
 				// Handle share after save if needed
 				if (shareAfterSave) {
 					setShareAfterSave(false);
-					setTimeout(() => handleShare(), 500);
 				}
 			} catch (error) {
 				console.error("Error saving garden:", error);
@@ -190,7 +207,7 @@ export function GardenCreator() {
 				});
 			}
 		},
-		[selectedGardenId, gardenName, gardenItems, atmosphere, gardens, updateGarden, addGarden, shareAfterSave, handleShare]
+		[selectedGardenId, gardenName, gardenItems, atmosphere, gardens, updateGarden, addGarden, shareAfterSave]
 	);
 
 	// Add the onElementRemove function
@@ -216,28 +233,42 @@ export function GardenCreator() {
 
 	return (
 		<div className="flex flex-col space-y-4">
-			<div className="flex flex-col md:flex-row gap-4">
-				{/* Left panel with tabbed interface */}
-				<div className="w-full md:w-96 h-[60vh] md:h-[70vh]">
-					<TabbedPanel
-						atmosphere={atmosphere}
-						selectedGardenId={selectedGardenId}
-						gardenName={gardenName}
-						gardenItems={gardenItems}
-						setAtmosphere={setAtmosphere}
-						addGardenItem={addGardenItem}
-						clearGardenItems={clearGardenItems}
-						setSaveDialogOpen={setSaveDialogOpen}
-						setShareAfterSave={setShareAfterSave}
-						handleShare={handleShare}
-					/>
+			{isLoading ? (
+				<div className="flex items-center justify-center h-[70vh]">
+					<div className="text-center">
+						<div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full mx-auto mb-4"></div>
+						<p className="text-muted-foreground">Loading garden...</p>
+					</div>
 				</div>
+			) : (
+				<div className="flex flex-col md:flex-row gap-4">
+					{/* Left panel with tabbed interface */}
+					<div className="w-full md:w-96 h-[60vh] md:h-[70vh]">
+						<TabbedPanel
+							atmosphere={atmosphere}
+							selectedGardenId={selectedGardenId}
+							gardenName={gardenName}
+							gardenItems={gardenItems}
+							setAtmosphere={setAtmosphere}
+							addGardenItem={addGardenItem}
+							clearGardenItems={clearGardenItems}
+							setSaveDialogOpen={setSaveDialogOpen}
+							setShareAfterSave={setShareAfterSave}
+						/>
+					</div>
 
-				{/* Right side canvas */}
-				<div className="flex-1">
-					<Canvas ref={canvasRef} elements={gardenItems} atmosphere={atmosphere} onElementRemove={handleElementRemove} onElementUpdate={handleElementUpdate} />
+					{/* Right side canvas */}
+					<div className="flex-1">
+						<Canvas
+							ref={canvasRef}
+							elements={gardenItems}
+							atmosphere={atmosphere}
+							onElementRemove={handleElementRemove}
+							onElementUpdate={handleElementUpdate}
+						/>
+					</div>
 				</div>
-			</div>
+			)}
 
 			{/* Save Garden Dialog */}
 			<Dialog open={saveDialogOpen} onOpenChange={setSaveDialogOpen}>
