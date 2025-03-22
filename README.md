@@ -1,22 +1,31 @@
 # Zen Den
 
-A digital zen garden where users can design their own tranquil, personalized space.
+A digital zen garden where users can design their own tranquil, personalized space. Create, customize, and find peace in your own virtual sanctuary.
+
+![Zen Den Screenshot](https://placehold.co/600x400?text=Zen+Den)
 
 ## Features
 
-- **Drag-and-Drop Elements**: Place zen-inspired items like rocks, bamboo, bonsai trees, and more onto your garden canvas
-- **Multiple Backgrounds**: Choose from serene backgrounds to set the mood for your garden
-- **Ambient Sounds**: Optional soundscapes to enhance the zen experience
-- **Save & Share**: Save your creations locally or share them with others
+- **Intuitive Garden Creation**: Arrange elements like rocks, plants, and water features on your digital canvas
+- **Personalized Experience**: Customize atmospheric conditions including time of day and weather
+- **Beautiful UI**: Elegant, responsive design with dark mode support
+- **Save & Share**: Save your creations and share them with others
 
 ## Tech Stack
 
-- **Next.js 15**: App Router, Server Components, Optimized Performance
-- **Tailwind CSS v4**: Utility-first styling, Dark Mode support
-- **shadcn**: Elegant UI Components, Accessible Design
-- **Motion**: Smooth Animations and Interactive Effects
+- **Next.js 15**: Utilizing App Router, Server Components, and optimized performance
+- **Tailwind CSS v4**: Utility-first styling with responsive design and dark mode
+- **shadcn**: Accessible, customizable UI components
+- **Motion**: Smooth animations and interactive effects for a polished user experience
 
 ## Getting Started
+
+### Prerequisites
+
+- Node.js 18.0.0 or higher
+- npm or yarn
+
+### Installation
 
 ```bash
 # Clone the repository
@@ -26,53 +35,55 @@ cd zen-den
 # Install dependencies
 npm install
 
-# Start the development server
+# Run the development server
 npm run dev
 ```
 
-## Required Assets
+The application will be available at `http://localhost:3000`.
 
-Before running the application, you'll need to add the following assets:
+## Deployment
 
-### Garden Elements
+Zen Den is designed to be deployed with [Coolify](https://coolify.io/) from a public GitHub repository.
 
-Create a folder `/public/garden-elements/` and add the following images:
+### Build for Production
 
-- rock.png
-- rock-preview.png
-- bamboo.png
-- bamboo-preview.png
-- bonsai.png
-- bonsai-preview.png
-- lantern.png
-- lantern-preview.png
-- sand.png
-- sand-preview.png
-- water.png
-- water-preview.png
+```bash
+# Create a production build
+npm run build
 
-### Backgrounds
+# Start the production server
+npm start
+```
 
-Create a folder `/public/backgrounds/` and add the following images:
+### Environment Variables
 
-- zen-default.jpg
-- zen-default-thumb.jpg
-- mountain.jpg
-- mountain-thumb.jpg
-- wood.jpg
-- wood-thumb.jpg
-- gradient.jpg
-- gradient-thumb.jpg
+No environment variables are currently required for basic functionality.
 
-### Sounds
+## Browser Support
 
-Create a folder `/public/sounds/` and add the following audio files:
+Zen Den supports all modern browsers:
 
-- water-trickling.mp3
-- wind-chimes.mp3
-- ambient-zen.mp3
-- birds.mp3
+- Chrome/Edge (latest 2 versions)
+- Firefox (latest 2 versions)
+- Safari (latest 2 versions)
+
+## Performance Optimizations
+
+- Server components for reduced client-side JavaScript
+- Optimized images and animations
+- Careful management of re-renders and state updates
+- Responsive design for all device sizes
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
 
 ## License
 
-MIT
+This project is licensed under the MIT License - see the LICENSE file for details.

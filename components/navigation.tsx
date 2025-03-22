@@ -4,6 +4,7 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Menu } from "lucide-react";
+import { motion } from "motion/react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import * as React from "react";
@@ -13,10 +14,7 @@ export function Navigation() {
 	const pathname = usePathname();
 
 	const routes = [
-		{ href: "/", label: "Home" },
 		{ href: "/gallery", label: "Gallery" },
-		{ href: "/garden", label: "Create Your Garden" },
-		{ href: "/about", label: "About" },
 	];
 
 	return (
@@ -24,7 +22,9 @@ export function Navigation() {
 			<div className="container mx-auto flex h-16 items-center justify-between px-4">
 				<div className="flex items-center gap-2">
 					<Link href="/" className="flex items-center gap-2">
-						<span className="text-2xl font-semibold text-primary">Zen Den</span>
+						<motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-2xl font-semibold">
+							Zen<span className="text-primary">Den</span>
+						</motion.span>
 					</Link>
 				</div>
 
@@ -34,10 +34,15 @@ export function Navigation() {
 						<Link
 							key={route.href}
 							href={route.href}
-							className={`transition-colors hover:text-primary ${pathname === route.href ? "text-foreground font-medium" : "text-muted"}`}>
+							className={`transition-colors hover:text-primary ${
+								pathname === route.href ? "text-foreground font-medium after:block after:w-full after:h-0.5 after:bg-primary after:mt-0.5" : "text-muted"
+							}`}>
 							{route.label}
 						</Link>
 					))}
+					<Button asChild variant="default" size="sm" className="ml-2">
+						<Link href="/garden">Create Your Garden</Link>
+					</Button>
 					<ThemeToggle />
 				</nav>
 
@@ -64,6 +69,11 @@ export function Navigation() {
 									{route.label}
 								</Link>
 							))}
+							<Button asChild variant="default" size="sm" className="mt-4">
+								<Link href="/garden" onClick={() => setIsOpen(false)}>
+									Create Your Garden
+								</Link>
+							</Button>
 						</nav>
 					</SheetContent>
 				</Sheet>

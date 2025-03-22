@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import * as motion from "motion/react-client";
+import Link from "next/link";
 
 export function Hero() {
 	return (
@@ -31,12 +32,16 @@ export function Hero() {
 								viewport={{ once: true }}
 								transition={{ duration: 0.8, delay: 0.4, easing: [0.22, 0.03, 0.26, 1] }}
 								className="mt-10 flex items-center gap-x-6">
-								<Button size="lg" className="rounded-md">
-									Create Your Garden
-								</Button>
-								<Button variant="outline" size="lg" className="rounded-md">
-									Explore Gallery
-								</Button>
+								<Link href="/garden">
+									<Button size="lg" className="rounded-md">
+										Create Your Garden
+									</Button>
+								</Link>
+								<Link href="/gallery">
+									<Button variant="outline" size="lg" className="rounded-md">
+										Explore Gallery
+									</Button>
+								</Link>
 							</motion.div>
 						</div>
 					</div>
@@ -47,23 +52,38 @@ export function Hero() {
 				whileInView={{ opacity: 1, scale: 1 }}
 				viewport={{ once: true }}
 				transition={{ duration: 1.2, delay: 0.4, easing: [0.22, 0.03, 0.26, 1] }}
-				className="absolute inset-y-0 right-0 -z-10 w-full overflow-hidden bg-secondary/5 lg:w-1/2"
+				className="absolute inset-y-0 right-0 -z-10 w-full overflow-hidden lg:w-1/2"
 				aria-hidden="true">
-				{/* We'll replace this with an actual zen garden image in the future */}
-				<div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-background to-accent/20 opacity-80" />
-				<div className="absolute inset-x-0 bottom-0 h-px bg-primary/10" />
-				<div className="absolute inset-y-0 right-0 w-px bg-primary/10" />
+				<div className="relative h-full w-full">
+					{/* Beautiful gradient background with zen-like patterns */}
+					<div className="absolute inset-0 bg-gradient-to-b from-primary/5 via-accent/10 to-secondary/5" />
 
-				{/* Decorative zen elements using CSS */}
-				<div className="absolute top-1/3 left-1/4 h-16 w-16 rounded-full bg-primary/10" />
-				<div className="absolute top-2/3 left-1/2 h-24 w-24 rounded-full bg-accent/10" />
-				<div className="absolute top-1/2 left-1/3 h-32 w-32 rounded-full bg-secondary/10" />
+					{/* Circular patterns mimicking zen garden sand patterns */}
+					<div className="absolute inset-0">
+						<svg className="h-full w-full" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800" preserveAspectRatio="none">
+							<defs>
+								<pattern id="dotPattern" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
+									<circle cx="2" cy="2" r="1" fill="currentColor" className="text-primary/10" />
+								</pattern>
+								<mask id="circleMask">
+									<rect width="100%" height="100%" fill="white" />
+									<circle cx="400" cy="400" r="320" fill="black" />
+									<circle cx="400" cy="400" r="240" fill="white" />
+									<circle cx="400" cy="400" r="160" fill="black" />
+									<circle cx="400" cy="400" r="80" fill="white" />
+								</mask>
+							</defs>
+							<rect width="100%" height="100%" fill="url(#dotPattern)" mask="url(#circleMask)" className="opacity-30" />
+							<path d="M0,700 C200,650 250,750 400,700 C550,650 600,750 800,700 L800,800 L0,800 Z" fill="currentColor" className="text-secondary/10" />
+							<path d="M0,750 C200,700 250,800 400,750 C550,700 600,800 800,750 L800,800 L0,800 Z" fill="currentColor" className="text-primary/10" />
+						</svg>
+					</div>
+				</div>
 
-				{/* Wavy pattern for water-like effect */}
-				<svg className="absolute inset-0 h-full w-full" viewBox="0 0 1000 1000" preserveAspectRatio="none" fill="none" xmlns="http://www.w3.org/2000/svg">
-					<path d="M0,800 C150,700 350,900 500,800 C650,700 850,900 1000,800 L1000,1000 L0,1000 Z" className="fill-accent/5" />
-					<path d="M0,900 C150,800 350,1000 500,900 C650,800 850,1000 1000,900 L1000,1000 L0,1000 Z" className="fill-primary/5" />
-				</svg>
+				{/* Subtle decorative elements */}
+				<div className="absolute bottom-1/4 right-1/4 h-24 w-24 rounded-full bg-primary/10 blur-xl z-0" />
+				<div className="absolute top-1/3 right-1/3 h-32 w-32 rounded-full bg-accent/10 blur-xl z-0" />
+				<div className="absolute top-2/3 right-1/2 h-20 w-20 rounded-full bg-secondary/10 blur-xl z-0" />
 			</motion.div>
 		</div>
 	);
