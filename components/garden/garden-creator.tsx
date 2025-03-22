@@ -4,9 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Garden } from "@/lib/types";
+import { Atmosphere, Garden, GardenItem } from "@/lib/types";
 import { useZenGardenStore } from "@/providers/zen-garden-store-provider";
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { v4 as uuidv4 } from "uuid";
 import { Canvas } from "./canvas";
@@ -16,14 +16,46 @@ export function GardenCreator() {
 	// Get zen garden store for saving/loading gardens
 	const { gardens, add: addGarden, update: updateGarden } = useZenGardenStore((state) => state);
 
+	// State that was previously in the store
+	const [gardenItems, setGardenItems] = useState<GardenItem[]>([]);
+	const [gardenName, setGardenName] = useState<string>("My Zen Garden");
+	const [selectedGardenId, setSelectedGardenId] = useState<string | null>(null);
+	const [atmosphere, setAtmosphere] = useState<Atmosphere>({
+		timeOfDay: "day",
+		weather: "clear",
+	});
+	const [saveDialogOpen, setSaveDialogOpen] = useState<boolean>(false);
+	const [shareAfterSave, setShareAfterSave] = useState<boolean>(false);
+
 	const canvasRef = useRef<HTMLDivElement>(null);
+
+	// Add garden item handler
+	const addGardenItem = useCallback((item: GardenItem) => {
+		setGardenItems((prev) => [...prev, item]);
+	}, []);
+
+	// Clear garden items handler
+	const clearGardenItems = useCallback(() => {
+		setGardenItems([]);
+	}, []);
+
+	// Load garden handler
+	const loadGarden = useCallback((garden: Garden) => {
+		setSelectedGardenId(garden.id || null);
+		setGardenName(garden.name || "My Zen Garden");
+		setGardenItems(garden.items || []);
+		if (garden.atmosphere) {
+			setAtmosphere(garden.atmosphere);
+		}
+	}, []);
 
 	// Get canvas size when component mounts
 	useEffect(() => {
 		const updateCanvasSize = () => {
+			// We're not using the canvas size anymore, but keeping the resize observation
+			// for potential future use
 			if (canvasRef.current) {
-				const { width, height } = canvasRef.current.getBoundingClientRect();
-				setCanvasSize({ width, height });
+				canvasRef.current.getBoundingClientRect();
 			}
 		};
 
@@ -42,7 +74,7 @@ export function GardenCreator() {
 			window.removeEventListener("resize", throttledResize);
 			clearTimeout(resizeTimer);
 		};
-	}, [setCanvasSize]);
+	}, []);
 
 	// Load garden from URL parameters
 	useEffect(() => {
@@ -54,12 +86,13 @@ export function GardenCreator() {
 				const garden = gardens.find((g: Garden) => g.id === gardenId);
 
 				if (garden) {
-					// Load garden data into store
+					// Load garden data into state
 					loadGarden({
 						id: gardenId,
 						name: garden.name || "My Zen Garden",
 						items: garden.items || [],
 						atmosphere: garden.atmosphere,
+						lastModifiedAt: garden.lastModifiedAt || Date.now(),
 					});
 				} else {
 					toast.error("Garden not found", {
@@ -74,6 +107,35 @@ export function GardenCreator() {
 			}
 		}
 	}, [gardens, loadGarden]);
+
+	// Handle sharing
+	const handleShare = useCallback(() => {
+		if (!selectedGardenId) {
+			setShareAfterSave(true);
+			setSaveDialogOpen(true);
+			toast.info("Name your garden", {
+				description: "Please name your garden before sharing it.",
+			});
+			return;
+		}
+
+		const shareableLink = `${window.location.origin}/view?id=${selectedGardenId}`;
+
+		// Copy to clipboard
+		navigator.clipboard
+			.writeText(shareableLink)
+			.then(() => {
+				toast.success("Link copied!", {
+					description: `Share this link with others to view "${gardenName}".`,
+				});
+			})
+			.catch((err) => {
+				console.error("Failed to copy link:", err);
+				toast.info("Share link", {
+					description: shareableLink,
+				});
+			});
+	}, [selectedGardenId, gardenName, setShareAfterSave]);
 
 	// Handle saving the garden
 	const handleSaveGarden = useCallback(
@@ -115,6 +177,12 @@ export function GardenCreator() {
 
 				// Close the dialog
 				setSaveDialogOpen(false);
+
+				// Handle share after save if needed
+				if (shareAfterSave) {
+					setShareAfterSave(false);
+					setTimeout(() => handleShare(), 500);
+				}
 			} catch (error) {
 				console.error("Error saving garden:", error);
 				toast.error("Save failed", {
@@ -122,20 +190,41 @@ export function GardenCreator() {
 				});
 			}
 		},
-		[selectedGardenId, gardenName, gardenItems, atmosphere, gardens, updateGarden, addGarden, setSelectedGardenId, setSaveDialogOpen]
+		[selectedGardenId, gardenName, gardenItems, atmosphere, gardens, updateGarden, addGarden, shareAfterSave, handleShare]
 	);
+
+	// Add the onElementRemove function
+	const handleElementRemove = useCallback((id: string) => {
+		setGardenItems((prev) => prev.filter((item) => item.id !== id));
+	}, []);
+
+	// Add an element update handler
+	const handleElementUpdate = useCallback((updatedElement: GardenItem) => {
+		setGardenItems((prev) => prev.map((item) => (item.id === updatedElement.id ? updatedElement : item)));
+	}, []);
 
 	return (
 		<div className="flex flex-col space-y-4">
 			<div className="flex flex-col md:flex-row gap-4">
 				{/* Left panel with tabbed interface */}
 				<div className="w-full md:w-96 h-[60vh] md:h-[70vh]">
-					<TabbedPanel />
+					<TabbedPanel
+						atmosphere={atmosphere}
+						selectedGardenId={selectedGardenId}
+						gardenName={gardenName}
+						gardenItems={gardenItems}
+						setAtmosphere={setAtmosphere}
+						addGardenItem={addGardenItem}
+						clearGardenItems={clearGardenItems}
+						setSaveDialogOpen={setSaveDialogOpen}
+						setShareAfterSave={setShareAfterSave}
+						handleShare={handleShare}
+					/>
 				</div>
 
 				{/* Right side canvas */}
 				<div className="flex-1">
-					<Canvas ref={canvasRef} elements={gardenItems} atmosphere={atmosphere} />
+					<Canvas ref={canvasRef} elements={gardenItems} atmosphere={atmosphere} onElementRemove={handleElementRemove} onElementUpdate={handleElementUpdate} />
 				</div>
 			</div>
 
