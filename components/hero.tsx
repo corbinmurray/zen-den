@@ -4,8 +4,8 @@ import Link from "next/link";
 
 export function Hero() {
 	return (
-		<div className="relative overflow-hidden">
-			{/* Background animations container - now spans full width */}
+		<div className="relative overflow-hidden pb-12">
+			{/* Background animations container - contained within the hero with explicit bottom padding */}
 			<motion.div
 				initial={{ opacity: 0, scale: 0.95 }}
 				whileInView={{ opacity: 1, scale: 1 }}
@@ -18,11 +18,11 @@ export function Hero() {
 					<div className="absolute inset-0 bg-transparent" />
 
 					{/* Circular patterns mimicking zen garden sand patterns - with reduced opacity */}
-					<div className="absolute inset-0 opacity-50">
+					<div className="absolute inset-0 opacity-40">
 						<svg className="h-full w-full" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 800" preserveAspectRatio="none">
 							<defs>
 								<pattern id="dotPattern" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
-									<circle cx="2" cy="2" r="1" fill="currentColor" className="text-primary/5" />
+									<circle cx="2" cy="2" r="1" fill="currentColor" className="text-primary/20" />
 								</pattern>
 								<mask id="circleMask1">
 									<rect width="100%" height="100%" fill="white" />
@@ -39,12 +39,12 @@ export function Hero() {
 									<circle cx="1200" cy="400" r="80" fill="white" />
 								</mask>
 								<linearGradient id="zenGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-									<stop offset="0%" stopColor="currentColor" stopOpacity="0.03" className="text-primary" />
-									<stop offset="50%" stopColor="currentColor" stopOpacity="0.05" className="text-accent" />
-									<stop offset="100%" stopColor="currentColor" stopOpacity="0.03" className="text-secondary" />
+									<stop offset="0%" stopColor="currentColor" stopOpacity="0.08" className="text-primary" />
+									<stop offset="50%" stopColor="currentColor" stopOpacity="0.12" className="text-accent" />
+									<stop offset="100%" stopColor="currentColor" stopOpacity="0.08" className="text-secondary" />
 								</linearGradient>
 							</defs>
-							<rect width="100%" height="100%" fill="url(#dotPattern)" className="opacity-20" />
+							<rect width="100%" height="100%" fill="url(#dotPattern)" className="opacity-30" />
 
 							{/* Animated ripple effects with reduced opacity */}
 							<motion.circle
@@ -55,10 +55,10 @@ export function Hero() {
 								strokeWidth="1"
 								strokeDasharray="5,5"
 								fill="none"
-								className="text-primary/10"
-								initial={{ opacity: 0.1, scale: 0.8 }}
+								className="text-primary/25"
+								initial={{ opacity: 0.2, scale: 0.8 }}
 								animate={{
-									opacity: [0.1, 0.4, 0.1],
+									opacity: [0.2, 0.5, 0.2],
 									scale: [0.8, 1.1, 0.8],
 								}}
 								transition={{
@@ -76,10 +76,10 @@ export function Hero() {
 								strokeWidth="1"
 								strokeDasharray="5,5"
 								fill="none"
-								className="text-primary/10"
-								initial={{ opacity: 0.1, scale: 0.8 }}
+								className="text-primary/25"
+								initial={{ opacity: 0.2, scale: 0.8 }}
 								animate={{
-									opacity: [0.1, 0.3, 0.1],
+									opacity: [0.2, 0.4, 0.2],
 									scale: [0.8, 1.1, 0.8],
 								}}
 								transition={{
@@ -96,10 +96,10 @@ export function Hero() {
 								stroke="currentColor"
 								strokeWidth="1"
 								fill="none"
-								className="text-accent/10"
-								initial={{ opacity: 0.15, scale: 0.7 }}
+								className="text-accent/25"
+								initial={{ opacity: 0.25, scale: 0.7 }}
 								animate={{
-									opacity: [0.15, 0.35, 0.15],
+									opacity: [0.25, 0.45, 0.25],
 									scale: [0.7, 1.2, 0.7],
 								}}
 								transition={{
@@ -117,10 +117,10 @@ export function Hero() {
 								stroke="currentColor"
 								strokeWidth="1"
 								fill="none"
-								className="text-accent/10"
-								initial={{ opacity: 0.15, scale: 0.7 }}
+								className="text-accent/25"
+								initial={{ opacity: 0.25, scale: 0.7 }}
 								animate={{
-									opacity: [0.15, 0.35, 0.15],
+									opacity: [0.25, 0.45, 0.25],
 									scale: [0.7, 1.2, 0.7],
 								}}
 								transition={{
@@ -130,14 +130,12 @@ export function Hero() {
 									ease: "easeInOut",
 								}}
 							/>
-
-
 						</svg>
 					</div>
 
-					{/* Floating elements with reduced opacity - now distributed across whole hero */}
+					{/* Floating elements with reduced opacity - now distributed only in the upper portion */}
 					<motion.div
-						className="absolute top-1/4 left-1/4 h-12 w-12 rounded-full bg-primary/15"
+						className="absolute top-1/4 left-1/4 h-12 w-12 rounded-full bg-primary/20"
 						animate={{
 							y: [0, -20, 0],
 							x: [0, 10, 0],
@@ -151,7 +149,7 @@ export function Hero() {
 					/>
 
 					<motion.div
-						className="absolute bottom-1/3 right-1/3 h-8 w-8 rounded-full bg-accent/10"
+						className="absolute top-1/3 right-1/3 h-8 w-8 rounded-full bg-accent/15"
 						animate={{
 							y: [0, 15, 0],
 							x: [0, -10, 0],
@@ -166,7 +164,7 @@ export function Hero() {
 					/>
 
 					<motion.div
-						className="absolute top-1/3 left-1/2 h-10 w-10 rounded-full bg-secondary/10"
+						className="absolute top-1/3 left-1/3 h-10 w-10 rounded-full bg-secondary/15"
 						animate={{
 							y: [0, 12, 0],
 							x: [0, 8, 0],
@@ -181,7 +179,7 @@ export function Hero() {
 					/>
 
 					<motion.div
-						className="absolute bottom-1/4 left-1/6 h-6 w-6 rounded-full bg-primary/10"
+						className="absolute top-1/4 left-1/6 h-6 w-6 rounded-full bg-primary/15"
 						animate={{
 							y: [0, -10, 0],
 							x: [0, -5, 0],
@@ -196,12 +194,12 @@ export function Hero() {
 					/>
 				</div>
 
-				{/* Subtle decorative elements with reduced opacity - distributed across the whole hero */}
-				<div className="absolute bottom-1/4 right-1/4 h-24 w-24 rounded-full bg-primary/5 blur-xl z-0" />
-				<div className="absolute top-1/3 right-1/3 h-32 w-32 rounded-full bg-accent/5 blur-xl z-0" />
-				<div className="absolute top-2/3 right-1/2 h-20 w-20 rounded-full bg-secondary/5 blur-xl z-0" />
-				<div className="absolute bottom-1/3 left-1/4 h-28 w-28 rounded-full bg-primary/5 blur-xl z-0" />
-				<div className="absolute top-1/4 left-1/3 h-36 w-36 rounded-full bg-secondary/5 blur-xl z-0" />
+				{/* Subtle decorative elements with reduced opacity - positioned only in the top portion of the hero */}
+				<div className="absolute top-1/4 right-1/4 h-24 w-24 rounded-full bg-primary/10 blur-xl z-0" />
+				<div className="absolute top-1/3 right-1/3 h-32 w-32 rounded-full bg-accent/10 blur-xl z-0" />
+				<div className="absolute top-1/3 left-1/3 h-20 w-20 rounded-full bg-secondary/10 blur-xl z-0" />
+				<div className="absolute top-1/3 left-1/4 h-28 w-28 rounded-full bg-primary/10 blur-xl z-0" />
+				<div className="absolute top-1/4 left-1/3 h-36 w-36 rounded-full bg-secondary/10 blur-xl z-0" />
 			</motion.div>
 
 			<div className="mx-auto max-w-7xl">
