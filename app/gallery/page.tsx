@@ -46,11 +46,38 @@ export default function GalleryPage() {
 			setSharingGardenIds((prev) => ({ ...prev, [garden.id as string]: true }));
 
 			const shareUrl = await getGardenShareUrl(garden);
-			await copyToClipboard(shareUrl);
 
-			toast.success("Share link created!", {
-				description: "Share link has been copied to your clipboard.",
-			});
+			try {
+				await copyToClipboard(shareUrl);
+				toast.success("Share link created!", {
+					description: "Share link has been copied to your clipboard.",
+				});
+			} catch {
+				toast.info("Share link created!", {
+					description: (
+						<div className="space-y-2">
+							<div>Unable to copy automatically to clipboard. You can:</div>
+							<div className="overflow-x-auto rounded bg-background/80 p-2 text-xs font-mono">{shareUrl}</div>
+						</div>
+					),
+					action: {
+						label: "Try Copy",
+						onClick: () => {
+							navigator.clipboard
+								.writeText(shareUrl)
+								.then(() => {
+									toast.success("URL copied to clipboard");
+								})
+								.catch(() => {
+									toast.info("Please select and copy the URL manually", {
+										duration: 5000,
+									});
+								});
+						},
+					},
+					duration: 15000,
+				});
+			}
 		} catch (error) {
 			console.error("Error sharing garden:", error);
 			toast.error("Failed to create share link", {
