@@ -26,7 +26,11 @@ export async function POST(request: NextRequest) {
 		const id = garden.id;
 		await storeGarden(garden);
 
-		const shareUrl = `${request.nextUrl.origin}/view?id=${id}`;
+		const host = request.headers.get("host") || request.headers.get("x-forwarded-host");
+		const protocol = request.headers.get("x-forwarded-proto") || (host?.includes("localhost") ? "http" : "https");
+
+		const origin = host ? `${protocol}://${host}` : request.nextUrl.origin;
+		const shareUrl = `${origin}/view?id=${id}`;
 
 		console.log("Created share URL", shareUrl);
 

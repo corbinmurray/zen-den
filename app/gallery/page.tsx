@@ -181,8 +181,14 @@ function GardenCard({ garden, index, isSharing, onShare, onRemove }: GardenCardP
 						<defs>
 							<pattern id={`paper-texture-${garden.id || index}`} patternUnits="userSpaceOnUse" width="200" height="200">
 								<filter id={`paper-grain-${garden.id || index}`}>
-									<feTurbulence type="fractalNoise" baseFrequency="0.04" numOctaves="5" seed={garden.id ? parseInt(garden.id.charAt(0), 36) : index} />
-									<feDisplacementMap in="SourceGraphic" scale="5" />
+									<feTurbulence
+										type="fractalNoise"
+										baseFrequency="0.04"
+										numOctaves="5"
+										result="turbulence"
+										seed={garden.id ? parseInt(garden.id.charAt(0), 36) || 1 : index + 1}
+									/>
+									<feDisplacementMap in="SourceGraphic" in2="turbulence" scale="5" />
 								</filter>
 								<rect width="100%" height="100%" fill="currentColor" filter={`url(#paper-grain-${garden.id || index})`} opacity="0.35" />
 							</pattern>
