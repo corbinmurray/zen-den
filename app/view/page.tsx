@@ -1,9 +1,16 @@
 import { GardenViewer } from "@/components/garden/garden-viewer";
+import { getGarden } from "@/lib/db";
 import { Suspense } from "react";
 
-// Type issue with searchParams in Next.js 15, use a different pattern
-export default async function ViewPage() {
-	// Access searchParams through props in client component instead
+export default async function ViewPage({ searchParams }: { searchParams: Promise<{ id?: string }> }) {
+	const params = await searchParams;
+	const gardenId = params.id;
+	let garden = null;
+
+	if (gardenId) {
+		garden = await getGarden(gardenId);
+	}
+
 	return (
 		<Suspense
 			fallback={
@@ -14,7 +21,7 @@ export default async function ViewPage() {
 					</div>
 				</div>
 			}>
-			<GardenViewer />
+			<GardenViewer initialGarden={garden} />
 		</Suspense>
 	);
 }

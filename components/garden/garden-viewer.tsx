@@ -32,14 +32,12 @@ export function GardenViewer({ initialGarden }: GardenViewerProps) {
 	// Fetch garden from API
 	const fetchGardenFromApi = useCallback(
 		async (id: string) => {
+			if (!id) {
+				console.error("Attempting to fetch garden with no ID");
+				return false;
+			}
+
 			try {
-
-				const existingGarden = getGardenById(id);
-				if (existingGarden) {
-					setGarden(existingGarden);
-					return true;
-				}
-
 				const response = await fetch(`/api/share/${id}`);
 
 				if (!response.ok) {
@@ -63,7 +61,7 @@ export function GardenViewer({ initialGarden }: GardenViewerProps) {
 				return false;
 			}
 		},
-		[addGarden, getGardenById]
+		[addGarden]
 	);
 
 	useEffect(() => {
@@ -88,6 +86,7 @@ export function GardenViewer({ initialGarden }: GardenViewerProps) {
 			const storeGarden = getGardenById(gardenId);
 
 			if (storeGarden) {
+				console.log("Getting garden from store", gardenId);
 				setGarden(storeGarden);
 				setIsLoading(false);
 				return;
