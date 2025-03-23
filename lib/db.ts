@@ -39,6 +39,8 @@ export async function storeGarden(garden: Garden): Promise<string> {
 
 	stmt.run(id, JSON.stringify(garden), Date.now());
 
+	console.log("Stored garden", id);
+
 	return id;
 }
 

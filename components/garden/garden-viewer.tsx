@@ -33,10 +33,9 @@ export function GardenViewer({ initialGarden }: GardenViewerProps) {
 	const fetchGardenFromApi = useCallback(
 		async (id: string) => {
 			try {
-				// First check if a garden with this ID already exists in the store
+
 				const existingGarden = getGardenById(id);
 				if (existingGarden) {
-					// We already have this garden, just set it
 					setGarden(existingGarden);
 					return true;
 				}
@@ -55,10 +54,7 @@ export function GardenViewer({ initialGarden }: GardenViewerProps) {
 
 				const fetchedGarden = data.garden;
 
-				// Add the garden to the store only if it doesn't already exist
 				addGarden(fetchedGarden);
-
-				// Set the garden in component state
 				setGarden(fetchedGarden);
 
 				return true;
@@ -72,9 +68,7 @@ export function GardenViewer({ initialGarden }: GardenViewerProps) {
 
 	useEffect(() => {
 		async function loadGarden() {
-			// If initialGarden was provided, we don't need to load
 			if (initialGarden) {
-				// Make sure to add it to the store if it's not already there
 				if (initialGarden.id && !getGardenById(initialGarden.id)) {
 					addGarden(initialGarden);
 				}
@@ -91,17 +85,14 @@ export function GardenViewer({ initialGarden }: GardenViewerProps) {
 				return;
 			}
 
-			// First check if the garden exists in the store
 			const storeGarden = getGardenById(gardenId);
 
 			if (storeGarden) {
-				// Garden found in store, set it directly
 				setGarden(storeGarden);
 				setIsLoading(false);
 				return;
 			}
 
-			// If not in store, try to fetch from API
 			const success = await fetchGardenFromApi(gardenId);
 
 			if (!success) {
