@@ -1165,7 +1165,7 @@ export const Canvas = forwardRef<HTMLDivElement, CanvasProps>(function Canvas(
 	};
 
 	// Control buttons that were accidentally removed
-	const renderControlButtons = (elementId: string, scale: number) => {
+	const renderControlButtons = (elementId: string) => {
 		return (
 			<>
 				<button
@@ -1362,7 +1362,7 @@ export const Canvas = forwardRef<HTMLDivElement, CanvasProps>(function Canvas(
 										}}
 										onClick={(e) => e.stopPropagation()}
 										onMouseDown={(e) => e.stopPropagation()}>
-										{renderControlButtons(element.id, scale)}
+										{renderControlButtons(element.id)}
 									</div>
 								)}
 							</div>
