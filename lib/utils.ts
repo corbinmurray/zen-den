@@ -66,3 +66,33 @@ export async function copyToClipboard(text: string): Promise<void> {
 		}
 	}
 }
+
+/**
+ * Formats a timestamp as a more elegant date stamp. Example 'Today, 5:40pm'
+ * @param timestamp The timestamp to format
+ * @returns The formatted date string
+ */
+export function formatDate(timestamp: number): string {
+	const date = new Date(timestamp);
+	const now = new Date();
+	const isToday = date.toDateString() === now.toDateString();
+
+	if (isToday) {
+		return `Today, ${date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`;
+	}
+
+	const yesterday = new Date(now);
+	yesterday.setDate(now.getDate() - 1);
+	const isYesterday = date.toDateString() === yesterday.toDateString();
+
+	if (isYesterday) {
+		return "Yesterday";
+	}
+
+	const options: Intl.DateTimeFormatOptions = { month: "short", day: "numeric" };
+	if (date.getFullYear() !== now.getFullYear()) {
+		options.year = "numeric";
+	}
+
+	return date.toLocaleDateString(undefined, options);
+}

@@ -3,7 +3,7 @@
 import { Canvas } from "@/components/garden/canvas";
 import { Button } from "@/components/ui/button";
 import { Atmosphere, Garden } from "@/lib/types";
-import { generateGardenId } from "@/lib/utils";
+import { formatDate, generateGardenId } from "@/lib/utils";
 import { useZenGardenStore } from "@/providers/zen-garden-store-provider";
 import { ArrowLeft, Edit } from "lucide-react";
 import Link from "next/link";
@@ -145,7 +145,8 @@ export function GardenViewer({ initialGarden }: GardenViewerProps) {
 					</Link>
 					{!isLoading && garden && (
 						<div className="hidden sm:block border-l border-border pl-4">
-							<h1 className="text-lg font-semibold">{garden.name || "Untitled Garden"}</h1>
+							<h1 className="text-lg font-semibold inline me-2">{garden.name || "Untitled Garden"}</h1>
+							<small className="inline text-muted text-xs">{formatDate(garden.lastModifiedAt)}</small>
 						</div>
 					)}
 				</div>
