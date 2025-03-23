@@ -414,6 +414,9 @@ export const Canvas = forwardRef<HTMLDivElement, CanvasProps>(function Canvas(
 	// Touch events for mobile
 	const handleTouchStart = useCallback(
 		(e: TouchEvent) => {
+			// Allow default touch behavior for scrolling in readonly mode
+			if (readonly) return;
+
 			if (e.touches.length === 1) {
 				if (!canvasContainerRef.current) return;
 				const container = canvasContainerRef.current;
@@ -422,6 +425,11 @@ export const Canvas = forwardRef<HTMLDivElement, CanvasProps>(function Canvas(
 				const touch = e.touches[0];
 				const element = document.elementFromPoint(touch.clientX, touch.clientY);
 				const resizeHandle = element?.closest(".resize-handle");
+
+				// If we touched a control element, let the event bubble
+				if (element?.closest(".controls") || element?.closest("button")) {
+					return;
+				}
 
 				if (resizeHandle) {
 					e.preventDefault();
@@ -465,14 +473,18 @@ export const Canvas = forwardRef<HTMLDivElement, CanvasProps>(function Canvas(
 					e.preventDefault(); // Prevent scrolling when dragging
 				} else {
 					setSelectedElementId(null);
+					// Don't prevent default here to allow scrolling when not on an element
 				}
 			}
 		},
-		[elements, elementPositions, elementScales, isPointInShape]
+		[elements, elementPositions, elementScales, isPointInShape, readonly]
 	);
 
 	const handleTouchMove = useCallback(
 		(e: TouchEvent) => {
+			// Skip touch handling in readonly mode to allow normal scrolling
+			if (readonly) return;
+
 			if (e.touches.length === 1) {
 				if (!canvasContainerRef.current) return;
 				const container = canvasContainerRef.current;
@@ -489,6 +501,7 @@ export const Canvas = forwardRef<HTMLDivElement, CanvasProps>(function Canvas(
 
 				// Handle resizing with touch
 				if (isResizing && draggedElement && resizeDirection) {
+					e.preventDefault(); // Prevent scrolling during resize
 					const element = elements.find((el) => el.id === draggedElement);
 					if (element) {
 						let scaleChange = 0;
@@ -542,12 +555,11 @@ export const Canvas = forwardRef<HTMLDivElement, CanvasProps>(function Canvas(
 								elementNode as HTMLElement
 							).style.transform = `translate(${newPosition.x}px, ${newPosition.y}px) scale(${newScale}) rotate(${element.rotation}deg)`;
 						}
-
-						e.preventDefault();
 					}
 				}
 				// Handle dragging with touch
 				else if (isDragging && draggedElement) {
+					e.preventDefault(); // Prevent scrolling when dragging elements
 					const element = elements.find((el) => el.id === draggedElement);
 					if (element) {
 						const currentPos = positionsRef.current.get(element.id) || element.position;
@@ -567,12 +579,11 @@ export const Canvas = forwardRef<HTMLDivElement, CanvasProps>(function Canvas(
 							(elementNode as HTMLElement).style.transform = `translate(${newX}px, ${newY}px) scale(${currentScale}) rotate(${element.rotation}deg)`;
 						}
 					}
-
-					e.preventDefault(); // Prevent scrolling when dragging
 				}
+				// If not dragging or resizing, allow default behavior (scrolling)
 			}
 		},
-		[canvasBounds.height, canvasBounds.width, draggedElement, elements, isDragging, isResizing, resizeDirection]
+		[canvasBounds.height, canvasBounds.width, draggedElement, elements, isDragging, isResizing, resizeDirection, readonly]
 	);
 
 	const handleTouchEnd = useCallback(() => {
@@ -617,26 +628,20 @@ export const Canvas = forwardRef<HTMLDivElement, CanvasProps>(function Canvas(
 
 	// Set up event listeners
 	useEffect(() => {
-		// Set canvas container ref if not already set
-		if (!canvasContainerRef.current) {
-			if (ref && typeof ref === "object" && ref.current) {
-				canvasContainerRef.current = ref.current;
-			} else if (canvasRef.current) {
-				canvasContainerRef.current = canvasRef.current;
-			}
-		}
+		// Canvas container ref is now defined directly in JSX, no need to set it here
+		const canvasContainer = canvasContainerRef.current;
 
 		// Add event listeners if not in readonly mode and container exists
-		if (canvasContainerRef.current && !readonly) {
+		if (canvasContainer && !readonly) {
 			// Mouse events
-			canvasContainerRef.current.addEventListener("mousedown", handleMouseDown);
-			canvasContainerRef.current.addEventListener("click", handleControlsClick);
+			canvasContainer.addEventListener("mousedown", handleMouseDown);
+			canvasContainer.addEventListener("click", handleControlsClick);
 			window.addEventListener("mousemove", handleMouseMove);
 			window.addEventListener("mouseup", handleMouseUp);
 
 			// Touch events for mobile
-			canvasContainerRef.current.addEventListener("touchstart", handleTouchStart as EventListener, { passive: false });
-			canvasContainerRef.current.addEventListener("touchmove", handleTouchMove as EventListener, { passive: false });
+			canvasContainer.addEventListener("touchstart", handleTouchStart as EventListener, { passive: false });
+			canvasContainer.addEventListener("touchmove", handleTouchMove as EventListener, { passive: false });
 			document.addEventListener("touchend", handleTouchEnd as EventListener);
 		}
 
@@ -645,18 +650,18 @@ export const Canvas = forwardRef<HTMLDivElement, CanvasProps>(function Canvas(
 
 		return () => {
 			// Clean up event listeners
-			if (canvasContainerRef.current && !readonly) {
-				canvasContainerRef.current.removeEventListener("mousedown", handleMouseDown);
-				canvasContainerRef.current.removeEventListener("click", handleControlsClick);
-				canvasContainerRef.current.removeEventListener("touchstart", handleTouchStart as EventListener);
-				canvasContainerRef.current.removeEventListener("touchmove", handleTouchMove as EventListener);
+			if (canvasContainer && !readonly) {
+				canvasContainer.removeEventListener("mousedown", handleMouseDown);
+				canvasContainer.removeEventListener("click", handleControlsClick);
+				canvasContainer.removeEventListener("touchstart", handleTouchStart as EventListener);
+				canvasContainer.removeEventListener("touchmove", handleTouchMove as EventListener);
 			}
 			window.removeEventListener("mousemove", handleMouseMove);
 			window.removeEventListener("mouseup", handleMouseUp);
 			document.removeEventListener("touchend", handleTouchEnd as EventListener);
 			window.removeEventListener("resize", updateBounds);
 		};
-	}, [handleMouseDown, handleMouseMove, handleMouseUp, handleTouchStart, handleTouchMove, handleTouchEnd, handleControlsClick, updateBounds, readonly, ref]);
+	}, [handleMouseDown, handleMouseMove, handleMouseUp, handleTouchStart, handleTouchMove, handleTouchEnd, handleControlsClick, updateBounds, readonly]);
 
 	// Handle rotate and scale functions
 	const handleRotate = (id: string, change: number, e?: React.MouseEvent) => {
@@ -1073,228 +1078,311 @@ export const Canvas = forwardRef<HTMLDivElement, CanvasProps>(function Canvas(
 		return () => document.removeEventListener("keydown", handleKeyDown);
 	}, [elements, selectedElementId, copiedElement, handlePasteElement, readonly]);
 
+	// Calculate minimum canvas dimensions to fit all elements
+	const calculateMinimumCanvasDimensions = useCallback(() => {
+		if (elements.length === 0) {
+			return { width: "100%", height: "100%" };
+		}
+
+		// Track the extremes of element positions
+		let minX = Infinity;
+		let minY = Infinity;
+		let maxX = -Infinity;
+		let maxY = -Infinity;
+
+		// Find the bounding box containing all elements
+		elements.forEach((element) => {
+			const position = positionsRef.current.get(element.id) || element.position;
+			const scale = scalesRef.current.get(element.id) || element.scale;
+			const size = 100 * scale;
+
+			minX = Math.min(minX, position.x);
+			minY = Math.min(minY, position.y);
+			maxX = Math.max(maxX, position.x + size);
+			maxY = Math.max(maxY, position.y + size);
+		});
+
+		// Add padding
+		const padding = 100;
+		minX = Math.max(0, minX - padding);
+		minY = Math.max(0, minY - padding);
+		maxX = maxX + padding;
+		maxY = maxY + padding;
+
+		// Ensure minimum dimensions
+		const minWidth = Math.max(canvasBounds.width, maxX);
+		const minHeight = Math.max(canvasBounds.height, maxY);
+
+		return {
+			width: minWidth + "px",
+			height: minHeight + "px",
+		};
+	}, [elements, canvasBounds.width, canvasBounds.height]);
+
+	// Get dimensions for the canvas inner content
+	const canvasDimensions = calculateMinimumCanvasDimensions();
+
+	// Resize handles that were accidentally removed
+	const renderResizeHandles = (elementId: string) => {
+		return (
+			<>
+				{/* Corner resize region */}
+				<div
+					className="resize-handle absolute bottom-0 right-0 w-8 h-8 bg-transparent hover:bg-primary/25 transition-colors duration-150 z-10 cursor-nwse-resize rounded-br-sm"
+					data-element-id={elementId}
+					data-direction="corner"
+				/>
+
+				{/* Right edge resize region */}
+				<div
+					className="resize-handle absolute top-0 right-0 w-5 h-full bg-transparent hover:bg-primary/25 transition-colors duration-150 z-10 cursor-ew-resize"
+					data-element-id={elementId}
+					data-direction="right"
+				/>
+
+				{/* Bottom edge resize region */}
+				<div
+					className="resize-handle absolute bottom-0 left-0 h-5 w-full bg-transparent hover:bg-primary/25 transition-colors duration-150 z-10 cursor-ns-resize"
+					data-element-id={elementId}
+					data-direction="bottom"
+				/>
+
+				{/* Left edge resize region */}
+				<div
+					className="resize-handle absolute top-0 left-0 w-5 h-full bg-transparent hover:bg-primary/25 transition-colors duration-150 z-10 cursor-ew-resize"
+					data-element-id={elementId}
+					data-direction="left"
+				/>
+
+				{/* Top edge resize region */}
+				<div
+					className="resize-handle absolute top-0 left-0 h-5 w-full bg-transparent hover:bg-primary/25 transition-colors duration-150 z-10 cursor-ns-resize"
+					data-element-id={elementId}
+					data-direction="top"
+				/>
+			</>
+		);
+	};
+
+	// Control buttons that were accidentally removed
+	const renderControlButtons = (elementId: string, scale: number) => {
+		return (
+			<>
+				<button
+					type="button"
+					className="p-1 hover:bg-muted"
+					onMouseDown={(e) => {
+						e.stopPropagation();
+						e.preventDefault();
+						handleRotate(elementId, -45);
+					}}
+					aria-label="Rotate left">
+					<RotateLeftIcon className="h-4 w-4" />
+				</button>
+
+				<button
+					type="button"
+					className="p-1 hover:bg-muted"
+					onMouseDown={(e) => {
+						e.stopPropagation();
+						e.preventDefault();
+						handleRotate(elementId, 45);
+					}}
+					aria-label="Rotate right">
+					<RotateRightIcon className="h-4 w-4" />
+				</button>
+
+				<button
+					type="button"
+					className="p-1 hover:bg-muted relative"
+					onMouseDown={(e) => {
+						e.stopPropagation();
+						e.preventDefault();
+						handleCopyElement(elementId, e);
+					}}
+					aria-label="Copy">
+					<CopyIcon className="h-4 w-4" />
+				</button>
+
+				<button
+					type="button"
+					className="p-1 hover:bg-muted text-destructive"
+					onMouseDown={(e) => {
+						e.stopPropagation();
+						e.preventDefault();
+						if (onElementRemove) {
+							onElementRemove(elementId);
+						}
+					}}
+					aria-label="Remove">
+					<XIcon className="h-4 w-4" />
+				</button>
+			</>
+		);
+	};
+
+	// Empty state content that was accidentally removed
+	const renderEmptyStateContent = () => {
+		return (
+			<>
+				<div className="bg-primary/10 p-3 rounded-full mb-4">
+					<Home className="size-8 text-primary" />
+				</div>
+				<h3 className="text-xl font-medium mb-3">Your Zen Garden Awaits</h3>
+				<p className="text-muted-foreground mb-6 max-w-sm">Create your peaceful space by following these simple steps:</p>
+
+				<div className="flex flex-col gap-4 w-full">
+					<div className="flex items-center gap-4 p-4 bg-background rounded-lg border border-border/50 hover:border-primary/30 transition-colors">
+						<div className="flex-shrink-0 bg-primary/10 h-10 w-10 rounded-full flex items-center justify-center">
+							<span className="font-semibold text-primary">1</span>
+						</div>
+						<div className="text-left">
+							<div className="font-medium mb-1 flex items-center gap-2">
+								<Pointer className="size-4" />
+								Select Elements
+							</div>
+							<p className="text-xs text-muted-foreground">Choose items from the left panel to add to your garden</p>
+						</div>
+					</div>
+
+					<div className="flex items-center gap-4 p-4 bg-background rounded-lg border border-border/50 hover:border-primary/30 transition-colors">
+						<div className="flex-shrink-0 bg-primary/10 h-10 w-10 rounded-full flex items-center justify-center">
+							<span className="font-semibold text-primary">2</span>
+						</div>
+						<div className="text-left">
+							<div className="font-medium mb-1 flex items-center gap-2">
+								<Grab className="size-4" />
+								Arrange & Position
+							</div>
+							<p className="text-xs text-muted-foreground">Drag elements to position them in your garden</p>
+						</div>
+					</div>
+
+					<div className="flex items-center gap-4 p-4 bg-background rounded-lg border border-border/50 hover:border-primary/30 transition-colors">
+						<div className="flex-shrink-0 bg-primary/10 h-10 w-10 rounded-full flex items-center justify-center">
+							<span className="font-semibold text-primary">3</span>
+						</div>
+						<div className="text-left">
+							<div className="font-medium mb-1 flex items-center gap-2">
+								<Save className="size-4" />
+								Customize & Save
+							</div>
+							<p className="text-xs text-muted-foreground">Adjust the atmosphere and save your creation</p>
+						</div>
+					</div>
+				</div>
+			</>
+		);
+	};
+
 	return (
-		<div>
+		<div className="relative w-full overflow-hidden">
+			{/* Mobile helper indicators */}
+			{!readonly && (
+				<div className="md:hidden flex items-center justify-center py-2 text-xs text-muted-foreground">
+					<span>Scroll to view entire garden • Tap elements to edit</span>
+				</div>
+			)}
+
 			<div
 				ref={canvasRef}
-				className="relative w-full h-[60vh] md:h-[70vh] overflow-hidden rounded-lg border border-border touch-none"
+				className="relative w-full h-[60vh] md:h-[70vh] overflow-auto rounded-lg border border-border"
 				style={{
 					cursor: isDragging ? "grabbing" : isResizing ? "nwse-resize" : "default",
 					filter: getTimeOfDayOverlay(),
-					position: "relative" /* Ensure stacking context is established */,
-					isolation: "isolate" /* Create stacking context */,
-					transformStyle: "preserve-3d" /* Support proper 3D stacking */,
-					contain: "paint" /* Optimize rendering of stacked elements */,
+					position: "relative",
+					isolation: "isolate",
+					transformStyle: "preserve-3d",
+					contain: "paint",
+					WebkitOverflowScrolling: "touch",
 				}}>
-				{/* Weather effects */}
-				<div className="absolute inset-0 z-10 pointer-events-none">{weatherEffectComponent}</div>
+				{/* Inner content container with minimum dimensions to ensure scrollability */}
+				<div
+					ref={canvasContainerRef}
+					className="relative"
+					style={{
+						...canvasDimensions,
+					}}>
+					{/* Weather effects */}
+					<div className="absolute inset-0 z-10 pointer-events-none">{weatherEffectComponent}</div>
 
-				{/* Render all garden elements */}
-				{elements.map((element) => {
-					// Get position from our position and scale refs for consistency
-					const position = positionsRef.current.get(element.id) || element.position;
-					const scale = scalesRef.current.get(element.id) || element.scale;
-					const baseSize = 100;
-					const size = baseSize * scale;
+					{/* Render all garden elements */}
+					{elements.map((element) => {
+						// Get position from our position and scale refs for consistency
+						const position = positionsRef.current.get(element.id) || element.position;
+						const scale = scalesRef.current.get(element.id) || element.scale;
+						const baseSize = 100;
+						const size = baseSize * scale;
 
-					// Determine the z-index for this element
-					const elementZIndex = element.id === selectedElementId ? Math.max(element.zIndex ?? 0, 99999) : element.zIndex || 1;
+						// Determine the z-index for this element
+						const elementZIndex = element.id === selectedElementId ? Math.max(element.zIndex ?? 0, 99999) : element.zIndex || 1;
 
-					return (
-						<div
-							key={element.id}
-							data-element-id={element.id}
-							className="absolute"
-							style={{
-								transform: `translate(${position.x}px, ${position.y}px) scale(${scale}) rotate(${element.rotation}deg)`,
-								transformOrigin: "top left",
-								zIndex: elementZIndex,
-								cursor: isDragging && draggedElement === element.id ? "grabbing" : "grab",
-								transition: (isDragging && draggedElement === element.id) || (isResizing && draggedElement === element.id) ? "none" : "transform 0.1s ease-out",
-								touchAction: "none", // Disable browser touch actions for better touch support
-								width: baseSize,
-								height: baseSize,
-							}}>
-							{/* Element Image with outline */}
+						return (
 							<div
+								key={element.id}
+								data-element-id={element.id}
+								className="absolute"
 								style={{
-									width: "100%",
-									height: "100%",
-									position: "relative",
-									boxSizing: "border-box",
-									border: element.id === selectedElementId ? "2px dashed var(--primary)" : "none",
-									borderRadius: "4px",
-									boxShadow: element.id === selectedElementId ? "0 0 0 1px rgba(0,0,0,0.05), 0 0 0 4px rgba(var(--primary), 0.15)" : "none",
-									transformStyle: "preserve-3d", // Propagate the stacking context
+									transform: `translate(${position.x}px, ${position.y}px) scale(${scale}) rotate(${element.rotation}deg)`,
+									transformOrigin: "top left",
+									zIndex: elementZIndex,
+									cursor: isDragging && draggedElement === element.id ? "grabbing" : "grab",
+									transition:
+										(isDragging && draggedElement === element.id) || (isResizing && draggedElement === element.id) ? "none" : "transform 0.1s ease-out",
+									touchAction: readonly ? "auto" : "none",
+									width: baseSize,
+									height: baseSize,
 								}}>
-								<div className="relative w-full h-full">{renderElementSVG(element.type)}</div>
+								{/* Element Image with outline */}
+								<div
+									style={{
+										width: "100%",
+										height: "100%",
+										position: "relative",
+										boxSizing: "border-box",
+										border: element.id === selectedElementId ? "2px dashed var(--primary)" : "none",
+										borderRadius: "4px",
+										boxShadow: element.id === selectedElementId ? "0 0 0 1px rgba(0,0,0,0.05), 0 0 0 4px rgba(var(--primary), 0.15)" : "none",
+										transformStyle: "preserve-3d",
+									}}>
+									<div className="relative w-full h-full">{renderElementSVG(element.type)}</div>
 
-								{/* Resize regions - only show for selected element when not readonly */}
+									{/* Resize regions - only show for selected element when not readonly */}
+									{element.id === selectedElementId && !readonly && renderResizeHandles(element.id)}
+								</div>
+
+								{/* Controls toolbar - show below element on mobile for better accessibility */}
 								{element.id === selectedElementId && !readonly && (
-									<>
-										{/* Corner resize region */}
-										<div
-											className="resize-handle absolute bottom-0 right-0 w-8 h-8 bg-transparent hover:bg-primary/25 transition-colors duration-150 z-10 cursor-nwse-resize rounded-br-sm"
-											data-element-id={element.id}
-											data-direction="corner"
-										/>
-
-										{/* Right edge resize region */}
-										<div
-											className="resize-handle absolute top-0 right-0 w-5 h-full bg-transparent hover:bg-primary/25 transition-colors duration-150 z-10 cursor-ew-resize"
-											data-element-id={element.id}
-											data-direction="right"
-										/>
-
-										{/* Bottom edge resize region */}
-										<div
-											className="resize-handle absolute bottom-0 left-0 h-5 w-full bg-transparent hover:bg-primary/25 transition-colors duration-150 z-10 cursor-ns-resize"
-											data-element-id={element.id}
-											data-direction="bottom"
-										/>
-
-										{/* Left edge resize region */}
-										<div
-											className="resize-handle absolute top-0 left-0 w-5 h-full bg-transparent hover:bg-primary/25 transition-colors duration-150 z-10 cursor-ew-resize"
-											data-element-id={element.id}
-											data-direction="left"
-										/>
-
-										{/* Top edge resize region */}
-										<div
-											className="resize-handle absolute top-0 left-0 h-5 w-full bg-transparent hover:bg-primary/25 transition-colors duration-150 z-10 cursor-ns-resize"
-											data-element-id={element.id}
-											data-direction="top"
-										/>
-									</>
+									<div
+										className="absolute md:-top-12 -bottom-12 md:bottom-auto left-1/2 transform -translate-x-1/2 flex items-center gap-1 bg-background border border-border rounded-md shadow-md isolation-auto z-[100000]"
+										style={{
+											pointerEvents: "auto",
+											width: "fit-content",
+											minWidth: size < 100 ? 120 : "auto",
+										}}
+										onClick={(e) => e.stopPropagation()}
+										onMouseDown={(e) => e.stopPropagation()}>
+										{renderControlButtons(element.id, scale)}
+									</div>
 								)}
 							</div>
+						);
+					})}
 
-							{/* Controls toolbar - with fixed z-index to always appear on top */}
-							{element.id === selectedElementId && !readonly && (
-								<div
-									className="absolute -top-12 left-1/2 transform -translate-x-1/2 flex items-center gap-1 bg-background border border-border rounded-md shadow-md isolation-auto"
-									style={{
-										pointerEvents: "auto",
-										zIndex: 100000,
-										width: "fit-content",
-										minWidth: size < 100 ? 120 : "auto",
-									}}
-									onClick={(e) => e.stopPropagation()}
-									onMouseDown={(e) => e.stopPropagation()}>
-									<button
-										type="button"
-										className="p-1 hover:bg-muted"
-										onMouseDown={(e) => {
-											e.stopPropagation();
-											e.preventDefault();
-											handleRotate(element.id, -45);
-										}}
-										aria-label="Rotate left">
-										<RotateLeftIcon className="h-4 w-4" />
-									</button>
-
-									<button
-										type="button"
-										className="p-1 hover:bg-muted"
-										onMouseDown={(e) => {
-											e.stopPropagation();
-											e.preventDefault();
-											handleRotate(element.id, 45);
-										}}
-										aria-label="Rotate right">
-										<RotateRightIcon className="h-4 w-4" />
-									</button>
-
-									<button
-										type="button"
-										className="p-1 hover:bg-muted relative"
-										onMouseDown={(e) => {
-											e.stopPropagation();
-											e.preventDefault();
-											handleCopyElement(element.id, e);
-										}}
-										aria-label="Copy">
-										<CopyIcon className="h-4 w-4" />
-									</button>
-
-									<button
-										type="button"
-										className="p-1 hover:bg-muted text-destructive"
-										onMouseDown={(e) => {
-											e.stopPropagation();
-											e.preventDefault();
-											if (onElementRemove) {
-												onElementRemove(element.id);
-											}
-										}}
-										aria-label="Remove">
-										<XIcon className="h-4 w-4" />
-									</button>
-								</div>
-							)}
-						</div>
-					);
-				})}
-
-				{/* Empty state */}
-				{elements.length === 0 && (
-					<div className="absolute inset-0 flex items-center justify-center">
-						<div className="bg-card/90 backdrop-blur-md shadow-lg p-8 rounded-xl text-center max-w-md flex flex-col items-center border border-border/30">
-							<div className="bg-primary/10 p-3 rounded-full mb-4">
-								<Home className="size-8 text-primary" />
-							</div>
-							<h3 className="text-xl font-medium mb-3">Your Zen Garden Awaits</h3>
-							<p className="text-muted-foreground mb-6 max-w-sm">Create your peaceful space by following these simple steps:</p>
-
-							<div className="flex flex-col gap-4 w-full">
-								<div className="flex items-center gap-4 p-4 bg-background rounded-lg border border-border/50 hover:border-primary/30 transition-colors">
-									<div className="flex-shrink-0 bg-primary/10 h-10 w-10 rounded-full flex items-center justify-center">
-										<span className="font-semibold text-primary">1</span>
-									</div>
-									<div className="text-left">
-										<div className="font-medium mb-1 flex items-center gap-2">
-											<Pointer className="size-4" />
-											Select Elements
-										</div>
-										<p className="text-xs text-muted-foreground">Choose items from the left panel to add to your garden</p>
-									</div>
-								</div>
-
-								<div className="flex items-center gap-4 p-4 bg-background rounded-lg border border-border/50 hover:border-primary/30 transition-colors">
-									<div className="flex-shrink-0 bg-primary/10 h-10 w-10 rounded-full flex items-center justify-center">
-										<span className="font-semibold text-primary">2</span>
-									</div>
-									<div className="text-left">
-										<div className="font-medium mb-1 flex items-center gap-2">
-											<Grab className="size-4" />
-											Arrange & Position
-										</div>
-										<p className="text-xs text-muted-foreground">Drag elements to position them in your garden</p>
-									</div>
-								</div>
-
-								<div className="flex items-center gap-4 p-4 bg-background rounded-lg border border-border/50 hover:border-primary/30 transition-colors">
-									<div className="flex-shrink-0 bg-primary/10 h-10 w-10 rounded-full flex items-center justify-center">
-										<span className="font-semibold text-primary">3</span>
-									</div>
-									<div className="text-left">
-										<div className="font-medium mb-1 flex items-center gap-2">
-											<Save className="size-4" />
-											Customize & Save
-										</div>
-										<p className="text-xs text-muted-foreground">Adjust the atmosphere and save your creation</p>
-									</div>
-								</div>
+					{/* Empty state */}
+					{elements.length === 0 && (
+						<div className="absolute inset-0 flex items-center justify-center">
+							<div className="bg-card/90 backdrop-blur-md shadow-lg p-8 rounded-xl text-center max-w-md flex flex-col items-center border border-border/30">
+								{renderEmptyStateContent()}
 							</div>
 						</div>
-					</div>
-				)}
+					)}
+				</div>
 			</div>
 
-			{/* Copy feedback toast notification */}
+			{/* Copy feedback toast notification - positioned relative to the viewport */}
 			{showCopyFeedback && (
-				<div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-card border border-border px-4 py-2 rounded-md shadow-md z-50 flex items-center gap-2 animate-in fade-in slide-in-from-bottom-4 duration-300">
+				<div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 bg-card border border-border px-4 py-2 rounded-md shadow-md z-50 flex items-center gap-2 animate-in fade-in slide-in-from-bottom-4 duration-300">
 					<CopyIcon className="h-4 w-4 text-primary" />
 					<span className="text-sm font-medium">Element copied! Press Ctrl+V to paste</span>
 				</div>
