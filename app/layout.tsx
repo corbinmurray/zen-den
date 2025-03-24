@@ -23,6 +23,8 @@ export const metadata: Metadata = {
 	description: "Design your own tranquil digital space where you can arrange elements like stones, plants, and water features for mindfulness and relaxation.",
 	keywords: ["zen garden", "digital garden", "mindfulness", "relaxation", "meditation", "zen den", "corbin murray", "software engineer", "zen", "den"],
 	authors: [{ name: "Corbin Murray" }],
+	creator: "Corbin Murray",
+	publisher: "Corbin Murray",
 	openGraph: {
 		type: "website",
 		locale: "en_US",
