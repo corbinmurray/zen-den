@@ -1,13 +1,8 @@
-"use client";
-
 import { Copyright, Github, Heart } from "lucide-react";
 import { motion } from "motion/react";
 import Link from "next/link";
 
-export function Footer() {
-	const currentYear = new Date().getFullYear();
-
-	// Keep only essential links
+export async function Footer() {
 	const footerLinks = [
 		{ name: "Garden", href: "/garden" },
 		{ name: "Gallery", href: "/gallery" },
