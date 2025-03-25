@@ -19,14 +19,14 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-	title: "Zen Den - Create Your Digital Zen Garden",
+	title: "Zen Den | Create Your Digital Zen Garden",
 	description: "Design your own tranquil digital space where you can arrange elements like stones, plants, and water features for mindfulness and relaxation.",
-	keywords: ["zen garden", "digital garden", "mindfulness", "relaxation", "meditation", "zen den"],
-	authors: [{ name: "Zen Den Team" }],
+	keywords: ["zen garden", "digital garden", "mindfulness", "relaxation", "meditation", "zen den", "corbin murray", "software engineer", "zen", "den"],
+	authors: [{ name: "Corbin Murray" }],
 	openGraph: {
 		type: "website",
 		locale: "en_US",
-		url: "https://zenden.app",
+		url: "https://zen-den.corbinmurray.dev/",
 		title: "Zen Den - Create Your Digital Zen Garden",
 		description: "Design your own tranquil digital space where you can arrange elements like stones, plants, and water features.",
 		siteName: "Zen Den",
@@ -39,10 +39,6 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-	themeColor: [
-		{ media: "(prefers-color-scheme: light)", color: "#ffffff" },
-		{ media: "(prefers-color-scheme: dark)", color: "#09090b" },
-	],
 	width: "device-width",
 	initialScale: 1,
 };
