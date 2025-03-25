@@ -205,8 +205,8 @@ export function Hero() {
 
 			<div className="mx-auto max-w-7xl">
 				<div className="relative z-10 lg:w-full lg:max-w-2xl">
-					<div className="relative px-6 py-32 sm:py-40 lg:px-8 lg:py-56 lg:pr-0">
-						<div className="mx-auto max-w-2xl lg:mx-0 lg:max-w-xl">
+					<div className="relative py-32 sm:py-40 lg:px-8 lg:py-56 lg:pr-0">
+						<div className="max-w-2xl lg:mx-0 lg:max-w-xl">
 							{/* Badge */}
 							<motion.div
 								initial={{ opacity: 0, y: -20 }}
@@ -249,7 +249,7 @@ export function Hero() {
 								whileInView={{ opacity: 1, y: 0 }}
 								viewport={{ once: true }}
 								transition={{ duration: 0.8, delay: 0.4, easing: [0.22, 0.03, 0.26, 1] }}
-								className="flex justify-between items-center md:justify-start md:gap-6 mt-10">
+								className="flex items-center justify-start gap-6 mt-10">
 								<Link href="/garden">
 									<Button className="rounded-md group relative overflow-hidden">
 										<span className="relative z-10">Create Your Garden</span>
