@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button";
+import { ArrowRight } from "lucide-react";
 import * as motion from "motion/react-client";
 import Link from "next/link";
 
@@ -248,31 +249,18 @@ export function Hero() {
 								whileInView={{ opacity: 1, y: 0 }}
 								viewport={{ once: true }}
 								transition={{ duration: 0.8, delay: 0.4, easing: [0.22, 0.03, 0.26, 1] }}
-								className="mt-10 flex items-center gap-x-6">
+								className="flex justify-between items-center md:justify-start md:gap-6 mt-10">
 								<Link href="/garden">
-									<Button size="lg" className="rounded-md group relative overflow-hidden">
+									<Button className="rounded-md group relative overflow-hidden">
 										<span className="relative z-10">Create Your Garden</span>
 										<span className="absolute inset-0 bg-primary/10 group-hover:bg-transparent transition-colors duration-300" />
 										<span className="absolute -inset-x-1 bottom-0 h-px bg-primary/20 group-hover:scale-x-100" />
 									</Button>
 								</Link>
 								<Link href="/gallery">
-									<Button variant="outline" size="lg" className="rounded-md group">
+									<Button variant="outline" className="rounded-md group">
 										<span>Explore Gallery</span>
-										<svg
-											xmlns="http://www.w3.org/2000/svg"
-											width="16"
-											height="16"
-											viewBox="0 0 24 24"
-											fill="none"
-											stroke="currentColor"
-											strokeWidth="2"
-											strokeLinecap="round"
-											strokeLinejoin="round"
-											className="ml-2 h-4 w-4 transition-transform duration-300 group-hover:translate-x-1">
-											<path d="M5 12h14"></path>
-											<path d="m12 5 7 7-7 7"></path>
-										</svg>
+										<ArrowRight />
 									</Button>
 								</Link>
 							</motion.div>
