@@ -1,6 +1,6 @@
 "use client";
 
-import { Github } from "lucide-react";
+import { Copyright, Github, Heart } from "lucide-react";
 import { motion } from "motion/react";
 import Link from "next/link";
 
@@ -22,11 +22,15 @@ export function Footer() {
 				<div className="grid grid-cols-1 md:grid-cols-3 gap-12 items-center">
 					{/* Logo area */}
 					<div className="flex flex-col items-center md:items-start">
-						<motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex items-center gap-2">
-							<span className="text-2xl font-semibold text-foreground">
-								Zen<span className="text-primary">Den</span>
-							</span>
-						</motion.div>
+						<Link href="/" className="flex items-center gap-2 group">
+							<motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-2xl font-semibold relative">
+								<span className="group-hover:text-foreground transition-colors duration-300">Zen</span>
+								<span className="text-primary">Den</span>
+
+								{/* Underline animation on hover */}
+								<span className="absolute -bottom-1 left-0 w-0 h-px bg-primary group-hover:w-full transition-all duration-300 ease-out"></span>
+							</motion.span>
+						</Link>
 						<p className="mt-3 text-sm text-muted max-w-xs text-center md:text-left">A tranquil digital space for mindfulness and creative expression</p>
 					</div>
 
@@ -43,18 +47,22 @@ export function Footer() {
 					</div>
 
 					{/* Social & Copyright */}
-					<div className="flex flex-col items-center md:items-end gap-4">
+					<div className="flex flex-col items-center md:items-end gap-2">
 						<Link
 							href="https://github.com/corbinmurray/zen-den"
 							target="_blank"
 							rel="noopener noreferrer"
 							className="rounded-full bg-muted/10 p-3 text-muted hover:bg-primary/10 hover:text-primary transition-all duration-300"
 							aria-label="GitHub">
-							<Github className="h-5 w-5" />
+							<Github className="size-5" />
 						</Link>
 
-						<p className="text-xs text-muted text-center md:text-right">&copy; {currentYear} Zen Den</p>
-						<p className="text-xs text-muted/60 text-center md:text-right">All rights reserved</p>
+						<p className="text-xs text-muted text-center md:text-right">
+							Developed and designed with <Heart className="inline-block w-4 fill-red-500 stroke-red-500" /> Corbin Murray
+						</p>
+						<p className="text-xs text-muted text-center md:text-right">
+							Copyright <Copyright className="w-3 inline-block" /> {new Date().getFullYear()} Corbin Murray
+						</p>
 					</div>
 				</div>
 			</div>
