@@ -2,7 +2,7 @@
 
 import { Atmosphere, GardenItem } from "@/lib/types";
 import { Grab, Home, Pointer, Save } from "lucide-react";
-import * as motion from "motion/react-client";
+import { motion } from "motion/react";
 import React, { forwardRef, useCallback, useEffect, useRef, useState } from "react";
 
 interface CanvasProps {
