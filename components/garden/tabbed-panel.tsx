@@ -87,9 +87,6 @@ export function TabbedPanel({
 				label: "Yes, clear it",
 				onClick: () => {
 					clearGardenItems();
-					toast.success("Garden cleared", {
-						description: "Your zen garden has been reset.",
-					});
 				},
 			},
 			cancel: {
