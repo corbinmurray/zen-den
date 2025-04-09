@@ -1485,7 +1485,7 @@ const RainEffect = React.memo(function RainEffect() {
 				return (
 					<motion.div
 						key={`rain-${i}`}
-						className="absolute w-[1px] h-[7px] bg-blue-200/70"
+						className="absolute w-[1px] h-[7px] bg-blue-500 dark:bg-blue-200/70"
 						style={{
 							left: `${randLeft}%`,
 							top: `-${randTop}px`,
@@ -1519,7 +1519,7 @@ const RainEffect = React.memo(function RainEffect() {
 					return (
 						<motion.div
 							key={`pool-${i}`}
-							className="absolute rounded-full bg-blue-200/20"
+							className="absolute rounded-full bg-blue-500/20 dark:bg-blue-200/20"
 							style={{
 								width: `${randWidth}px`,
 								height: `${randWidth}px`,
@@ -1542,7 +1542,7 @@ const RainEffect = React.memo(function RainEffect() {
 					);
 				})}
 				{/* Water puddle base */}
-				<div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-blue-200/30 to-blue-200/5 h-[15px]"></div>
+				<div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-blue-500/30 to-blue-500/5 dark:from-blue-200/30 dark:to-blue-200/5 h-[15px]"></div>
 			</div>
 		</div>
 	);
@@ -1564,7 +1564,7 @@ const SnowEffect = React.memo(function SnowEffect() {
 				return (
 					<motion.div
 						key={`snow-${i}`}
-						className="absolute rounded-full bg-white/80"
+						className="absolute rounded-full bg-black/80 dark:bg-white/80"
 						style={{
 							width: `${randWidth}px`,
 							height: `${randWidth}px`,
@@ -1595,11 +1595,13 @@ const SnowEffect = React.memo(function SnowEffect() {
 				<svg width="100%" height="30" viewBox="0 0 1000 30" preserveAspectRatio="none">
 					<path
 						d="M0,30 Q50,10 100,20 Q150,30 200,15 Q250,5 300,25 Q350,15 400,20 Q450,10 500,25 Q550,15 600,20 Q650,5 700,15 Q750,25 800,10 Q850,20 900,25 Q950,15 1000,20 L1000,30 L0,30 Z"
-						fill="rgba(255, 255, 255, 0.3)"
+						fill="currentColor"
+						className="fill-black/30 dark:fill-white/30"
 					/>
 					<path
 						d="M0,30 Q70,20 140,25 Q210,15 280,20 Q350,25 420,15 Q490,25 560,20 Q630,15 700,25 Q770,15 840,20 Q910,25 1000,15 L1000,30 L0,30 Z"
-						fill="rgba(255, 255, 255, 0.5)"
+						fill="currentColor"
+						className="fill-black/50 dark:fill-white/50"
 					/>
 				</svg>
 
@@ -1659,7 +1661,7 @@ const CloudEffect = React.memo(function CloudEffect() {
 				return (
 					<motion.div
 						key={`cloud-top-${i}`}
-						className="absolute bg-white/40 rounded-[50%]"
+						className="absolute bg-black/40 dark:bg-white/40 rounded-[50%]"
 						style={{
 							width: `${width}px`,
 							height: `${height}px`,
@@ -1696,7 +1698,7 @@ const CloudEffect = React.memo(function CloudEffect() {
 					<div key={`cloud-cluster-${i}`} className="absolute" style={{ top: `${yPos}%`, left: `${xPos}%` }}>
 						{/* Main cloud body */}
 						<motion.div
-							className="absolute bg-white/40 rounded-full w-[70px] h-[45px]"
+							className="absolute bg-black/40 dark:bg-white/40 rounded-full w-[70px] h-[45px]"
 							style={{ filter: "blur(2px)" }}
 							initial={{ x: -350 }}
 							animate={{ x: "120vw" }}
@@ -1710,7 +1712,7 @@ const CloudEffect = React.memo(function CloudEffect() {
 						/>
 						{/* Cloud puff 1 */}
 						<motion.div
-							className="absolute bg-white/30 rounded-full w-[55px] h-[40px] left-[40px] top-[-10px]"
+							className="absolute bg-black/30 dark:bg-white/30 rounded-full w-[55px] h-[40px] left-[40px] top-[-10px]"
 							style={{ filter: "blur(2px)" }}
 							initial={{ x: -350 }}
 							animate={{ x: "120vw" }}
@@ -1724,7 +1726,7 @@ const CloudEffect = React.memo(function CloudEffect() {
 						/>
 						{/* Cloud puff 2 */}
 						<motion.div
-							className="absolute bg-white/35 rounded-full w-[60px] h-[35px] left-[25px] top-[5px]"
+							className="absolute bg-black/35 dark:bg-white/35 rounded-full w-[60px] h-[35px] left-[25px] top-[5px]"
 							style={{ filter: "blur(2px)" }}
 							initial={{ x: -350 }}
 							animate={{ x: "120vw" }}
@@ -1738,7 +1740,7 @@ const CloudEffect = React.memo(function CloudEffect() {
 						/>
 						{/* Cloud puff 3 - adds more complexity */}
 						<motion.div
-							className="absolute bg-white/25 rounded-full w-[40px] h-[30px] left-[15px] top-[-5px]"
+							className="absolute bg-black/25 dark:bg-white/25 rounded-full w-[40px] h-[30px] left-[15px] top-[-5px]"
 							style={{ filter: "blur(2px)" }}
 							initial={{ x: -350 }}
 							animate={{ x: "120vw" }}
@@ -1766,12 +1768,11 @@ const CloudEffect = React.memo(function CloudEffect() {
 				return (
 					<motion.div
 						key={`cloud-mid-${i}`}
-						className="absolute rounded-full"
+						className="absolute rounded-full bg-gradient-to-b from-black/40 via-0% to-black/10 dark:from-white/40 dark:to-white/10"
 						style={{
 							top: `${yPos}%`,
 							width: "100px",
 							height: "60px",
-							background: "linear-gradient(to bottom, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0.1) 100%)",
 							filter: "blur(1.5px)",
 						}}
 						initial={{
@@ -1805,13 +1806,12 @@ const CloudEffect = React.memo(function CloudEffect() {
 				return (
 					<motion.div
 						key={`cloud-small-${i}`}
-						className="absolute"
+						className="absolute bg-gradient-to-b from-black/40 via-0% to-black/10 dark:from-white/40 dark:to-white/10"
 						style={{
 							top: `${yPos}%`,
 							width: "70px",
 							height: "40px",
 							borderRadius: "50px 50px 30px 30px",
-							background: "linear-gradient(to bottom, rgba(255,255,255,0.25) 0%, rgba(255,255,255,0.1) 100%)",
 							filter: "blur(1px)",
 						}}
 						initial={{
