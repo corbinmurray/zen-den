@@ -1296,6 +1296,10 @@ export const Canvas = forwardRef<HTMLDivElement, CanvasProps>(function Canvas(
 					contain: "paint",
 					WebkitOverflowScrolling: "touch",
 				}}>
+
+				{/* Weather effects */}
+				<div className="absolute inset-0 z-10 pointer-events-none">{weatherEffectComponent}</div>
+				
 				{/* Inner content container with minimum dimensions to ensure scrollability */}
 				<div
 					ref={canvasContainerRef}
@@ -1303,9 +1307,6 @@ export const Canvas = forwardRef<HTMLDivElement, CanvasProps>(function Canvas(
 					style={{
 						...canvasDimensions,
 					}}>
-					{/* Weather effects */}
-					<div className="absolute inset-0 z-10 pointer-events-none">{weatherEffectComponent}</div>
-
 					{/* Render all garden elements */}
 					{elements.map((element) => {
 						// Get position from our position and scale refs for consistency
