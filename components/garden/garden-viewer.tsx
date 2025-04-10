@@ -137,7 +137,7 @@ export function GardenViewer({ initialGarden }: GardenViewerProps) {
 	return (
 		<div className="flex flex-col h-full w-full">
 			{/* Header with back and edit buttons */}
-			<div className="flex justify-between items-center p-4 border-b border-border bg-card">
+			<div className="flex justify-between items-center p-4 border-border bg-card">
 				<div className="flex items-center gap-4">
 					<Link href="/gallery" className="flex items-center gap-2 text-sm font-medium">
 						<ArrowLeft className="h-4 w-4" />
@@ -158,7 +158,7 @@ export function GardenViewer({ initialGarden }: GardenViewerProps) {
 
 			{/* Garden name for mobile view */}
 			{!isLoading && garden && (
-				<div className="sm:hidden px-4 py-2 border-b border-border bg-background">
+				<div className="sm:hidden px-4 py-2 border-border bg-background">
 					<h1 className="text-lg font-semibold">{garden.name || "Untitled Garden"}</h1>
 				</div>
 			)}
